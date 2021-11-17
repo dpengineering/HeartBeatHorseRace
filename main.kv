@@ -1,0 +1,47 @@
+<MainScreen>:
+
+    name: 'main'
+
+    normal_button:normal_button
+    zen_button:zen_button
+    chaos_button:chaos_button
+
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "horse_race.JPG"
+
+    FloatLayout:
+        size_hint: None, None
+        sorce: "horse_race.JPG"
+        allow_stretch: True
+        keep_ratio: False
+
+    DPEAButton:
+        id: normal_button
+        text: 'Normal'
+        size_hint: 0.21, 0.11
+        x: root.width * 0.75
+        y: root.height * 0.22
+        color: 0.834, 0.23, 0.11, 1
+        on_press: root.run_normal_thread()
+
+
+    DPEAButton:
+        id: zen_button
+        text: 'Zen'
+        size_hint: 0.21, 0.11
+        x: root.width * 0.395
+        y: root.height * 0.22
+        color: 0.834, 0.23, 0.11, 1
+        on_press: root.run_normal_setting()
+
+    DPEAButton:
+        id: chaos_button
+        text: 'Chaos'
+        size_hint: 0.21, 0.11
+        x: root.width * 0.04
+        y: root.height * 0.22
+        color: 0.834, 0.23, 0.11, 1
+        on_press: root.run_normal_setting()
