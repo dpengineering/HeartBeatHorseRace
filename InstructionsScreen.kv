@@ -1,0 +1,29 @@
+<InstructionsScreen>:
+
+    name: 'instructions'
+
+    back_button:back_button
+
+     canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "instructions.png"
+
+     FloatLayout:
+        size_hint: None, root.height * 0.85
+        source: "instructions.png"
+        allow_stretch: True
+        keep_ratio: False
+
+     DPEAButton:
+        id: back_button
+        text: 'Back'
+        size_hint: 0.21, 0.9
+        x: root.width * 0.05
+        y: root.height * 0.05
+        color: 0.834, 0, 0, 1
+        on_press: root.main_screen()
+
+
+

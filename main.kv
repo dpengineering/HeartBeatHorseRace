@@ -2,46 +2,36 @@
 
     name: 'main'
 
-    normal_button:normal_button
-    zen_button:zen_button
-    chaos_button:chaos_button
+    instructions_button:instructions_button
+    continue_button:continue_button
 
-    canvas.before:
+     canvas.before:
         Rectangle:
             pos: self.pos
             size: self.size
             source: "horse_race.JPG"
 
-    FloatLayout:
+     FloatLayout:
         size_hint: None, None
-        sorce: "horse_race.JPG"
+        source: "horse_race.JPG"
         allow_stretch: True
         keep_ratio: False
 
-    DPEAButton:
-        id: normal_button
-        text: 'Normal'
-        size_hint: 0.21, 0.11
-        x: root.width * 0.75
+     DPEAButton:
+        id: instructions_button
+        text: 'How to Play'
+        size_hint: 0.27, 0.11
+        x: root.width * .17
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
-        on_press: root.run_normal_thread()
+        on_press: root.instructions_screen()
 
-
-    DPEAButton:
-        id: zen_button
-        text: 'Zen'
-        size_hint: 0.21, 0.11
-        x: root.width * 0.395
+     DPEAButton:
+        id: continue_button
+        text: 'Continue'
+        size_hint: 0.27, 0.11
+        x: root.width * 0.56
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
-        on_press: root.run_normal_setting()
+        on_press: root.game_screen()
 
-    DPEAButton:
-        id: chaos_button
-        text: 'Chaos'
-        size_hint: 0.21, 0.11
-        x: root.width * 0.04
-        y: root.height * 0.22
-        color: 0.834, 0.23, 0.11, 1
-        on_press: root.run_normal_setting()
