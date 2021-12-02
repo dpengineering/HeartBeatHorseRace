@@ -1,0 +1,36 @@
+<TestScreen>:
+
+    name: 'test'
+    back_button_3:back_button_3
+
+    FloatLayout:
+        size_hint: root.width, root.height
+
+    Slider:
+        id: motor_speed
+        min: 0
+        max: 100
+        center_x: root.width * 0.15
+        center_y: root.height * 0.15
+        step: 1
+        orientation: 'horizontal'
+        size_hint: 0.4, 0.4
+
+    Slider:
+        id: iteration_slider
+        min: 1
+        max: 6
+        center_x: root.width * 0.15
+        center_y: root.height * 0.45
+        step: 1
+        orientation: 'horizontal'
+        size_hint: 0.4, 0.4
+
+    DPEAButton:
+        id: back_button_3
+        text: 'Back'
+        size_hint: 0.21, 0.09
+        x: root.width * 0.79
+        y: root.height * 0.91
+        color: 0.834, 0, 0, 1
+        on_press: root.main_screen()

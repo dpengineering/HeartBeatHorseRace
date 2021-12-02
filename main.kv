@@ -5,19 +5,19 @@
     instructions_button:instructions_button
     continue_button:continue_button
 
-     canvas.before:
+    canvas.before:
         Rectangle:
             pos: self.pos
             size: self.size
             source: "horse_race.JPG"
 
-     FloatLayout:
+    FloatLayout:
         size_hint: None, None
         source: "horse_race.JPG"
         allow_stretch: True
         keep_ratio: False
 
-     DPEAButton:
+    DPEAButton:
         id: instructions_button
         text: 'How to Play'
         size_hint: 0.27, 0.11
@@ -26,7 +26,7 @@
         color: 0.834, 0.23, 0.11, 1
         on_press: root.instructions_screen()
 
-     DPEAButton:
+    DPEAButton:
         id: continue_button
         text: 'Continue'
         size_hint: 0.27, 0.11
@@ -34,4 +34,5 @@
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
         on_press: root.game_screen()
+
 

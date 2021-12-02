@@ -2,9 +2,13 @@
 
     name: 'game'
 
+    on_enter: self.prepare_race()
+
     normal_button:normal_button
+    baseline_button:baseline_button
     zen_button:zen_button
     chaos_button:chaos_button
+    back_button_2:back_button_2
 
     canvas.before:
         Rectangle:
@@ -19,31 +23,34 @@
         keep_ratio: False
 
     DPEAButton:
-        id: normal_button
+        id: chaos_button
         text: 'Chaos'
         size_hint: 0.21, 0.11
         x: root.width * 0.75
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
         on_press: root.run_chaos_thread()
+        disabled: True
 
     DPEAButton:
-        id: zen_button
+        id: normal_button
         text: 'Steady'
         size_hint: 0.21, 0.11
         x: root.width * 0.395
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
         on_press: root.run_steady_thread()
+        disabled: True
 
     DPEAButton:
-        id: chaos_button
+        id: zen_button
         text: 'Zen'
         size_hint: 0.21, 0.11
         x: root.width * 0.04
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
         on_press: root.run_zen_thread()
+        disabled: True
 
     DPEAButton:
         id: baseline_button
@@ -52,4 +59,22 @@
         x: root.width * 0.05
         y: root.height * 0.84
         color: 0.834, 0.23, 0.11, 1
-        on_press: root.get_baseline()
+        on_press: root.start_baseline_thread()
+
+    DPEAButton:
+        id: back_button_2
+        text: 'Back'
+        size_hint: 0.21, 0.09
+        x: root.width * 0.79
+        y: root.height * 0.91
+        color: 0.834, 0, 0, 1
+        on_press: root.main_screen()
+
+    DPEAButton:
+        id: test_button
+        text: 'Test Motor'
+        size_hint: 0.21, 0.09
+        x: root.width * 0.72
+        y: root.height * 0.65
+        color: 0.834, 0, 0, 1
+        on_press: root.test_motor_screen()
