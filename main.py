@@ -214,9 +214,25 @@ class GameScreen(Screen):
 
 class TestScreen(Screen):
     back_button_3 = ObjectProperty(None)
+    motor_speed = ObjectProperty(None)
+    count_slider = ObjectProperty(None)
+    test_button = ObjectProperty(None)
 
-    def back_to_mainscreen(self):
+    def main_screen(self):
         SCREEN_MANAGER.current = GAME_SCREEN_NAME
+
+    def test_motor(self):
+        i = 0
+        while i < self.count_slider.value:
+            ax.set_vel_limit(self.motor_speed.value/5)
+            ax.set_pos(-8)
+            while ax.is_busy():
+                sleep(5)
+            ax.set_pos(0)
+            while ax.is_busy():
+                sleep(5)
+            i+=1
+
 
 
 class CounterScreen(Screen):

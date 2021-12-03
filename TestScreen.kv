@@ -2,22 +2,36 @@
 
     name: 'test'
     back_button_3:back_button_3
+    motor_speed:motor_speed
+    count_slider:count_slider
+    test_button:test_button
 
     FloatLayout:
         size_hint: root.width, root.height
 
     Slider:
         id: motor_speed
-        min: 0
-        max: 100
+        min: 1
+        max: 10
         center_x: root.width * 0.15
         center_y: root.height * 0.15
         step: 1
         orientation: 'horizontal'
         size_hint: 0.4, 0.4
 
+
+    Label:
+        size_hint: None, None
+        font_size: 40
+        bold: True
+        center_x: root.width* 0.20
+        center_y: root.height * 0.22
+        color: 1, 0, 0, 1
+        text: 'Motor Speed: ' + str(motor_speed.value)
+
+
     Slider:
-        id: iteration_slider
+        id: count_slider
         min: 1
         max: 6
         center_x: root.width * 0.15
@@ -25,6 +39,26 @@
         step: 1
         orientation: 'horizontal'
         size_hint: 0.4, 0.4
+
+
+    Label
+        size_hint: None, None
+        font_size: 40
+        bold: True
+        center_x: root.width* 0.20
+        center_y: root.height * 0.52
+        color: 1, 0, 0, 1
+        text: 'Number of Cycles: '+  str(count_slider.value)
+
+    DPEAButton:
+        id: test_button
+        text: 'Test Motor'
+        size_hint: 0.21, 0.09
+        x: root.width * 0.21
+        y: root.height * 0.91
+        color: 0, 0.834, 0, 1
+        on_press: root.test_motor()
+
 
     DPEAButton:
         id: back_button_3
