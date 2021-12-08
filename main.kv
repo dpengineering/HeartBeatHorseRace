@@ -2,6 +2,7 @@
 
     name: 'main'
 
+    exit_button:exit_button
     instructions_button:instructions_button
     continue_button:continue_button
 
@@ -34,5 +35,15 @@
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
         on_press: root.game_screen()
+
+    DPEAButton:
+        id: exit_button
+        text: 'Exit'
+        size_hint: 0.27, 0.11
+        x: root.width * 0.73
+        y: root.height * 0.89
+        color: 0.834, 0.23, 0.11, 1
+        on_press: root.exit_program()
+
 
 

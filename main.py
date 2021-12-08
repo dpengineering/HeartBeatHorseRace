@@ -37,6 +37,7 @@ import odrive
 
 od = odrive.find_any()
 ax = ODrive_Ease_Lib.ODrive_Axis(od.axis0)
+avg_1 = 0
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -47,6 +48,9 @@ GAME_SCREEN_NAME = 'game'
 COUNTER_SCREEN_NAME = 'counter'
 INSTRUCTIONS_SCREEN_NAME = 'instructions'
 TEST_SCREEN_NAME = 'test'
+CHAOS_SCREEN_NAME = 'chaos'
+STEADY_SCREEN_NAME = 'steady'
+ZEN_SCREEN_NAME = 'zen'
 
 class MainApp(App):
 
@@ -58,6 +62,7 @@ class MainApp(App):
 
 class MainScreen(Screen):
 
+    exit_button = ObjectProperty(None)
     instructions_button = ObjectProperty(None)
     continue_button = ObjectProperty(None)
 
@@ -67,6 +72,9 @@ class MainScreen(Screen):
     def game_screen(self):
         SCREEN_MANAGER.current = GAME_SCREEN_NAME
 
+    def exit_program(self):
+        quit()
+
 
 
 
@@ -74,8 +82,6 @@ class InstructionsScreen(Screen):
 
     def main_screen(self):
         SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-
-
 
 
 class GameScreen(Screen):
@@ -127,7 +133,7 @@ class GameScreen(Screen):
         bt_thread = Thread(target=lambda: self.read_btle(output_filename))
         bt_thread.daemon = True
         bt_thread.start()
-        sleep(3)
+        sleep(4)
 
         with open(output_filename, "r") as logfile:
             loglines = self.follow(logfile)
@@ -149,7 +155,7 @@ class GameScreen(Screen):
                 elif count == 10 and baseline == 0:
                     print("Getting average...")
                     self.baseline_button.text = "Get Baseline"
-                    avg = self.get_avg(heart_rate)
+                    avg_1 = self.get_avg(heart_rate)
                     baseline += 1
                     heart_rate.clear()
                     count = 0
@@ -192,23 +198,46 @@ class GameScreen(Screen):
         Thread(target=self.run_chaos_setting).start()
 
     def run_chaos_setting(self):
-        pass
+        SCREEN_MANAGER.current = CHAOS_SCREEN_NAME
 
     def run_steady_thread(self):
         if self.baseline == False:
             pass
         self.counter_screen()
-        Thread(target=self.run_zen_setting).start()
+        Thread(target=self.run_steady_setting).start()
+
+    def run_steady_setting(self):
+        SCREEN_MANAGER.current = STEADY_SCREEN_NAME
 
     def run_zen_thread(self):
         self.counter_screen()
-        Thread(target=self.run_steady_setting).start()
+        Thread(target=self.run_zen_setting).start()
 
-    def counter_screen(self):
-        SCREEN_MANAGER.current = COUNTER_SCREEN_NAME
+    def run_zen_setting(self):
+        SCREEN_MANAGER.current = ZEN_SCREEN_NAME
+
 
     def test_motor_screen(self):
         SCREEN_MANAGER.current = TEST_SCREEN_NAME
+
+
+class SteadyScreen(Screen):
+    pass
+
+    def steady_setting(self):
+        pass
+
+
+
+
+class ZenScreen(Screen):
+    pass
+
+
+
+class ChaosScreen(Screen):
+    pass
+
 
 
 
@@ -227,16 +256,11 @@ class TestScreen(Screen):
             ax.set_vel_limit(self.motor_speed.value/5)
             ax.set_pos(-8)
             while ax.is_busy():
-                sleep(5)
+                sleep(10)
             ax.set_pos(0)
             while ax.is_busy():
-                sleep(5)
+                sleep(10)
             i+=1
-
-
-
-class CounterScreen(Screen):
-    pass
 
 
 Builder.load_file('main.kv')
@@ -244,11 +268,15 @@ Builder.load_file('GameScreen.kv')
 Builder.load_file('InstructionsScreen.kv')
 Builder.load_file('CounterScreen.kv')
 Builder.load_file('TestScreen.kv')
+Builder.load_file('SteadyScreen.kv')
+Builder.load_file('ZenScreen.kv')
+Builder.load_file('ChaosScreen.kv')
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(InstructionsScreen(name=INSTRUCTIONS_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(GameScreen(name=GAME_SCREEN_NAME))
-SCREEN_MANAGER.add_widget(CounterScreen(name=COUNTER_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(TestScreen(name=TEST_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(SteadyScreen(name=STEADY_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(ChaosScreen(name=CHAOS_SCREEN_NAME))
 
 
 def send_event(event_name):
