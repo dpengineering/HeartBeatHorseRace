@@ -37,7 +37,7 @@ import odrive
 
 od = odrive.find_any()
 ax = ODrive_Ease_Lib.ODrive_Axis(od.axis0)
-avg_1 = 0
+baseline_1 = 0
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -155,7 +155,7 @@ class GameScreen(Screen):
                 elif count == 10 and baseline == 0:
                     print("Getting average...")
                     self.baseline_button.text = "Get Baseline"
-                    avg_1 = self.get_avg(heart_rate)
+                    baseline_1 = self.get_avg(heart_rate)
                     baseline += 1
                     heart_rate.clear()
                     count = 0
@@ -171,11 +171,10 @@ class GameScreen(Screen):
         while ax.is_busy():
             sleep(1)
         ax.set_vel(0)
-        ax.set_vel_limit(0.5)
-        ax.set_pos(ax.get_pos() - 0.5)
+        ax.set_vel_limit(5)
+        ax.set_pos_traj((ax.get_pos() - 0.5), 0.5, 1, 0.5)
         while ax.is_busy():
             sleep(0.5)
-        ax.set_vel_limit(5)
         ax.set_home()
         if self.check == 1:
             self.enable_buttons()
@@ -191,8 +190,6 @@ class GameScreen(Screen):
         return avg
 
     def run_chaos_thread(self):
-        if self.baseline == False:
-            pass
         self.prepare_race
         self.counter_screen()
         Thread(target=self.run_chaos_setting).start()
@@ -201,9 +198,7 @@ class GameScreen(Screen):
         SCREEN_MANAGER.current = CHAOS_SCREEN_NAME
 
     def run_steady_thread(self):
-        if self.baseline == False:
-            pass
-        self.counter_screen()
+        self.run_steady_setting()
         Thread(target=self.run_steady_setting).start()
 
     def run_steady_setting(self):
@@ -222,10 +217,113 @@ class GameScreen(Screen):
 
 
 class SteadyScreen(Screen):
-    pass
+
+    text_button = ObjectProperty(None)
+    back_button = ObjectProperty(None)
+
+    count = 0
+    i = 10
+
+    def read_btle(self, out):
+        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
+        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
+
+    def follow(self, f):
+        f.seek(0, 2)
+        while True:
+            curr_line = f.readline()
+            if not curr_line:
+                sleep(1)
+                curr_line = f.readline()
+                if not curr_line:
+                    return
+            yield curr_line
+
+    def get_diff(self, heart_rate, baseline):
+        max = heart_rate[0]
+
+        for element in heart_rate:
+            if element > max:
+                max = element
+        diff = max - baseline
+        print("Max is:", max)
+        print("Baseline is:", baseline)
+        print("Difference is:", diff)
+        return diff
+
+    def start_steady_thread(self):
+        Thread(target=self.countdown).start()
+
+    def countdown(self):
+        sleep(1)
+        while self.i > 0:
+            self.i -= 1
+            sleep(1)
+            self.text_button.text = str(self.i)
+
+        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
+        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
+        bt_thread.daemon = True
+        bt_thread.start()
+        sleep(5)
+
+        with open(output_filename, "r") as logfile:
+            loglines = self.follow(logfile)
+            count = 0
+            heart_rate = []
+
+            if self.i <= 3:
+
+                for line in loglines:
+                    hr_in_hex = line[39:41]
+
+                    if ax.finished:
+                        break
+
+                    elif count != 5:
+
+                        heart_rate.append(int(hr_in_hex, 16))
+                        self.text_button.text = str(heart_rate[count])
+                        count += 1
+                        sleep(0.5)
+
+                    elif count == 5:
+
+                        diff = self.get_diff(heart_rate, baseline_1)
+                        count = 0
+
+                        if diff <= 1:
+                            ax.set_vel(-0.1)
+                            print("Low Setting")
+                            print("Velocity is:", ax.get_vel())
+
+                        elif diff > 30:
+                            ax.set_vel(-1)
+                            print("Max Setting")
+                            print("Velocity is:", ax.get_vel())
+
+                        else:
+                            ax.set_vel(diff / (-30))
+                            print("Normal Setting")
+                            print("Velocity is:", ax.get_vel())
+
+                        count = 0
+                        heart_rate.clear()
+
+
+
 
     def steady_setting(self):
-        pass
+        self.start_steady_thread()
+
+
+    def enable_back_button(self):
+        self.back_button.disabled = False
+
+    def disable_back_button(self):
+        self.back_button.disabled = True
+
+
 
 
 
@@ -253,13 +351,13 @@ class TestScreen(Screen):
     def test_motor(self):
         i = 0
         while i < self.count_slider.value:
-            ax.set_vel_limit(self.motor_speed.value/5)
-            ax.set_pos(-8)
+            ax.set_vel_limit(5)
+            ax.set_pos_traj(-8,self.motor_speed.value/10,self.motor_speed.value/5,self.motor_speed.value/10)
             while ax.is_busy():
-                sleep(10)
-            ax.set_pos(0)
+                sleep(5)
+            ax.set_pos_traj(0,self.motor_speed.value/10,self.motor_speed.value/5,self.motor_speed.value/10)
             while ax.is_busy():
-                sleep(10)
+                sleep(5)
             i+=1
 
 
