@@ -6,7 +6,7 @@ import os
 os.environ['DISPLAY'] = ":0.0"
 os.environ['KIVY_WINDOW'] = 'sdl2'
 
-from RPi_ODrive import ODrive_Ease_Lib
+
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.core.window import Window
@@ -34,6 +34,7 @@ from time import sleep
 from datetime import datetime
 from threading import Thread
 import odrive
+from RPi_ODrive import ODrive_Ease_Lib
 
 od = odrive.find_any()
 ax = ODrive_Ease_Lib.ODrive_Axis(od.axis0)
@@ -168,8 +169,8 @@ class GameScreen(Screen):
 
 
     def prepare_race(self):
+        ax.set_vel(0)
         self.disable_buttons()
-        ax.finished = False
         ax.set_vel(1)
         while ax.is_busy():
             sleep(1)
@@ -225,7 +226,20 @@ class SteadyScreen(Screen):
     back_button = ObjectProperty(None)
 
     count = 0
-    i = 6
+    i = 5
+
+    def sensor_check(self):
+        while self.check_gpio() == False:
+            sleep(0.01)
+        print("You won!")
+        sleep(5)
+        self.game_screen()
+
+    def check_gpio(self):
+        if od.get_gpio_states() & 0b100 == 0:
+            return True
+        else:
+            return False
 
     def read_btle(self, out):
         # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
@@ -256,6 +270,7 @@ class SteadyScreen(Screen):
 
     def start_steady_thread(self):
         Thread(target=self.countdown).start()
+        Thread(target=self.sensor_check).start()
 
     def countdown(self):
         sleep(1)
@@ -278,10 +293,8 @@ class SteadyScreen(Screen):
             for line in loglines:
                 hr_in_hex = line[39:41]
 
-                if ax.finished:
-                    break
 
-                elif count != 5:
+                if count != 5:
 
                     heart_rate.append(int(hr_in_hex, 16))
                     self.text_button.text = str(heart_rate[count])
@@ -311,7 +324,8 @@ class SteadyScreen(Screen):
                     count = 0
                     heart_rate.clear()
 
-
+    def game_screen(self):
+        SCREEN_MANAGER.current = GAME_SCREEN_NAME
 
 
     def steady_setting(self):
