@@ -129,6 +129,8 @@ class GameScreen(Screen):
         SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
     def get_baseline(self):
+        global baseline_1
+
         output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
         bt_thread = Thread(target=lambda: self.read_btle(output_filename))
         bt_thread.daemon = True
@@ -161,6 +163,7 @@ class GameScreen(Screen):
                     count = 0
                     self.check = 1
                     self.enable_buttons()
+                    print("Baseline is:", )
 
 
 
@@ -222,7 +225,7 @@ class SteadyScreen(Screen):
     back_button = ObjectProperty(None)
 
     count = 0
-    i = 10
+    i = 6
 
     def read_btle(self, out):
         # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
@@ -247,7 +250,7 @@ class SteadyScreen(Screen):
                 max = element
         diff = max - baseline
         print("Max is:", max)
-        print("Baseline is:", baseline)
+        print("Baseline is:", baseline_1)
         print("Difference is:", diff)
         return diff
 
@@ -265,50 +268,48 @@ class SteadyScreen(Screen):
         bt_thread = Thread(target=lambda: self.read_btle(output_filename))
         bt_thread.daemon = True
         bt_thread.start()
-        sleep(5)
+
 
         with open(output_filename, "r") as logfile:
             loglines = self.follow(logfile)
             count = 0
             heart_rate = []
 
-            if self.i <= 3:
+            for line in loglines:
+                hr_in_hex = line[39:41]
 
-                for line in loglines:
-                    hr_in_hex = line[39:41]
+                if ax.finished:
+                    break
 
-                    if ax.finished:
-                        break
+                elif count != 5:
 
-                    elif count != 5:
+                    heart_rate.append(int(hr_in_hex, 16))
+                    self.text_button.text = str(heart_rate[count])
+                    count += 1
+                    sleep(0.25)
 
-                        heart_rate.append(int(hr_in_hex, 16))
-                        self.text_button.text = str(heart_rate[count])
-                        count += 1
-                        sleep(0.5)
+                elif count == 5:
 
-                    elif count == 5:
+                    diff = self.get_diff(heart_rate, baseline_1)
+                    count = 0
 
-                        diff = self.get_diff(heart_rate, baseline_1)
-                        count = 0
+                    if diff <= 1:
+                        ax.set_vel(-0.1)
+                        print("Low Setting")
+                        print("Velocity is:", ax.get_vel())
 
-                        if diff <= 1:
-                            ax.set_vel(-0.1)
-                            print("Low Setting")
-                            print("Velocity is:", ax.get_vel())
+                    elif diff > 30:
+                        ax.set_vel(-1)
+                        print("Max Setting")
+                        print("Velocity is:", ax.get_vel())
 
-                        elif diff > 30:
-                            ax.set_vel(-1)
-                            print("Max Setting")
-                            print("Velocity is:", ax.get_vel())
+                    else:
+                        ax.set_vel(diff / (-30))
+                        print("Normal Setting")
+                        print("Velocity is:", ax.get_vel())
 
-                        else:
-                            ax.set_vel(diff / (-30))
-                            print("Normal Setting")
-                            print("Velocity is:", ax.get_vel())
-
-                        count = 0
-                        heart_rate.clear()
+                    count = 0
+                    heart_rate.clear()
 
 
 
