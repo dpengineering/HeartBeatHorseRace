@@ -4,10 +4,10 @@
 
     on_enter: self.prepare_race()
 
-    normal_button:normal_button
+    chaos_button:chaos_button
     baseline_button:baseline_button
     zen_button:zen_button
-    chaos_button:chaos_button
+    steady_button:steady_button
     back_button_2:back_button_2
 
     canvas.before:
@@ -23,23 +23,23 @@
         keep_ratio: False
 
     DPEAButton:
-        id: chaos_button
-        text: 'Chaos'
+        id: steady_button
+        text: 'Steady'
         size_hint: 0.21, 0.11
         x: root.width * 0.75
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
-        on_press: root.run_chaos_thread()
+        on_press: root.run_steady_thread()
         disabled: True
 
     DPEAButton:
-        id: normal_button
-        text: 'Steady'
+        id: chaos_button
+        text: 'chaos'
         size_hint: 0.21, 0.11
         x: root.width * 0.395
         y: root.height * 0.22
         color: 0.834, 0.23, 0.11, 1
-        on_press: root.run_steady_thread()
+        on_press: root.run_chaos_thread()
         disabled: True
 
     DPEAButton:

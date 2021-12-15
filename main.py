@@ -39,6 +39,7 @@ from RPi_ODrive import ODrive_Ease_Lib
 od = odrive.find_any()
 ax = ODrive_Ease_Lib.ODrive_Axis(od.axis0)
 baseline_1 = 0
+race_finished = False
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -86,6 +87,8 @@ class InstructionsScreen(Screen):
 
 
 class GameScreen(Screen):
+
+    global race_finished
 
     check = 0
 
@@ -169,6 +172,7 @@ class GameScreen(Screen):
 
 
     def prepare_race(self):
+        race_finished = False
         ax.set_vel(0)
         self.disable_buttons()
         ax.set_vel(1)
@@ -220,7 +224,9 @@ class GameScreen(Screen):
         SCREEN_MANAGER.current = TEST_SCREEN_NAME
 
 
-class SteadyScreen(Screen):
+class ChaosScreen(Screen):
+
+    global race_finished
 
     text_button = ObjectProperty(None)
     back_button = ObjectProperty(None)
@@ -232,7 +238,9 @@ class SteadyScreen(Screen):
         while self.check_gpio() == False:
             sleep(0.01)
         print("You won!")
+        race_finished = True
         sleep(5)
+        self.enable_back_button()
         self.game_screen()
 
     def check_gpio(self):
@@ -268,11 +276,14 @@ class SteadyScreen(Screen):
         print("Difference is:", diff)
         return diff
 
-    def start_steady_thread(self):
+    def start_chaos_thread(self):
         Thread(target=self.countdown).start()
         Thread(target=self.sensor_check).start()
 
     def countdown(self):
+        self.i = 5
+        self.text_button.text = str(self.i)
+        self.disable_back_button()
         sleep(1)
         while self.i > 0:
             self.i -= 1
@@ -328,9 +339,8 @@ class SteadyScreen(Screen):
         SCREEN_MANAGER.current = GAME_SCREEN_NAME
 
 
-    def steady_setting(self):
-        self.start_steady_thread()
-
+    def chaos_setting(self):
+        self.start_chaos_thread()
 
     def enable_back_button(self):
         self.back_button.disabled = False
@@ -344,11 +354,132 @@ class SteadyScreen(Screen):
 
 
 class ZenScreen(Screen):
-    pass
+
+    global race_finished
+
+    text_button = ObjectProperty(None)
+    back_button = ObjectProperty(None)
+
+    count = 0
+    i = 5
+
+    def sensor_check(self):
+        while self.check_gpio() == False:
+            sleep(0.01)
+        print("You won!")
+        race_finished = True
+        sleep(5)
+        self.enable_back_button()
+        self.game_screen()
+
+    def check_gpio(self):
+        if od.get_gpio_states() & 0b100 == 0:
+            return True
+        else:
+            return False
+
+    def read_btle(self, out):
+        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
+        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
+
+    def follow(self, f):
+        f.seek(0, 2)
+        while True:
+            curr_line = f.readline()
+            if not curr_line:
+                sleep(1)
+                curr_line = f.readline()
+                if not curr_line:
+                    return
+            yield curr_line
+
+    def get_diff(self, heart_rate, baseline):
+        max = heart_rate[0]
+
+        for element in heart_rate:
+            if element > max:
+                max = element
+        diff = max - baseline
+        print("Max is:", max)
+        print("Baseline is:", baseline_1)
+        print("Difference is:", diff)
+        return diff
+
+    def start_zen_thread(self):
+        Thread(target=self.countdown).start()
+        Thread(target=self.sensor_check).start()
+
+    def countdown(self):
+        self.i = 5
+        self.text_button.text = str(self.i)
+        self.disable_back_button()
+        sleep(1)
+        while self.i > 0:
+            self.i -= 1
+            sleep(1)
+            self.text_button.text = str(self.i)
+
+        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
+        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
+        bt_thread.daemon = True
+        bt_thread.start()
+
+
+        with open(output_filename, "r") as logfile:
+            loglines = self.follow(logfile)
+            count = 0
+            heart_rate = []
+
+            for line in loglines:
+                hr_in_hex = line[39:41]
+
+
+                if count != 5:
+
+                    heart_rate.append(int(hr_in_hex, 16))
+                    self.text_button.text = str(heart_rate[count])
+                    count += 1
+                    sleep(0.25)
+
+                elif count == 5:
+
+                    diff = self.get_diff(heart_rate, baseline_1)
+                    count = 0
+
+                    if diff <= 1:
+                        ax.set_vel(-0.1)
+                        print("Low Setting")
+                        print("Velocity is:", ax.get_vel())
+
+                    elif diff > 30:
+                        ax.set_vel(-1)
+                        print("Max Setting")
+                        print("Velocity is:", ax.get_vel())
+
+                    else:
+                        ax.set_vel(diff / (-30))
+                        print("Normal Setting")
+                        print("Velocity is:", ax.get_vel())
+
+                    count = 0
+                    heart_rate.clear()
+
+    def game_screen(self):
+        SCREEN_MANAGER.current = GAME_SCREEN_NAME
+
+
+    def zen_setting(self):
+        self.start_chaos_thread()
+
+    def enable_back_button(self):
+        self.back_button.disabled = False
+
+    def disable_back_button(self):
+        self.back_button.disabled = True
 
 
 
-class ChaosScreen(Screen):
+class SteadyScreen(Screen):
     pass
 
 
@@ -381,7 +512,7 @@ Builder.load_file('GameScreen.kv')
 Builder.load_file('InstructionsScreen.kv')
 Builder.load_file('CounterScreen.kv')
 Builder.load_file('TestScreen.kv')
-Builder.load_file('SteadyScreen.kv')
+Builder.load_file('ChaosScreen.kv')
 Builder.load_file('ZenScreen.kv')
 Builder.load_file('ChaosScreen.kv')
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
