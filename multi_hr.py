@@ -5,15 +5,16 @@ import time
 adapter0 = pygatt.BGAPIBackend()
 #adapter1 = pygatt.GATTToolBackend()
 
-def handle_data_for_player(player_num):
-    def handle_data(handle, value):
-        """
-        handle -- integer, characteristic read handle the data was received on
-        value -- bytearray, the data returned in the notification
-        """
-        #print("Received data: %s" % hexlify(value))
-        print(" "*(32*player_num) + "Player %s Heart Rate: %s" % (player_num, int(hexlify(value)[2:4], 16))) 
-    return handle_data  
+
+def handle_data(handle, value):
+    """
+    handle -- integer, characteristic read handle the data was received on
+    value -- bytearray, the data returned in the notification
+    """
+    #print("Received data: %s" % hexlify(value))
+    #self.current_heartrate = (int(hexlify(value)[2:4], 16))
+    print("Player Heart Rate: %s" % (int(hexlify(value)[2:4], 16)))
+
 
 try:
     adapter0.start()
@@ -23,7 +24,7 @@ try:
 
     #chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(0))
                      
-    hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
+    hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data)
 
     # The subscription runs on a background thread. You must stop this main
     # thread from exiting, otherwise you will not receive any messages, and

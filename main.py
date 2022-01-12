@@ -1,6 +1,9 @@
 import sys
 import time
 import threading
+import pygatt
+from binascii import hexlify
+import time
 
 import os
 os.environ['DISPLAY'] = ":0.0"
@@ -39,7 +42,29 @@ from RPi_ODrive import ODrive_Ease_Lib
 od = odrive.find_any()
 ax = ODrive_Ease_Lib.ODrive_Axis(od.axis0)
 baseline_1 = 0
+current_heartrate = 0
 race_finished = False
+
+adapter0 = pygatt.BGAPIBackend()
+
+
+# adapter1 = pygatt.GATTToolBackend()
+
+
+def handle_data(handle, value):
+    global current_heartrate
+    current_heartrate = (int(hexlify(value)[2:4], 16))
+    #print("Player Heart Rate: %s" % (int(hexlify(value)[2:4], 16)))
+
+adapter0.start()
+# adapter1.start()
+# chest_polar = adapter0.connect("A0:9E:1A:49:A8:51")
+hand_polar = adapter0.connect("A0:9E:1A:5E:EF:F6")
+
+# chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(0))
+
+hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data)
+
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -89,6 +114,7 @@ class InstructionsScreen(Screen):
 class GameScreen(Screen):
 
     global race_finished
+    global current_heartrate
 
     check = 0
 
@@ -119,10 +145,6 @@ class GameScreen(Screen):
         self.chaos_button.disabled = True
         self.zen_button.disabled = True
 
-    def read_btle(self, out):
-        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
-        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
-
     def start_baseline_thread(self):
         Thread(target=self.get_baseline).start()
         self.baseline_button.text == "..."
@@ -134,40 +156,27 @@ class GameScreen(Screen):
 
     def get_baseline(self):
         global baseline_1
+        global current_heartrate
 
-        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
-        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
-        bt_thread.daemon = True
-        bt_thread.start()
-        sleep(4)
+        count = 0
+        heart_rate = []
 
-        with open(output_filename, "r") as logfile:
-            loglines = self.follow(logfile)
-            count = 0
-            baseline = 0
-            heart_rate = []
+        while count != 10:
+            heart_rate.append(current_heartrate)
+            print(heart_rate[count])
+            count += 1
+            self.baseline_button.text = "." * ((count%3) + 1)
+            sleep(0.5)
 
-            for line in loglines:
-                hr_in_hex = line[39:41]
-
-
-                if count != 10 and baseline == 0:
-                    heart_rate.append(int(hr_in_hex, 16))
-                    print(heart_rate[count])
-                    count += 1
-                    self.baseline_button.text = "." * ((count%3) + 1)
-                    sleep(0.5)
-
-                elif count == 10 and baseline == 0:
-                    print("Getting average...")
-                    self.baseline_button.text = "Get Baseline"
-                    baseline_1 = self.get_avg(heart_rate)
-                    baseline += 1
-                    heart_rate.clear()
-                    count = 0
-                    self.check = 1
-                    self.enable_buttons()
-                    print("Baseline is:", )
+        print("Getting average...")
+        self.baseline_button.text = "Get Baseline"
+        baseline_1 = self.get_avg(heart_rate)
+        heart_rate.clear()
+        count = 0
+        self.check = 1
+        # Used to check if there is baseline heart rate when preparing race
+        self.enable_buttons()
+        print("Baseline is:", )
 
 
 
@@ -199,7 +208,6 @@ class GameScreen(Screen):
 
     def run_chaos_thread(self):
         self.prepare_race
-        self.counter_screen()
         Thread(target=self.run_chaos_setting).start()
 
     def run_chaos_setting(self):
@@ -227,6 +235,7 @@ class GameScreen(Screen):
 class ChaosScreen(Screen):
 
     global race_finished
+    global current_heartrate
 
     text_button = ObjectProperty(None)
     back_button = ObjectProperty(None)
@@ -249,20 +258,6 @@ class ChaosScreen(Screen):
         else:
             return False
 
-    def read_btle(self, out):
-        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
-        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
-
-    def follow(self, f):
-        f.seek(0, 2)
-        while True:
-            curr_line = f.readline()
-            if not curr_line:
-                sleep(1)
-                curr_line = f.readline()
-                if not curr_line:
-                    return
-            yield curr_line
 
     def get_diff(self, heart_rate, baseline):
         max = heart_rate[0]
@@ -286,54 +281,40 @@ class ChaosScreen(Screen):
         self.disable_back_button()
         sleep(1)
         while self.i > 0:
+            # Countdown loop
             self.i -= 1
             sleep(1)
             self.text_button.text = str(self.i)
 
-        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
-        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
-        bt_thread.daemon = True
-        bt_thread.start()
+            if count != 5:
 
+                heart_rate.append(self.current_heartrate)
+                self.text_button.text = str(heart_rate[count])
+                count += 1
+                sleep(0.25)
 
-        with open(output_filename, "r") as logfile:
-            loglines = self.follow(logfile)
-            count = 0
-            heart_rate = []
+            elif count == 5:
 
-            for line in loglines:
-                hr_in_hex = line[39:41]
+                diff = self.get_diff(heart_rate, baseline_1)
+                count = 0
 
+                if diff <= 1:
+                    ax.set_vel(-0.1)
+                    print("Low Setting")
+                    print("Velocity is:", ax.get_vel())
 
-                if count != 5:
+                elif diff > 30:
+                    ax.set_vel(-1)
+                    print("Max Setting")
+                    print("Velocity is:", ax.get_vel())
 
-                    heart_rate.append(int(hr_in_hex, 16))
-                    self.text_button.text = str(heart_rate[count])
-                    count += 1
-                    sleep(0.25)
+                else:
+                    ax.set_vel(diff / (-30))
+                    print("Normal Setting")
+                    print("Velocity is:", ax.get_vel())
 
-                elif count == 5:
-
-                    diff = self.get_diff(heart_rate, baseline_1)
-                    count = 0
-
-                    if diff <= 1:
-                        ax.set_vel(-0.1)
-                        print("Low Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    elif diff > 30:
-                        ax.set_vel(-1)
-                        print("Max Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    else:
-                        ax.set_vel(diff / (-30))
-                        print("Normal Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    count = 0
-                    heart_rate.clear()
+                count = 0
+                heart_rate.clear()
 
     def game_screen(self):
         SCREEN_MANAGER.current = GAME_SCREEN_NAME
@@ -356,6 +337,7 @@ class ChaosScreen(Screen):
 class ZenScreen(Screen):
 
     global race_finished
+    global current_heartrate
 
     text_button = ObjectProperty(None)
     back_button = ObjectProperty(None)
@@ -377,21 +359,6 @@ class ZenScreen(Screen):
             return True
         else:
             return False
-
-    def read_btle(self, out):
-        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
-        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
-
-    def follow(self, f):
-        f.seek(0, 2)
-        while True:
-            curr_line = f.readline()
-            if not curr_line:
-                sleep(1)
-                curr_line = f.readline()
-                if not curr_line:
-                    return
-            yield curr_line
 
     def get_diff(self, heart_rate, baseline):
         max = heart_rate[0]
@@ -419,50 +386,35 @@ class ZenScreen(Screen):
             sleep(1)
             self.text_button.text = str(self.i)
 
-        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
-        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
-        bt_thread.daemon = True
-        bt_thread.start()
+            if count != 5:
 
+                heart_rate.append(int(hr_in_hex, 16))
+                self.text_button.text = str(heart_rate[count])
+                count += 1
+                sleep(0.25)
 
-        with open(output_filename, "r") as logfile:
-            loglines = self.follow(logfile)
-            count = 0
-            heart_rate = []
+            elif count == 5:
 
-            for line in loglines:
-                hr_in_hex = line[39:41]
+                diff = self.get_diff(heart_rate, baseline_1)
+                count = 0
 
+                if diff <= 1:
+                    ax.set_vel(-0.1)
+                    print("Low Setting")
+                    print("Velocity is:", ax.get_vel())
 
-                if count != 5:
+                elif diff > 30:
+                    ax.set_vel(-1)
+                    print("Max Setting")
+                    print("Velocity is:", ax.get_vel())
 
-                    heart_rate.append(int(hr_in_hex, 16))
-                    self.text_button.text = str(heart_rate[count])
-                    count += 1
-                    sleep(0.25)
+                else:
+                    ax.set_vel(diff / (-30))
+                    print("Normal Setting")
+                    print("Velocity is:", ax.get_vel())
 
-                elif count == 5:
-
-                    diff = self.get_diff(heart_rate, baseline_1)
-                    count = 0
-
-                    if diff <= 1:
-                        ax.set_vel(-0.1)
-                        print("Low Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    elif diff > 30:
-                        ax.set_vel(-1)
-                        print("Max Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    else:
-                        ax.set_vel(diff / (-30))
-                        print("Normal Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    count = 0
-                    heart_rate.clear()
+                count = 0
+                heart_rate.clear()
 
     def game_screen(self):
         SCREEN_MANAGER.current = GAME_SCREEN_NAME
