@@ -2,9 +2,9 @@ import pygatt
 from binascii import hexlify
 import time
 
-adapter0 = pygatt.GATTToolBackend()
+adapter0 = pygatt.BGAPIBackend()
 #adapter1 = pygatt.GATTToolBackend()
-    
+
 def handle_data_for_player(player_num):
     def handle_data(handle, value):
         """
@@ -18,12 +18,12 @@ def handle_data_for_player(player_num):
 try:
     adapter0.start()
     #adapter1.start()
-    chest_polar = adapter0.connect("A0:9E:1A:49:A8:51")
-    #hand_polar = adapter1.connect("A0:9E:1A:5E:EF:F6")
+    #chest_polar = adapter0.connect("A0:9E:1A:49:A8:51")
+    hand_polar = adapter0.connect("A0:9E:1A:5E:EF:F6")
 
-    chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(0))
+    #chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(0))
                      
-    #hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
+    hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
 
     # The subscription runs on a background thread. You must stop this main
     # thread from exiting, otherwise you will not receive any messages, and

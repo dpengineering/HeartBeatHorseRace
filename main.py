@@ -94,7 +94,7 @@ class GameScreen(Screen):
 
     back_button_2 = ObjectProperty(None)
     baseline_button = ObjectProperty(None)
-    normal_button = ObjectProperty(None)
+    steady_button = ObjectProperty(None)
     zen_button = ObjectProperty(None)
     chaos_button = ObjectProperty(None)
 
@@ -110,12 +110,12 @@ class GameScreen(Screen):
             yield curr_line
 
     def enable_buttons(self):
-        self.normal_button.disabled = False
+        self.steady_button.disabled = False
         self.chaos_button.disabled = False
         self.zen_button.disabled = False
 
     def disable_buttons(self):
-        self.normal_button.disabled = True
+        self.steady_button.disabled = True
         self.chaos_button.disabled = True
         self.zen_button.disabled = True
 
@@ -490,6 +490,7 @@ class TestScreen(Screen):
     motor_speed = ObjectProperty(None)
     count_slider = ObjectProperty(None)
     test_button = ObjectProperty(None)
+    testindefinitely_button = ObjectProperty(None)
 
     def main_screen(self):
         SCREEN_MANAGER.current = GAME_SCREEN_NAME
@@ -505,6 +506,16 @@ class TestScreen(Screen):
             while ax.is_busy():
                 sleep(5)
             i+=1
+
+    def test_indefinitely(self):
+        while True:
+            ax.set_vel_limit(5)
+            ax.set_pos_traj(-8, self.motor_speed.value / 10, self.motor_speed.value / 5, self.motor_speed.value / 10)
+            while ax.is_busy():
+                sleep(5)
+            ax.set_pos_traj(0, self.motor_speed.value / 10, self.motor_speed.value / 5, self.motor_speed.value / 10)
+            while ax.is_busy():
+                sleep(5)
 
 
 Builder.load_file('main.kv')

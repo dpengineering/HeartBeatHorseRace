@@ -5,6 +5,7 @@
     motor_speed:motor_speed
     count_slider:count_slider
     test_button:test_button
+    testindefinitely_button:testindefinitely_button
 
     FloatLayout:
         size_hint: root.width, root.height
@@ -68,3 +69,12 @@
         y: root.height * 0.91
         color: 0.834, 0, 0, 1
         on_press: root.main_screen()
+
+    DPEAButton:
+        id: testindefinitely_button
+        text: 'Indefinite Test'
+        size_hint: 0.21, 0.08
+        x: root.width * 0.21
+        y: root.height * 0
+        color: 0, 0.834, 0, 1
+        on_press: root.test_indefinitely()
