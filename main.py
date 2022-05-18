@@ -1,544 +1,530 @@
-import sys
-import time
-import threading
-
 import os
-os.environ['DISPLAY'] = ":0.0"
-os.environ['KIVY_WINDOW'] = 'sdl2'
+import sys
 
+# os.environ['DISPLAY'] = ":0.0"
+# os.environ['KIVY_WINDOW'] = 'egl_rpi'
 
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.lang import Builder
-from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import *
-from kivy.uix.popup import Popup
-from kivy.uix.label import Label
-from kivy.uix.widget import Widget
-from kivy.uix.slider import Slider
-from kivy.uix.image import Image
-from kivy.uix.behaviors import ButtonBehavior
-from kivy.clock import Clock
-from kivy.animation import Animation
-from functools import partial
-from kivy.config import Config
-from kivy.core.window import Window
-from pidev.kivy import DPEAButton
-from pidev.MixPanel import MixPanel
-from pidev.kivy import PauseScreen
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+from odrive_helpers import digital_read
+from threading import Thread
+from time import time, sleep
 from kivy.properties import ObjectProperty
 
-from time import sleep
-from datetime import datetime
-from threading import Thread
-import odrive
-from RPi_ODrive import ODrive_Ease_Lib
+from pidev.MixPanel import MixPanel
+from pidev.kivy.PassCodeScreen import PassCodeScreen
+from pidev.kivy.PauseScreen import PauseScreen
+from pidev.kivy import DPEAButton
+from pidev.kivy import ImageButton
 
-od = odrive.find_any()
-ax = ODrive_Ease_Lib.ODrive_Axis(od.axis0)
-baseline_1 = 0
-race_finished = False
+sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
+from odrive_helpers import *
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
 
 SCREEN_MANAGER = ScreenManager()
 MAIN_SCREEN_NAME = 'main'
-GAME_SCREEN_NAME = 'game'
-COUNTER_SCREEN_NAME = 'counter'
-INSTRUCTIONS_SCREEN_NAME = 'instructions'
-TEST_SCREEN_NAME = 'test'
-CHAOS_SCREEN_NAME = 'chaos'
-STEADY_SCREEN_NAME = 'steady'
-ZEN_SCREEN_NAME = 'zen'
+TRAJ_SCREEN_NAME = 'traj'
+GPIO_SCREEN_NAME = 'gpio'
+ADMIN_SCREEN_NAME = 'admin'
 
-class MainApp(App):
+from odrive_helpers import *
+
+od_1 = find_odrive(serial_number="208D3388304B")
+od_2 = find_odrive(serial_number="20553591524B")
+
+digital_read(od_1, 8)
+digital_read(od_1, 2)
+digital_read(od_2, 8)
+digital_read(od_2, 2)
+
+assert od_1.config.enable_brake_resistor is True, "Check for faulty brake resistor."
+assert od_2.config.enable_brake_resistor is True, "Check for faulty brake resistor."
+
+# axis0 and axis1 correspond to M0 and M1 on the ODrive
+# You can also set the current limit and velocity limit when initializing the axis
+
+horse1 = ODriveAxis(od_2.axis0, current_lim=10, vel_lim=10)
+horse2 = ODriveAxis(od_2.axis1, current_lim=10, vel_lim=10)
+horse3 = ODriveAxis(od_1.axis0, current_lim=10, vel_lim=10)
+horse4 = ODriveAxis(od_1.axis1, current_lim=10, vel_lim=10)
+
+#digital_read(od, 2) #od defined after od is defined
+# Basic motor tuning, for more precise tuning,
+# follow this guide: https://docs.odriverobotics.com/v/latest/control.html#tuning
+
+horse1.set_gains()
+horse2.set_gains()
+horse3.set_gains()
+horse4.set_gains()
+
+if not horse1.is_calibrated():
+    print("calibrating horse1...")
+    horse1.calibrate_with_current_lim(15)
+if not horse2.is_calibrated():
+    print("calibrating horse2...")
+    horse2.calibrate_with_current_lim(15)
+if not horse3.is_calibrated():
+    print("calibrating horse3...")
+    horse3.calibrate_with_current_lim(15)
+if not horse4.is_calibrated():
+    print("calibrating horse4...")
+    horse4.calibrate_with_current_lim(15)
+
+print("Current Limit Horse1: ", horse1.get_current_limit())
+print("Velocity Limit Horse1: ", horse1.get_vel_limit())
+print("Current Limit Horse2: ", horse2.get_current_limit())
+print("Velocity Limit Horse2: ", horse2.get_vel_limit())
+print("Current Limit Horse3: ", horse3.get_current_limit())
+print("Velocity Limit Horse3: ", horse3.get_vel_limit())
+print("Current Limit Horse4: ", horse4.get_current_limit())
+print("Velocity Limit Horse4: ", horse4.get_vel_limit())
+
+horse1.set_vel(0)
+horse2.set_vel(0)
+horse3.set_vel(0)
+horse4.set_vel(0)
+
+dump_errors(od_1)
+dump_errors(od_2)
+
+od_1.clear_errors()
+od_2.clear_errors()
+
+od_1.axis0.controller.config.enable_overspeed_error = False
+od_1.axis1.controller.config.enable_overspeed_error = False
+od_2.axis0.controller.config.enable_overspeed_error = False
+od_2.axis1.controller.config.enable_overspeed_error = False
+
+print("end of beginning")
+
+class ProjectNameGUI(App):
+    """
+    Class to handle running the GUI Application
+    """
 
     def build(self):
+        """
+        Build the application
+        :return: Kivy Screen Manager instance
+        """
         return SCREEN_MANAGER
 
+    print("class created")
 
+
+Window.clearcolor = (1, 1, 1, 1)  # White
 
 
 class MainScreen(Screen):
+    """
+    Class to handle the main screen and its associated touch events
+    """
+    count = 0
+    elapsed = ObjectProperty()
 
-    exit_button = ObjectProperty(None)
-    instructions_button = ObjectProperty(None)
-    continue_button = ObjectProperty(None)
+    def stop_time(self):
+        self.horse1_running = False
+        self.horse2_running = False
+        self.horse3_running = False
+        self.horse4_running = False
+        self.start_time_button.disabled = False
+        self.timer_status = False
 
-    def instructions_screen(self):
-        SCREEN_MANAGER.current = INSTRUCTIONS_SCREEN_NAME
 
-    def game_screen(self):
-        SCREEN_MANAGER.current = GAME_SCREEN_NAME
+    def start_time_thread(self):
+        Thread(target=self.start_time, daemon=True).start()
 
-    def exit_program(self):
+    def start_time(self):
+        #horse1_time = time()
+        #horse2_time = time()
+        #horse3_time = time()
+        #horse4_time = time()
+        start = time()
+        print("Start: Seconds since epoch =", start)
+        self.horse1_running = True
+        self.horse2_running = True
+        self.horse3_running = True
+        self.horse4_running = True
+        self.timer_status = True
+        self.start_time_button.disabled = True
+        while True:
+            self.elapsed = str(round((time() - start), 2))
+            if self.timer_status == False:
+                #self.elapsed = 0
+                #self.timer_horse1.text = self.elapsed
+                #self.timer_horse2.text = self.elapsed
+                #self.timer_horse3.text = self.elapsed
+                #self.timer_horse4.text = self.elapsed
+                break
+            else:
+                print("you have not pressed 'stop timer' yet")
+            if digital_read(od_2, 2) == 1 and self.horse1_running: #horse 1 is not sensing and variable reads True
+                self.timer_horse1.text = self.elapsed
+            else:
+                print("horse 1 sensed")
+                self.horse1_running = False
+            if digital_read(od_2, 8) == 1 and self.horse2_running: #horse 2 is not sensing
+                self.timer_horse2.text = self.elapsed
+            else:
+                print("horse 2 sensed")
+                self.horse2_running = False
+            if digital_read(od_1, 2) == 1 and self.horse3_running:
+                self.timer_horse3.text = self.elapsed
+            else:
+                print("horse 3 sensed")
+                self.horse3_running = False
+            if digital_read(od_1, 8) == 1 and self.horse4_running:
+                self.timer_horse4.text = self.elapsed
+            else:
+                print("horse 4 sensed")
+                self.horse4_running = False
+            sleep(.03)
+
+
+        # while digital_read(od_1, 8) == 1 & digital_read(od_1, 2) == 1 & digital_read(od_2, 8) == 1 & digital_read(od_2, 2) == 1:
+        #    print("No sensors sensing")
+        #    print("horse1_time = ", horse1_time )
+        #    sleep(1)
+        # while True:
+        #     if digital_read(od_1, 8) == 1 & digital_read(od_1, 2) == 1 & digital_read(od_2, 8) == 1 & digital_read(od_2, 2) == 1:
+        #         print("All sensors aren't sensing")
+        #         self.elapsed = str(round((time() - start), 2))
+        #         self.timer_horse1.text = self.elapsed
+        #         self.timer_horse2.text = self.elapsed
+        #         self.timer_horse3.text = self.elapsed
+        #         self.timer_horse4.text = self.elapsed
+        #         #self.ids.timer_horse1.text = str('four') #str(round(elapsed, 1))
+        #         print(self.elapsed)
+        #         sleep(0.05) #why ISN'T the timer reading every 0.5 seconds?
+        #     else:
+        #         print("a sensor is sensing, or there is an error")
+        #         break
+#----------------------------------------------------------------------------------------------------------------#
+          # digital_read(od_1, 8) == 0:  # ==0 means the sensor is on and sensing; this is for horse 4
+          # digital_read(od_1, 2) == 0:  # ==0 means the sensor is on and sensing; this is for horse 3
+          # digital_read(od_2, 8) == 0:  # ==0 means the sensor is on and sensing; this is for horse 2
+          # digital_read(od_2, 2) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
+
+
+    def check_end_sensor(self, horse, od_name, pin_number):
+        if digital_read(od_name, pin_number) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
+            print("sensor hit")
+            horse.set_vel(0)
+            sleep(.5)
+            horse.set_rel_pos_traj(1, 1, 1, 1)
+            #horse.wait_for_motor_to_stop()
+
+    def check_all_sensors(self):
+        while True:
+            self.check_end_sensor(horse1, od_2, 2)
+            self.check_end_sensor(horse2, od_2, 8)
+            self.check_end_sensor(horse3, od_1, 2)
+            self.check_end_sensor(horse4, od_1, 8)
+            sleep(.1)
+
+    def thread_check_all_sensors(self):
+        Thread(target=self.check_all_sensors, daemon=True).start()
+
+
+    def thread_end_sensor_horse1(self):
+        Thread(target=self.end_sensor_horse1, daemon=True).start()
+    def end_sensor_horse1(self):
+        while True:
+            #print("while True 1 running")
+            sleep(.1)
+            self.check_end_sensor(horse1, od_2, 2)
+            #if digital_read(od_2, 2) == 0: # ==0 means the sensor is on and sensing; this is for horse 1
+            #    print("sensor hit for horse1")
+            #    horse1.set_vel(0)
+            #    sleep(.5)
+            #    print("slept")
+            #    horse1.set_rel_pos_traj(1, 1, 1, 1)
+            #    horse1.wait_for_motor_to_stop()
+            #else:
+            #    #print("sensor1 not currently being hit")
+            #    sleep(.1)
+
+
+    def thread_end_sensor_horse2(self):
+        Thread(target=self.end_sensor_horse2, daemon=True).start()
+    def end_sensor_horse2(self):
+        while True:
+            #print("while True 2 running")
+            sleep(.1)
+            self.check_end_sensor(horse2, od_2, 8)
+
+
+    def thread_end_sensor_horse3(self):
+        Thread(target=self.end_sensor_horse3, daemon=True).start()
+    def end_sensor_horse3(self):
+        while True:
+            #print("while True 3 running")
+            sleep(.1)
+            self.check_end_sensor(horse3, od_1, 2)
+
+
+    def thread_end_sensor_horse4(self):
+        Thread(target=self.end_sensor_horse4, daemon=True).start()
+    def end_sensor_horse4(self):
+        while True:
+            #print("while True 4 running")
+            sleep(.1)
+            self.check_end_sensor(horse4, od_1, 8)
+
+
+##CONNECTED TO THE VELOCITY SLIDER##
+    def thread_velocity_function_horse1(self):
+        Thread(target=self.velocity_function_horse1, daemon=True).start()
+
+    def velocity_function_horse1(self):
+        horse1.set_vel(-self.velocity_slider_horse1.value)
+        self.velocity_slider_horse1.text = str(round(self.velocity_slider_horse1.value))
+        print('horse1 slider activated')
+
+
+    def thread_velocity_function_horse2(self):
+        Thread(target=self.velocity_function_horse2, daemon=True).start()
+    def velocity_function_horse2(self):
+        horse2.set_vel(-self.velocity_slider_horse2.value)
+        self.velocity_slider_horse2.text = str(round(self.velocity_slider_horse2.value))
+        print('horse2 slider activated')
+
+    def thread_velocity_function_horse3(self):
+        Thread(target=self.velocity_function_horse3, daemon=True).start()
+    def velocity_function_horse3(self):
+        horse3.set_vel(-self.velocity_slider_horse3.value)
+        self.velocity_slider_horse3.text = str(round(self.velocity_slider_horse3.value))
+        print('horse3 slider activated')
+
+    def thread_velocity_function_horse4(self):
+        Thread(target=self.velocity_function_horse4, daemon=True).start()
+
+    def velocity_function_horse4(self):
+        horse4.set_vel(-self.velocity_slider_horse4.value)
+        self.velocity_slider_horse4.text = str(round(self.velocity_slider_horse4.value))
+        print('horse4 slider activated')
+
+
+
+##CONNECTED TO THE ACCELERATION SLIDER##
+    def acceleration_function(self):
+        self.acceleration_slider.text = str(round(self.acceleration_slider.value))
+        print('slider activated')
+
+    def switch_to_traj(self):
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = TRAJ_SCREEN_NAME
+
+    def switch_to_gpio(self):
+        SCREEN_MANAGER.transition.direction = "right"
+        SCREEN_MANAGER.current = GPIO_SCREEN_NAME
+
+
+##CONNECTED TO THE HOME BUTTON##
+
+    def home_all_horses(self):
+        horses = [horse1, horse2, horse3, horse4]
+        for horse in horses:
+            horse.set_ramped_vel(1, 1)
+        sleep(1)
+        for horse in horses:
+            horse.wait_for_motor_to_stop()# waiting until motor slowly hits wall
+        for horse in horses:
+            horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
+        sleep(3)  # allows motor to start moving to offset position
+        for horse in horses:
+            horse.wait_for_motor_to_stop()
+        for horse in horses:
+            horse.set_home()
+
+
+
+    #def thread_home_without_endstop(self):
+    #    Thread(target=self.horse1_home_without_endstop, daemon=True).start()
+    #    Thread(target=self.horse2_home_without_endstop, daemon=True).start()
+    #    Thread(target=self.horse3_home_without_endstop, daemon=True).start()
+    #    Thread(target=self.horse4_home_without_endstop, daemon=True).start()
+    #   # self.horse1_home_without_endstop()
+    #   # self.horse2_home_without_endstop()
+    #   # self.horse3_home_without_endstop()
+    #   # self.horse4_home_without_endstop( )
+#
+    #def horse1_home_without_endstop(self):
+    #    horse1.home_without_endstop(1, -.5)
+    #    print("thread ran for horse1")
+    #def horse2_home_without_endstop(self):
+    #    horse2.home_without_endstop(1, -.5)
+    #    print("thread ran for horse2")
+    #def horse3_home_without_endstop(self):
+    #    horse3.home_without_endstop(1, -.5)
+    #    print("thread ran for horse3")
+    #def horse4_home_without_endstop(self):
+    #    horse4.home_without_endstop(1, -.5)
+    #    print("thread ran for horse4")
+
+##CONNECTED TO MOTOR TOGGLE BUTTON##
+    def motor_toggle(self):
+        #horse3.set_relative_pos(0)
+        print(horse3.get_vel())
+        #dump_errors(od)
+        if horse3.get_vel() <= 0.2:
+            if self.count%2 == 0:
+                horse3.set_rel_pos_traj(10, self.acceleration_slider.value, 10, self.acceleration_slider.value)
+                print('If vel = 0 and count% = 0 : horse3.set_rel_pos_traj(-5, .5, 1, .5)')
+                self.count += 1
+            elif self.count%2 == 1:
+                horse3.set_rel_pos_traj(-10, self.acceleration_slider.value, 10, self.acceleration_slider.value)
+                print('If vel = 0 and count% = 1 : horse3.set_rel_pos_traj(5, .5, 1, .5)')
+                self.count += 1
+            else:
+                print("motor_toggle command malfunction")
+        else:
+            if self.count%2 == 0:
+                horse3.set_rel_pos_traj(5, self.acceleration_slider.value, self.velocity_slider_horse3.value, self.acceleration_slider.value)
+                print('If vel = moving and count% = 0 : horse3.set_rel_pos_traj(5, .5, var, .5)')
+                #horse3.set_vel_limit(self.velocity_slider.value)
+                #horse3.set_relative_pos(-5)
+                self.count += 1
+            elif self.count%2 == 1:
+                horse3.set_rel_pos_traj(-5, self.acceleration_slider.value, self.velocity_slider_horse3.value, self.acceleration_slider.value)
+                print('If vel = moving and count% = 1 : horse3.set_rel_pos_traj(-5, .5, var, .5)')
+                #horse3.set_vel_limit(self.velocity_slider.value)
+                #horse3.set_relative_pos(5)
+                self.count += 1
+            else:
+                print("motor_toggle command malfunction")
+
+    def admin_action(self):
+        """
+        Hidden admin button touch event. Transitions to passCodeScreen.
+        This method is called from pidev/kivy/PassCodeScreen.kv
+        :return: None
+        """
+        SCREEN_MANAGER.current = 'passCode'
+
+    print("screen 1 created")
+
+
+class TrajectoryScreen(Screen):
+    """
+    Class to handle the trajectory control screen and its associated touch events
+    """
+
+    def switch_screen(self):
+        SCREEN_MANAGER.transition.direction = "right"
+        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+
+    def submit_trapezoidal_traj(self):
+        horse3.set_vel_limit(10)
+        horse3.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+
+class GPIOScreen(Screen):
+    """
+    Class to handle the GPIO screen and its associated touch/listening events
+    """
+
+    #horse3.home_with_endstop(self, vel, offset, min_gpio_num):
+
+    def homing_switch(self):
+        horse3.home_with_endstop(1, 1, 2)
+        horse4.home_with_endstop(1, 1, 2)
+
+    def switch_screen(self):
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+
+    print("gpio screen created")
+
+
+class AdminScreen(Screen):
+    """
+    Class to handle the AdminScreen and its functionality
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Load the AdminScreen.kv file. Set the necessary names of the screens for the PassCodeScreen to transition to.
+        Lastly super Screen's __init__
+        :param kwargs: Normal kivy.uix.screenmanager.Screen attributes
+        """
+        Builder.load_file('AdminScreen.kv')
+
+        PassCodeScreen.set_admin_events_screen(
+            ADMIN_SCREEN_NAME)  # Specify screen name to transition to after correct password
+        PassCodeScreen.set_transition_back_screen(
+            MAIN_SCREEN_NAME)  # set screen name to transition to if "Back to Game is pressed"
+
+        super(AdminScreen, self).__init__(**kwargs)
+
+        print("admin screen created")
+
+    @staticmethod
+    def transition_back():
+        """
+        Transition back to the main screen
+        :return:
+        """
+        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+
+    @staticmethod
+    def shutdown():
+        """
+        Shutdown the system. This should free all steppers and do any cleanup necessary
+        :return: None
+        """
+        os.system("sudo shutdown now")
+
+    @staticmethod
+    def exit_program():
+        """
+        Quit the program. This should free all steppers and do any cleanup necessary
+        :return: None
+        """
         quit()
 
+    print("static methods created")
 
 
-
-class InstructionsScreen(Screen):
-
-    def main_screen(self):
-        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-
-
-class GameScreen(Screen):
-
-    global race_finished
-
-    check = 0
-
-    back_button_2 = ObjectProperty(None)
-    baseline_button = ObjectProperty(None)
-    steady_button = ObjectProperty(None)
-    zen_button = ObjectProperty(None)
-    chaos_button = ObjectProperty(None)
-
-    def follow(self, f):
-        f.seek(0, 2)
-        while True:
-            curr_line = f.readline()
-            if not curr_line:
-                sleep(1)
-                curr_line = f.readline()
-                if not curr_line:
-                    return
-            yield curr_line
-
-    def enable_buttons(self):
-        self.steady_button.disabled = False
-        self.chaos_button.disabled = False
-        self.zen_button.disabled = False
-
-    def disable_buttons(self):
-        self.steady_button.disabled = True
-        self.chaos_button.disabled = True
-        self.zen_button.disabled = True
-
-    def read_btle(self, out):
-        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
-        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
-
-    def start_baseline_thread(self):
-        Thread(target=self.get_baseline).start()
-        self.baseline_button.text == "..."
-
-
-
-    def main_screen(self):
-        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-
-    def get_baseline(self):
-        global baseline_1
-
-        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
-        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
-        bt_thread.daemon = True
-        bt_thread.start()
-        sleep(4)
-
-        with open(output_filename, "r") as logfile:
-            loglines = self.follow(logfile)
-            count = 0
-            baseline = 0
-            heart_rate = []
-
-            for line in loglines:
-                hr_in_hex = line[39:41]
-
-
-                if count != 10 and baseline == 0:
-                    heart_rate.append(int(hr_in_hex, 16))
-                    print(heart_rate[count])
-                    count += 1
-                    self.baseline_button.text = "." * ((count%3) + 1)
-                    sleep(0.5)
-
-                elif count == 10 and baseline == 0:
-                    print("Getting average...")
-                    self.baseline_button.text = "Get Baseline"
-                    baseline_1 = self.get_avg(heart_rate)
-                    baseline += 1
-                    heart_rate.clear()
-                    count = 0
-                    self.check = 1
-                    self.enable_buttons()
-                    print("Baseline is:", )
-
-
-
-    def prepare_race(self):
-        race_finished = False
-        ax.set_vel(0)
-        self.disable_buttons()
-        ax.set_vel(1)
-        while ax.is_busy():
-            sleep(1)
-        ax.set_vel(0)
-        ax.set_vel_limit(5)
-        ax.set_pos_traj((ax.get_pos() - 0.5), 0.5, 1, 0.5)
-        while ax.is_busy():
-            sleep(0.5)
-        ax.set_home()
-        if self.check == 1:
-            self.enable_buttons()
-        sleep(1)
-
-    def get_avg(self,heart_rate):
-        print("Getting baseline...")
-        total = 0
-        for element in heart_rate:
-            total += element
-
-        avg = total / len(heart_rate)
-        return avg
-
-    def run_chaos_thread(self):
-        self.prepare_race
-        self.counter_screen()
-        Thread(target=self.run_chaos_setting).start()
-
-    def run_chaos_setting(self):
-        SCREEN_MANAGER.current = CHAOS_SCREEN_NAME
-
-    def run_steady_thread(self):
-        self.run_steady_setting()
-        Thread(target=self.run_steady_setting).start()
-
-    def run_steady_setting(self):
-        SCREEN_MANAGER.current = STEADY_SCREEN_NAME
-
-    def run_zen_thread(self):
-        self.counter_screen()
-        Thread(target=self.run_zen_setting).start()
-
-    def run_zen_setting(self):
-        SCREEN_MANAGER.current = ZEN_SCREEN_NAME
-
-
-    def test_motor_screen(self):
-        SCREEN_MANAGER.current = TEST_SCREEN_NAME
-
-
-class ChaosScreen(Screen):
-
-    global race_finished
-
-    text_button = ObjectProperty(None)
-    back_button = ObjectProperty(None)
-
-    count = 0
-    i = 5
-
-    def sensor_check(self):
-        while self.check_gpio() == False:
-            sleep(0.01)
-        print("You won!")
-        race_finished = True
-        sleep(5)
-        self.enable_back_button()
-        self.game_screen()
-
-    def check_gpio(self):
-        if od.get_gpio_states() & 0b100 == 0:
-            return True
-        else:
-            return False
-
-    def read_btle(self, out):
-        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
-        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
-
-    def follow(self, f):
-        f.seek(0, 2)
-        while True:
-            curr_line = f.readline()
-            if not curr_line:
-                sleep(1)
-                curr_line = f.readline()
-                if not curr_line:
-                    return
-            yield curr_line
-
-    def get_diff(self, heart_rate, baseline):
-        max = heart_rate[0]
-
-        for element in heart_rate:
-            if element > max:
-                max = element
-        diff = max - baseline
-        print("Max is:", max)
-        print("Baseline is:", baseline_1)
-        print("Difference is:", diff)
-        return diff
-
-    def start_chaos_thread(self):
-        Thread(target=self.countdown).start()
-        Thread(target=self.sensor_check).start()
-
-    def countdown(self):
-        self.i = 5
-        self.text_button.text = str(self.i)
-        self.disable_back_button()
-        sleep(1)
-        while self.i > 0:
-            self.i -= 1
-            sleep(1)
-            self.text_button.text = str(self.i)
-
-        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
-        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
-        bt_thread.daemon = True
-        bt_thread.start()
-
-
-        with open(output_filename, "r") as logfile:
-            loglines = self.follow(logfile)
-            count = 0
-            heart_rate = []
-
-            for line in loglines:
-                hr_in_hex = line[39:41]
-
-
-                if count != 5:
-
-                    heart_rate.append(int(hr_in_hex, 16))
-                    self.text_button.text = str(heart_rate[count])
-                    count += 1
-                    sleep(0.25)
-
-                elif count == 5:
-
-                    diff = self.get_diff(heart_rate, baseline_1)
-                    count = 0
-
-                    if diff <= 1:
-                        ax.set_vel(-0.1)
-                        print("Low Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    elif diff > 30:
-                        ax.set_vel(-1)
-                        print("Max Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    else:
-                        ax.set_vel(diff / (-30))
-                        print("Normal Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    count = 0
-                    heart_rate.clear()
-
-    def game_screen(self):
-        SCREEN_MANAGER.current = GAME_SCREEN_NAME
-
-
-    def chaos_setting(self):
-        self.start_chaos_thread()
-
-    def enable_back_button(self):
-        self.back_button.disabled = False
-
-    def disable_back_button(self):
-        self.back_button.disabled = True
-
-
-
-
-
-
-class ZenScreen(Screen):
-
-    global race_finished
-
-    text_button = ObjectProperty(None)
-    back_button = ObjectProperty(None)
-
-    count = 0
-    i = 5
-
-    def sensor_check(self):
-        while self.check_gpio() == False:
-            sleep(0.01)
-        print("You won!")
-        race_finished = True
-        sleep(5)
-        self.enable_back_button()
-        self.game_screen()
-
-    def check_gpio(self):
-        if od.get_gpio_states() & 0b100 == 0:
-            return True
-        else:
-            return False
-
-    def read_btle(self, out):
-        # A0:9E:1A:5E:EF:F6 represents MAC Address of Polar H7 device
-        os.system("gatttool -b A0:9E:1A:5E:EF:F6 --char-write-req --handle=0x0013 --value=0100 --listen > " + out)
-
-    def follow(self, f):
-        f.seek(0, 2)
-        while True:
-            curr_line = f.readline()
-            if not curr_line:
-                sleep(1)
-                curr_line = f.readline()
-                if not curr_line:
-                    return
-            yield curr_line
-
-    def get_diff(self, heart_rate, baseline):
-        max = heart_rate[0]
-
-        for element in heart_rate:
-            if element > max:
-                max = element
-        diff = max - baseline
-        print("Max is:", max)
-        print("Baseline is:", baseline_1)
-        print("Difference is:", diff)
-        return diff
-
-    def start_zen_thread(self):
-        Thread(target=self.countdown).start()
-        Thread(target=self.sensor_check).start()
-
-    def countdown(self):
-        self.i = 5
-        self.text_button.text = str(self.i)
-        self.disable_back_button()
-        sleep(1)
-        while self.i > 0:
-            self.i -= 1
-            sleep(1)
-            self.text_button.text = str(self.i)
-
-        output_filename = "hr_output_" + str(datetime.now().strftime("%m-%d-%Y")) + ".txt"
-        bt_thread = Thread(target=lambda: self.read_btle(output_filename))
-        bt_thread.daemon = True
-        bt_thread.start()
-
-
-        with open(output_filename, "r") as logfile:
-            loglines = self.follow(logfile)
-            count = 0
-            heart_rate = []
-
-            for line in loglines:
-                hr_in_hex = line[39:41]
-
-
-                if count != 5:
-
-                    heart_rate.append(int(hr_in_hex, 16))
-                    self.text_button.text = str(heart_rate[count])
-                    count += 1
-                    sleep(0.25)
-
-                elif count == 5:
-
-                    diff = self.get_diff(heart_rate, baseline_1)
-                    count = 0
-
-                    if diff <= 1:
-                        ax.set_vel(-0.1)
-                        print("Low Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    elif diff > 30:
-                        ax.set_vel(-1)
-                        print("Max Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    else:
-                        ax.set_vel(diff / (-30))
-                        print("Normal Setting")
-                        print("Velocity is:", ax.get_vel())
-
-                    count = 0
-                    heart_rate.clear()
-
-    def game_screen(self):
-        SCREEN_MANAGER.current = GAME_SCREEN_NAME
-
-
-    def zen_setting(self):
-        self.start_chaos_thread()
-
-    def enable_back_button(self):
-        self.back_button.disabled = False
-
-    def disable_back_button(self):
-        self.back_button.disabled = True
-
-
-
-class SteadyScreen(Screen):
-    pass
-
-
-
-
-class TestScreen(Screen):
-    back_button_3 = ObjectProperty(None)
-    motor_speed = ObjectProperty(None)
-    count_slider = ObjectProperty(None)
-    test_button = ObjectProperty(None)
-    testindefinitely_button = ObjectProperty(None)
-
-    def main_screen(self):
-        SCREEN_MANAGER.current = GAME_SCREEN_NAME
-
-    def test_motor(self):
-        i = 0
-        while i < self.count_slider.value:
-            ax.set_vel_limit(5)
-            ax.set_pos_traj(-8,self.motor_speed.value/10,self.motor_speed.value/5,self.motor_speed.value/10)
-            while ax.is_busy():
-                sleep(5)
-            ax.set_pos_traj(0,self.motor_speed.value/10,self.motor_speed.value/5,self.motor_speed.value/10)
-            while ax.is_busy():
-                sleep(5)
-            i+=1
-
-    def test_indefinitely(self):
-        while True:
-            ax.set_vel_limit(5)
-            ax.set_pos_traj(-8, self.motor_speed.value / 10, self.motor_speed.value / 5, self.motor_speed.value / 10)
-            while ax.is_busy():
-                sleep(5)
-            ax.set_pos_traj(0, self.motor_speed.value / 10, self.motor_speed.value / 5, self.motor_speed.value / 10)
-            while ax.is_busy():
-                sleep(5)
-
+"""
+Widget additions
+"""
 
 Builder.load_file('main.kv')
-Builder.load_file('GameScreen.kv')
-Builder.load_file('InstructionsScreen.kv')
-Builder.load_file('CounterScreen.kv')
-Builder.load_file('TestScreen.kv')
-Builder.load_file('ChaosScreen.kv')
-Builder.load_file('ZenScreen.kv')
-Builder.load_file('ChaosScreen.kv')
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
-SCREEN_MANAGER.add_widget(InstructionsScreen(name=INSTRUCTIONS_SCREEN_NAME))
-SCREEN_MANAGER.add_widget(GameScreen(name=GAME_SCREEN_NAME))
-SCREEN_MANAGER.add_widget(TestScreen(name=TEST_SCREEN_NAME))
-SCREEN_MANAGER.add_widget(SteadyScreen(name=STEADY_SCREEN_NAME))
-SCREEN_MANAGER.add_widget(ChaosScreen(name=CHAOS_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(TrajectoryScreen(name=TRAJ_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(GPIOScreen(name=GPIO_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(PassCodeScreen(name='passCode'))
+SCREEN_MANAGER.add_widget(PauseScreen(name='pauseScene'))
+SCREEN_MANAGER.add_widget(AdminScreen(name=ADMIN_SCREEN_NAME))
+print("various screens created")
+
+"""
+MixPanel
+"""
 
 
 def send_event(event_name):
+    """
+    Send an event to MixPanel without properties
+    :param event_name: Name of the event
+    :return: None
+    """
     global MIXPANEL
 
     MIXPANEL.set_event_name(event_name)
     MIXPANEL.send_event()
+    print("mix panel")
 
-if __name__ == '__main__':
-    MainApp().run()
+
+if __name__ == "__main__":
+    #send_event("Project Initialized")
+    # Window.fullscreen = 'auto'
+    print("done setting up")
+    ProjectNameGUI().run()
+

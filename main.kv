@@ -1,49 +1,394 @@
 <MainScreen>:
 
     name: 'main'
-
-    exit_button:exit_button
-    instructions_button:instructions_button
-    continue_button:continue_button
-
-    canvas.before:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            source: "horse_race.JPG"
+    velocity_slider_horse1: velocity_slider_horse1
+    velocity_slider_label_horse1: velocity_slider_label_horse1
+    velocity_slider_horse2: velocity_slider_horse2
+    velocity_slider_label_horse2: velocity_slider_label_horse2
+    velocity_slider_horse3: velocity_slider_horse3
+    velocity_slider_label_horse3: velocity_slider_label_horse3
+    velocity_slider_horse4: velocity_slider_horse4
+    velocity_slider_label_horse4: velocity_slider_label_horse4
+    #acceleration_slider: acceleration_slider
+    #acceleration_slider_label: acceleration_slider_label
+    on_enter: root.thread_check_all_sensors()
+    #on_enter: root.thread_end_sensor_horse2()
+    #on_enter: root.thread_end_sensor_horse3()
+    #on_enter: root.thread_end_sensor_horse4()
+    timer_horse1: timer_horse1
+    timer_horse2: timer_horse2
+    timer_horse3: timer_horse3
+    timer_horse4: timer_horse4
+    start_time_button: start_time_button
 
     FloatLayout:
         size_hint: None, None
-        source: "horse_race.JPG"
-        allow_stretch: True
-        keep_ratio: False
 
     DPEAButton:
-        id: instructions_button
-        text: 'How to Play'
-        size_hint: 0.27, 0.11
-        x: root.width * .17
-        y: root.height * 0.22
-        color: 0.834, 0.23, 0.11, 1
-        on_press: root.instructions_screen()
+        id: test_button
+        text: '>'
+        font_size: self.width * .5
+        size_hint: .1, 1
+        pos_hint: {"x": .9, "y":0}
+        color: 0, 1, 0, 1
+        on_press: root.switch_to_traj()
 
     DPEAButton:
-        id: continue_button
-        text: 'Continue'
-        size_hint: 0.27, 0.11
-        x: root.width * 0.56
-        y: root.height * 0.22
-        color: 0.834, 0.23, 0.11, 1
-        on_press: root.game_screen()
+        text: "<"
+        font_size: self.width * .5
+        size_hint: .1, 1
+        pos_hint: {"x": 0, "y":0}
+        color: 1, 0, 0, 1
+        on_press: root.switch_to_gpio()
+
+    #DPEAButton:
+    #    text: 'Motor Toggle'
+    #    size: 100, 100
+    #    x: root.width * .15
+    #    y: root.height * .6
+    #    color: 0, .5, .5, 1
+    #    on_press: root.motor_toggle()
 
     DPEAButton:
-        id: exit_button
-        text: 'Exit'
-        size_hint: 0.27, 0.11
-        x: root.width * 0.73
-        y: root.height * 0.89
-        color: 0.834, 0.23, 0.11, 1
-        on_press: root.exit_program()
+        text: 'Home'
+        size: 100, 100
+        x: root.width * .15
+        y: root.height * .8
+        color: 0, .5, .5, 1
+        on_press: root.home_all_horses()
+
+############################################################# TIME LABELS
+    Label:
+        id: timer_horse1
+        text: '0.0'
+        #text: str(100.25)
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.2
+        center_y: root.height * 0.7
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: timer_horse2
+        text: str(round(velocity_slider_horse1.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.4
+        center_y: root.height * 0.7
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: timer_horse3
+        text: str(round(velocity_slider_horse1.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.6
+        center_y: root.height * 0.7
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: timer_horse4
+        text: str(round(velocity_slider_horse1.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.8
+        center_y: root.height * 0.7
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    DPEAButton:
+        id: start_time_button
+        text: 'Start Timer'
+        size: 100, 100
+        x: root.width * .35
+        y: root.height * .8
+        color: 0, 1, 0, 1
+        on_press: root.start_time_thread()
+
+    DPEAButton:
+        id: stop_time_button
+        text: 'Stop Timer'
+        size: 100, 100
+        x: root.width * .55
+        y: root.height * .8
+        color: 0, 1, 0, 1
+        on_press: root.stop_time()
 
 
 
+
+############################################################
+
+##CONSTUCTS THE VELOCITY SLIDER AND LABELING##
+    Slider:
+        id: velocity_slider_horse1
+        size_hint: .1 ,.5
+        x: root.width * 0.15
+        min: 0
+        max: .7
+        step: .7
+        orientation: 'vertical'
+        sensitivity: 'handle'
+        on_value: root.velocity_function_horse1()
+
+    Label:
+        id: velocity_slider_label_horse1
+        text: str(round(velocity_slider_horse1.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.2
+        center_y: root.height * 0.5
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: label_horse1
+        text: 'Horse 1'
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.2
+        center_y: root.height * 0.42
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 20
+
+
+
+#########################################################################
+
+    Slider:
+        id: velocity_slider_horse2
+        size_hint: .1 ,.5
+        x: root.width * 0.35
+        min: 0
+        max: .7
+        step: 0.7
+        orientation: 'vertical'
+        sensitivity: 'handle'
+        on_value: root.velocity_function_horse2()
+
+    Label:
+        id: velocity_slider_label_horse2
+        text: str(round(velocity_slider_horse2.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.4
+        center_y: root.height * 0.5
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: label_horse2
+        text: 'Horse 2'
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.4
+        center_y: root.height * 0.42
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 20
+########################################################################3
+    Slider:
+        id: velocity_slider_horse3
+        size_hint: .1 ,.5
+        x: root.width * 0.55
+        min: 0
+        max: .7
+        step: 0.7
+        orientation: 'vertical'
+        sensitivity: 'handle'
+        on_value: root.velocity_function_horse3()
+
+    Label:
+        id: velocity_slider_label_horse3
+        text: str(round(velocity_slider_horse3.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.6
+        center_y: root.height * 0.5
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: label_horse3
+        text: 'Horse 3'
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.6
+        center_y: root.height * 0.42
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 20
+
+########################################################################
+
+    Slider:
+        id: velocity_slider_horse4
+        size_hint: .1 ,.5
+        x: root.width * 0.75
+        min: 0
+        max: .7
+        step: 0.7
+        orientation: 'vertical'
+        sensitivity: 'handle'
+        on_value: root.velocity_function_horse4()
+
+    Label:
+        id: velocity_slider_label_horse4
+        text: str(round(velocity_slider_horse4.value, 2))
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.8
+        center_y: root.height * 0.5
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 50
+
+    Label:
+        id: label_horse4
+        text: 'Horse 4'
+        size_hint: None, None
+        color: 0, .5, .5, 1
+        center_x: root.width * 0.8
+        center_y: root.height * 0.42
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+        font_size: 20
+
+        ##############################################################################
+        ###############################################################################
+        ###############################################################################
+        ###################### BELOW THIS IS ACCELERATION STUFF ########################
+        ###############################################################################
+        ###############################################################################
+        ##############################################################################
+
+
+    #Label:
+    #    id: acceleration_label
+    #    text: 'Acceleration'
+    #    size_hint: None, None
+    #    color: 0, .5, .5, 1
+    #    center_x: root.width * 0.65
+    #    center_y: root.height * 0.42
+    #    bold: True
+    #    outline_width: self.font_size * 0.1
+    #    outline_color: 0, 0, 0
+    #    font_size: 20
+#
+    #Label:
+    #    id: acceleration_slider_label
+    #    text: str(round(acceleration_slider.value, 2))
+    #    size_hint: None, None
+    #    color: 0, .5, .5, 1
+    #    center_x: root.width * 0.65
+    #    center_y: root.height * 0.5
+    #    bold: True
+    #    outline_width: self.font_size * 0.1
+    #    outline_color: 0, 0, 0
+    #    font_size: 50
+#
+    #Slider:
+    #    id: acceleration_slider
+    #    size_hint: .1 ,1
+    #    x: root.width * 0.6
+    #    min: 0
+    #    max: 10
+    #    step: 0.01
+    #    orientation: 'vertical'
+    #    sensitivity: 'handle'
+    #    on_value: root.acceleration_function()
+
+<TrajectoryScreen>:
+
+    name: 'main'
+    target_position: target_position
+    acceleration: acceleration
+    target_speed: target_speed
+    deceleration: deceleration
+    submit_button: submit_button
+
+    FloatLayout:
+        size_hint: None, None
+
+    DPEAButton:
+        id: test_button
+        text:'back'
+        size: 100, 100
+        pos_hint: {"center_x": 0.5, "center_y":0.7}
+        color: 0, 1, 0, 1
+        on_press: root.switch_screen()
+
+    TextInput:
+        id: target_position
+        hint_text: 'target position'
+        size_hint: .35, .1
+        font_size: 40
+        pos_hint: {"center_x": 0.5, "center_y":0.45}
+
+    TextInput:
+        id: acceleration
+        hint_text: 'acceleration'
+        size_hint: .35, .1
+        font_size: 40
+        pos_hint: {"center_x": 0.5, "center_y":0.35}
+
+    TextInput:
+        id: target_speed
+        hint_text: 'target speed'
+        size_hint: .35, .1
+        font_size: 40
+        pos_hint: {"center_x": 0.5, "center_y":0.25}
+
+    TextInput:
+        id: deceleration
+        hint_text: 'deceleration'
+        size_hint: .35, .1
+        font_size: 40
+        pos_hint: {"center_x": 0.5, "center_y":0.15}
+
+    DPEAButton:
+        id: submit_button
+        text:'submit'
+        size: 100, 100
+        pos_hint: {"center_x": 0.75, "center_y":0.2}
+        color: 0, 1, 0, 1
+        on_press: root.submit_trapezoidal_traj()
+
+<GPIOScreen>:
+
+    name: 'main'
+    on_enter: root.homing_switch()
+
+    FloatLayout:
+        size_hint: None, None
+
+    DPEAButton:
+        id: test_button
+        text:'back'
+        size: 100, 100
+        pos_hint: {"center_x": 0.5, "center_y":0.5}
+        color: 0, 1, 0, 1
+        on_press: root.switch_screen()
