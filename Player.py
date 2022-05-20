@@ -2,7 +2,7 @@ import pygatt
 from binascii import hexlify
 from time import sleep
 from odrive_helpers import *
-
+from threading import Thread
 
 class Player:
 
@@ -10,14 +10,28 @@ class Player:
         "49A85121": "A0:9E:1A:49:A8:51",
         "5EEFF62F": "A0:9E:1A:5E:EF:F6",
         "A3DDF820": "C6:4B:DF:A5:36:0B",
-        "9F43FF2B": "F8:FF:5C:77:2A:A1",
-        "A3DDDD2F": "EF:FD:6F:EE:D7:81" #horse 1
+        "9F43FF2B": "F8:FF:5C:77:2A:A1", #horse2
+        "A3DDDD2F": "EF:FD:6F:EE:D7:81" #horse1
     }
 
     def __init__(self, deviceID, od, axis):
         self.deviceID = deviceID
         self.od = od
         self.axis = axis
+
+    def check_end_sensor_player_version(self, horse, od_name, pin_number):
+        if digital_read(od_name, pin_number) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
+            print("sensor hit")
+            horse.set_vel(0)
+            sleep(.5)
+            horse.set_rel_pos_traj(1, 1, 1, 1)
+            #horse.wait_for_motor_to_stop()
+    def check_sensors_player_version(self):
+        while True:
+            self.check_end_sensor_player_version(horse1, od_2, 2)
+            sleep(.1)
+    def thread_check_all_sensors_player_version(self):
+        Thread(target=self.check_sensors_player_version, daemon=True).start()
 
     def heart_rate_average(self, lst):
         return sum(lst) / len(lst)
@@ -44,20 +58,24 @@ class Player:
                 print("Average Value: ", average)
                 #print("Delta: ", rate - average)
                 maxSpeed = average + 50
-                speed = ((10*((Crate-average)/(maxSpeed-average))) + 1)/10
+                speed = ((10*((Crate-average)/(maxSpeed-average))) + 1)/5
 
                 accel = 2
 
-                if 1/10 < speed < 11/10:
+                if speed == 0:
+                    speed = 0
+                    self.axis.set_ramped_vel(-speed, accel)
+
+                if 1/5 < speed < 11/5:
                     speed = speed
                     self.axis.set_ramped_vel(-speed, accel)
 
-                if speed < 1/10:
-                    speed = 1/10
+                if speed < 1/5:
+                    speed = 1/5
                     self.axis.set_ramped_vel(-speed, accel)
 
-                if speed > 11/10:
-                    speed = 11/10
+                if speed > 11/5:
+                    speed = 11/5
                     self.axis.set_ramped_vel(-speed, accel)
 
                 print("Speed: ", speed)

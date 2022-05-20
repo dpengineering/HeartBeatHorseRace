@@ -1,5 +1,8 @@
 import os
 import sys
+from Player import Player
+import pygatt
+
 
 # os.environ['DISPLAY'] = ":0.0"
 # os.environ['KIVY_WINDOW'] = 'egl_rpi'
@@ -127,6 +130,62 @@ class MainScreen(Screen):
     """
     count = 0
     elapsed = ObjectProperty()
+
+    def run_players(self):
+        adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
+        ##################adapter2 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
+        #adapter3 = pygatt.BGAPIBackend()
+        #adapter4 = pygatt.BGAPIBackend()
+        player1 = Player("EF:FD:6F:EE:D7:81", od_2, horse1)
+        ###########################player2 = Player("F8:FF:5C:77:2A:A1", od_2, horse2)
+        #player3 = Player("", od_1, horse3)
+        #player4 = Player("", od_1, horse4)
+        try:
+            adapter1.start()
+            ###############################adapter2.start()
+            #adapter3.start()
+            #adapter4.start()
+            hand_polar1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+            #####################hand_polar2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
+            #hand_polar3 = adapter3.connect(player3.deviceID, address_type=pygatt.BLEAddressType.random)
+            #hand_polar4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+            dump_errors(od_2)
+            #dump_errors(od_1)
+            hand_polar1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player1.handle_data_for_axis(0, []))
+            ############################hand_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player2.handle_data_for_axis(0, []))
+            #hand_polar3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player3.handle_data_for_axis(0, []))
+            #hand_polar4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player4.handle_data_for_axis(0, []))
+            horse1_finished = False
+            #horse2_finished = False
+            while not horse1_finished: #or not horse2_finished
+                if digital_read(od_2, 2) == 0:
+                    horse1.set_vel(2)
+                    sleep(1)
+                    horse1.set_vel(0)
+                    horse1_finished = True
+                #can include a second sensor read here
+                sleep(.1)
+            #horse1.set_rel_pos_traj(1, 1, 1, 1)
+            #sleep(1)
+            #horse1.wait_for_motor_to_stop()
+            print("done with try code")
+            #adapter1.stop()
+            #YOU CAN ALSO TRY ADAPTER1.STOP SO THAT IT DOESN'T EXIT TRY CODE
+
+        finally:
+            print("exited 'try' code")
+            adapter1.stop()
+            ############################adapter2.stop()
+            #adapter3.stop()
+            #adapter4.stop()
+            horse1.set_vel(0)
+            horse2.set_vel(0)
+            #horse3.set_vel(0)
+            #horse4.set_vel(0)
+            horse1.idle()
+            horse2.idle()
+            #horse3.idle()
+            #horse4.idle()
 
     def stop_time(self):
         self.horse1_running = False
