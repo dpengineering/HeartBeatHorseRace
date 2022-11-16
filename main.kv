@@ -1,20 +1,7 @@
 <MainScreen>:
 
     name: 'main'
-    #velocity_slider_horse1: velocity_slider_horse1
-    #velocity_slider_label_horse1: velocity_slider_label_horse1
-    #velocity_slider_horse2: velocity_slider_horse2
-    #velocity_slider_label_horse2: velocity_slider_label_horse2
-    #velocity_slider_horse3: velocity_slider_horse3
-    #velocity_slider_label_horse3: velocity_slider_label_horse3
-    #velocity_slider_horse4: velocity_slider_horse4
-    #velocity_slider_label_horse4: velocity_slider_label_horse4
-    #acceleration_slider: acceleration_slider
-    #acceleration_slider_label: acceleration_slider_label
     on_enter: root.thread_check_all_sensors()
-    #on_enter: root.thread_end_sensor_horse2()
-    #on_enter: root.thread_end_sensor_horse3()
-    #on_enter: root.thread_end_sensor_horse4()
     timer_horse1: timer_horse1
     timer_horse2: timer_horse2
     timer_horse3: timer_horse3
@@ -24,22 +11,32 @@
     FloatLayout:
         size_hint: None, None
 
-   # DPEAButton:
-   #     id: test_button
-   #     text: '>'
-   #     font_size: self.width * .5
-   #     size_hint: .1, 1
-   #     pos_hint: {"x": .9, "y":0}
-   #     color: 0, 1, 0, 1
-   #     on_press: root.switch_to_traj()
+    DPEAButton:
+        id: traj_button
+        text: 'TRAJ'
+        size: 100, 100
+        x: root.width * 0.85
+        y: root.height * 0.5
+        color: 0, 1, 0, 1
+        on_press: root.switch_to_traj()
 
-   # DPEAButton:
-   #     text: "<"
-   #     font_size: self.width * .5
-   #     size_hint: .1, 1
-   #     pos_hint: {"x": 0, "y":0}
-   #     color: 1, 0, 0, 1
-   #     on_press: root.switch_to_gpio()
+    DPEAButton:
+        id: gpio_button
+        text: "GPIO"
+        size: 100, 100
+        x: root.width * 0.15
+        y: root.height * 0.5
+        color: 1, 0, 0, 1
+        on_press: root.switch_to_gpio()
+
+    DPEAButton:
+        id: beginning_button
+        text: "Beginning"
+        size: 100, 100
+        x: root.width * 0.5
+        y: root.height * 0.25
+        color: 1, 0, 0, 1
+        on_press: root.switch_to_beginning()
 
     #DPEAButton:
     #    text: 'Motor Toggle'
@@ -57,13 +54,13 @@
         color: 0, .5, .5, 1
         on_press: root.home_all_horses()
 
-    DPEAButton:
-        text: 'Horse Start'
-        size: 100, 100
-        x: root.width * .45
-        y: root.height * .2
-        color: 0, .5, .5, 1
-        on_press: root.run_players()
+    #DPEAButton:
+    #    text: 'Horse Start'
+    #    size: 100, 100
+    #   x: root.width * .45
+    #   y: root.height * .2
+    #   color: 0, .5, .5, 1
+    #   on_press: root.run_players()
 
 ############################################################# TIME LABELS
     Label:
@@ -135,6 +132,15 @@
         y: root.height * .8
         color: 0, 1, 0, 1
         on_press: root.stop_time()
+
+    DPEAButton:
+        id: quit
+        text: 'Quit'
+        size: 100, 100
+        x: root.width * 0.85
+        y: root.height * 0.1
+        color: 1, 0, 0, 1
+        on_press: root.quit()
 
 
 
@@ -391,10 +397,18 @@
 <GPIOScreen>:
 
     name: 'main'
-    on_enter: root.homing_switch()
 
     FloatLayout:
         size_hint: None, None
+
+    DPEAButton:
+        id: newHome
+        text: 'New Home'
+        size: 100, 100
+        x: root.width * 0.5
+        y: root.height * 0.25
+        color: 0, 1, 0, 1
+        on_press: root.homing_switch()
 
     DPEAButton:
         id: test_button
