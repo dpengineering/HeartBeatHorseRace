@@ -1,0 +1,28 @@
+<BaselineScreen>:
+
+    name: 'baseline'
+
+    FloatLayout:
+        size_hint: None, None
+
+    Button:
+        id: heart
+        width: 100
+        size: 100, 100
+        x: root.width * 0.5
+        y: root.height * 0.5
+        size_hint: None, None
+        color: 1, 0, 0, 1
+        background_normal: "heart_icon.jpg"
+        text: "heart"
+        on_press: root.find_baseline()
+
+    DPEAButton:
+        id: goBack
+        text: 'Go Back'
+        size: 100, 100
+        x: root.width * 0.5
+        y: root.height * 0.05
+        color: 1, 0, 0, 1
+        on_press: root.switch_screen()
+

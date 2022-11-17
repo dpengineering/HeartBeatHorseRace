@@ -4,7 +4,7 @@ from Player import Player
 import pygatt
 from binascii import hexlify
 
-# os.environ['DISPLAY'] = ":0.0"
+os.environ['DISPLAY'] = ":0.0"
 # os.environ['KIVY_WINDOW'] = 'egl_rpi'
 
 from kivy.app import App
@@ -17,6 +17,7 @@ from odrive_helpers import digital_read
 from threading import Thread
 from time import time, sleep
 from kivy.properties import ObjectProperty
+from kivy.uix.image import Image
 
 from pidev.MixPanel import MixPanel
 from pidev.kivy.PassCodeScreen import PassCodeScreen
@@ -36,6 +37,7 @@ TRAJ_SCREEN_NAME = 'traj'
 GPIO_SCREEN_NAME = 'gpio'
 ADMIN_SCREEN_NAME = 'admin'
 BEGINNING_SCREEN_NAME = 'beginning'
+BASELINE_SCREEN_NAME = 'baseline'
 
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
@@ -130,8 +132,8 @@ def handle_data_for_player(player_num):
         #print(" " * (32 * player_num) + "Player %s Heart Rate: %s" % (player_num, int(hexlify(value)[2:4], 16)))
 
         # This sets each heart rate to a scaled value
-        t = int(hexlify(value)[2:4], 16) / 20
-        print(int(hexlify(value)[2:4], 16))
+        t = int(hexlify(value)[2:4], 16)
+        print("Player ", player_num, "'s Heartrate is ", str(t))
     return handle_data
 
 
@@ -156,7 +158,7 @@ Window.clearcolor = (1, 1, 1, 1)  # White
 adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
 adapter2 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
 adapter3 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM4')
-#adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM5')
+adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM5')
 
 
 class MainScreen(Screen):
@@ -519,7 +521,7 @@ class MainScreen(Screen):
 
 
 class BeginningScreen(Screen):
-    def switch_screen(self):
+    def switch_screen1(self):
         SCREEN_MANAGER.transition.direction = "down"
         SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
@@ -527,26 +529,96 @@ class BeginningScreen(Screen):
         player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
         player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
 
-        try:
-            adapter1.start()
-            print('adapter1 started')
-            adapter2.start()
-            print('adapter2 started')
+        adapter1.start()
+        print('adapter1 started')
+        adapter2.start()
+        print('adapter2 started')
 
-            vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-            vernier2 = adapter1.connect(player2.deviceID)
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
+        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier1 connected')
+        vernier2 = adapter1.connect(player2.deviceID)
+        print('vernier2 connected')
 
-        finally:
-            adapter1.stop()
-            adapter2.stop()
+        adapter1.stop()
+        print('adapter1 stopped')
+        adapter2.stop()
+        print('adapter2 stopped')
 
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
+    def three_players(self):
+        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+        player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
 
+        adapter1.start()
+        print('adapter1 started')
+        adapter2.start()
+        print('adapter2 started')
+        adapter3.start()
+        print('adapter3 started')
+
+        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier1 connected')
+        vernier2 = adapter1.connect(player2.deviceID)
+        print('vernier2 connected')
+        vernier3 = adapter3.connect(player3.deviceID)
+        print('vernier3 connected')
+
+        adapter1.stop()
+        adapter2.stop()
+        adapter3.stop()
+
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+    def four_players(self):
+        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+        player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
+        player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
+
+        adapter1.start()
+        print('adapter1 started')
+        adapter2.start()
+        print('adapter2 started')
+        adapter3.start()
+        print('adapter3 started')
+        adapter4.start()
+        print('adapter4 started')
+
+        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier1 connected')
+        vernier2 = adapter1.connect(player2.deviceID)
+        print('vernier2 connected')
+        vernier3 = adapter3.connect(player3.deviceID)
+        print('vernier3 connected')
+        vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier4 connected')
+
+        adapter1.stop()
+        adapter2.stop()
+        adapter3.stop()
+        adapter4.stop()
+
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
 
     print("Beginning Screen Created")
+
+
+class BaselineScreen(Screen):
+
+    def find_baseline(self):
+        return
+
+    def switch_screen(self):
+        SCREEN_MANAGER.transition.direction = "right"
+        SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
+
+    print("Baseline Screen Created")
 
 class TrajectoryScreen(Screen):
     """
@@ -645,10 +717,12 @@ Widget additions
 
 Builder.load_file('main.kv')
 Builder.load_file('BeginningScreen.kv')
+Builder.load_file('BaselineScreen.kv')
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(TrajectoryScreen(name=TRAJ_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(GPIOScreen(name=GPIO_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(BeginningScreen(name=BEGINNING_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(BaselineScreen(name=BASELINE_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(PassCodeScreen(name='passCode'))
 SCREEN_MANAGER.add_widget(PauseScreen(name='pauseScene'))
 SCREEN_MANAGER.add_widget(AdminScreen(name=ADMIN_SCREEN_NAME))
