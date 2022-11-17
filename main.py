@@ -378,46 +378,6 @@ class MainScreen(Screen):
             sleep(.1)
             self.check_end_sensor(horse4, od_1, 8)
 
-
-##CONNECTED TO THE VELOCITY SLIDER##
-    def thread_velocity_function_horse1(self):
-        Thread(target=self.velocity_function_horse1, daemon=True).start()
-
-    def velocity_function_horse1(self):
-        horse1.set_vel(-self.velocity_slider_horse1.value)
-        self.velocity_slider_horse1.text = str(round(self.velocity_slider_horse1.value))
-        print('horse1 slider activated')
-
-
-    def thread_velocity_function_horse2(self):
-        Thread(target=self.velocity_function_horse2, daemon=True).start()
-    def velocity_function_horse2(self):
-        horse2.set_vel(-self.velocity_slider_horse2.value)
-        self.velocity_slider_horse2.text = str(round(self.velocity_slider_horse2.value))
-        print('horse2 slider activated')
-
-    def thread_velocity_function_horse3(self):
-        Thread(target=self.velocity_function_horse3, daemon=True).start()
-    def velocity_function_horse3(self):
-        horse3.set_vel(-self.velocity_slider_horse3.value)
-        self.velocity_slider_horse3.text = str(round(self.velocity_slider_horse3.value))
-        print('horse3 slider activated')
-
-    def thread_velocity_function_horse4(self):
-        Thread(target=self.velocity_function_horse4, daemon=True).start()
-
-    def velocity_function_horse4(self):
-        horse4.set_vel(-self.velocity_slider_horse4.value)
-        self.velocity_slider_horse4.text = str(round(self.velocity_slider_horse4.value))
-        print('horse4 slider activated')
-
-
-
-##CONNECTED TO THE ACCELERATION SLIDER##
-    def acceleration_function(self):
-        self.acceleration_slider.text = str(round(self.acceleration_slider.value))
-        print('slider activated')
-
     def switch_to_traj(self):
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = TRAJ_SCREEN_NAME
