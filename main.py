@@ -2,9 +2,9 @@ import os
 import sys
 from Player import Player
 import pygatt
+from binascii import hexlify
 
-
-# os.environ['DISPLAY'] = ":0.0"
+os.environ['DISPLAY'] = ":0.0"
 # os.environ['KIVY_WINDOW'] = 'egl_rpi'
 
 from kivy.app import App
@@ -17,6 +17,7 @@ from odrive_helpers import digital_read
 from threading import Thread
 from time import time, sleep
 from kivy.properties import ObjectProperty
+from kivy.uix.image import Image
 
 from pidev.MixPanel import MixPanel
 from pidev.kivy.PassCodeScreen import PassCodeScreen
@@ -35,8 +36,8 @@ MAIN_SCREEN_NAME = 'main'
 TRAJ_SCREEN_NAME = 'traj'
 GPIO_SCREEN_NAME = 'gpio'
 ADMIN_SCREEN_NAME = 'admin'
-
-from odrive_helpers import *
+BEGINNING_SCREEN_NAME = 'beginning'
+BASELINE_SCREEN_NAME = 'baseline'
 
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
@@ -66,6 +67,7 @@ horse2.set_gains()
 horse3.set_gains()
 horse4.set_gains()
 
+# Checks the ODrive Calibraton
 if not horse1.is_calibrated():
     print("calibrating horse1...")
     horse1.calibrate_with_current_lim(15)
@@ -102,7 +104,38 @@ od_2.clear_errors()
 od_1.axis0.controller.config.enable_overspeed_error = False
 od_1.axis1.controller.config.enable_overspeed_error = False
 od_2.axis0.controller.config.enable_overspeed_error = False
-od_2.axis1.controller.config.enable_overspeed_error = False
+od_2.axis1.controller.config.enable_overspeed_error = False\
+
+
+# Homes the Horses to Left Side
+horses = [horse1, horse2, horse3, horse4]
+for horse in horses:
+    horse.set_ramped_vel(1, 1)
+sleep(1)
+for horse in horses:
+    horse.wait_for_motor_to_stop()# waiting until motor slowly hits wall
+for horse in horses:
+    horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
+sleep(3)  # allows motor to start moving to offset position
+for horse in horses:
+    horse.wait_for_motor_to_stop()
+for horse in horses:
+    horse.set_home()
+
+def handle_data_for_player(player_num):
+    def handle_data(handle, value):
+        """
+        handle -- integer, characteristic read handle the data was received on
+        value -- bytearray, the data returned in the notification
+        """
+        # print("Received data: %s" % hexlify(value))
+        #print(" " * (32 * player_num) + "Player %s Heart Rate: %s" % (player_num, int(hexlify(value)[2:4], 16)))
+
+        # This sets each heart rate to a scaled value
+        t = int(hexlify(value)[2:4], 16)
+        print("Player ", player_num, "'s Heartrate is ", str(t))
+    return handle_data
+
 
 print("end of beginning")
 
@@ -122,6 +155,10 @@ class ProjectNameGUI(App):
 
 
 Window.clearcolor = (1, 1, 1, 1)  # White
+adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
+adapter2 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
+adapter3 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM4')
+adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM5')
 
 
 class MainScreen(Screen):
@@ -132,30 +169,25 @@ class MainScreen(Screen):
     elapsed = ObjectProperty()
 
     def run_players(self):
-        try:
-            adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
-            adapter2 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
-        except Exception as e:
-            return None
         #adapter3 = pygatt.BGAPIBackend()
         #adapter4 = pygatt.BGAPIBackend()
-        player1 = Player("EF:FD:6F:EE:D7:81", od_2, horse1)
-        player2 = Player("F8:FF:5C:77:2A:A1", od_1, horse3)
+        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+        #player2 = Player("F8:FF:5C:77:2A:A1", od_1, horse3)
         #player3 = Player("", od_1, horse3)
         #player4 = Player("", od_1, horse4)
         try:
             adapter1.start()
-            adapter2.start()
+            #adapter2.start()
             #adapter3.start()
             #adapter4.start()
             hand_polar1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-            hand_polar2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
+            #hand_polar2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
             #hand_polar3 = adapter3.connect(player3.deviceID, address_type=pygatt.BLEAddressType.random)
             #hand_polar4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
-            dump_errors(od_2)
+            #dump_errors(od_2)
             #dump_errors(od_1)
             hand_polar1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player1.handle_data_for_axis(0, [], 2))
-            hand_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player2.handle_data_for_axis(0, [], 2))
+            #hand_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player2.handle_data_for_axis(0, [], 2))
             #hand_polar3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player3.handle_data_for_axis(0, []))
             #hand_polar4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player4.handle_data_for_axis(0, []))
             #horse1_finished = False
@@ -177,7 +209,7 @@ class MainScreen(Screen):
             #horse1.wait_for_motor_to_stop()
             
             print("done with try code")
-            while player1.is_playing or player2.is_playing:
+            while player1.is_playing: #or player2.is_playing:
                 sleep(1)
             #adapter1.stop()
             #YOU CAN ALSO TRY ADAPTER1.STOP SO THAT IT DOESN'T EXIT TRY CODE
@@ -287,7 +319,7 @@ class MainScreen(Screen):
             horse.set_vel(0)
             sleep(.5)
             horse.set_rel_pos_traj(1, 1, 1, 1)
-            #horse.wait_for_motor_to_stop()
+            horse.wait_for_motor_to_stop()
 
     def check_all_sensors(self):
         while True:
@@ -346,46 +378,6 @@ class MainScreen(Screen):
             sleep(.1)
             self.check_end_sensor(horse4, od_1, 8)
 
-
-##CONNECTED TO THE VELOCITY SLIDER##
-    def thread_velocity_function_horse1(self):
-        Thread(target=self.velocity_function_horse1, daemon=True).start()
-
-    def velocity_function_horse1(self):
-        horse1.set_vel(-self.velocity_slider_horse1.value)
-        self.velocity_slider_horse1.text = str(round(self.velocity_slider_horse1.value))
-        print('horse1 slider activated')
-
-
-    def thread_velocity_function_horse2(self):
-        Thread(target=self.velocity_function_horse2, daemon=True).start()
-    def velocity_function_horse2(self):
-        horse2.set_vel(-self.velocity_slider_horse2.value)
-        self.velocity_slider_horse2.text = str(round(self.velocity_slider_horse2.value))
-        print('horse2 slider activated')
-
-    def thread_velocity_function_horse3(self):
-        Thread(target=self.velocity_function_horse3, daemon=True).start()
-    def velocity_function_horse3(self):
-        horse3.set_vel(-self.velocity_slider_horse3.value)
-        self.velocity_slider_horse3.text = str(round(self.velocity_slider_horse3.value))
-        print('horse3 slider activated')
-
-    def thread_velocity_function_horse4(self):
-        Thread(target=self.velocity_function_horse4, daemon=True).start()
-
-    def velocity_function_horse4(self):
-        horse4.set_vel(-self.velocity_slider_horse4.value)
-        self.velocity_slider_horse4.text = str(round(self.velocity_slider_horse4.value))
-        print('horse4 slider activated')
-
-
-
-##CONNECTED TO THE ACCELERATION SLIDER##
-    def acceleration_function(self):
-        self.acceleration_slider.text = str(round(self.acceleration_slider.value))
-        print('slider activated')
-
     def switch_to_traj(self):
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = TRAJ_SCREEN_NAME
@@ -393,6 +385,10 @@ class MainScreen(Screen):
     def switch_to_gpio(self):
         SCREEN_MANAGER.transition.direction = "right"
         SCREEN_MANAGER.current = GPIO_SCREEN_NAME
+
+    def switch_to_beginning(self):
+        SCREEN_MANAGER.transition.direction = "down"
+        SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
 
 
 ##CONNECTED TO THE HOME BUTTON##
@@ -479,6 +475,110 @@ class MainScreen(Screen):
 
     print("screen 1 created")
 
+    def quit(self):
+        print("Exit")
+        quit()
+
+
+class BeginningScreen(Screen):
+    def switch_screen1(self):
+        SCREEN_MANAGER.transition.direction = "down"
+        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+
+    def two_players(self):
+        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+
+        adapter1.start()
+        print('adapter1 started')
+        adapter2.start()
+        print('adapter2 started')
+
+        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier1 connected')
+        vernier2 = adapter1.connect(player2.deviceID)
+        print('vernier2 connected')
+
+        adapter1.stop()
+        print('adapter1 stopped')
+        adapter2.stop()
+        print('adapter2 stopped')
+
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+    def three_players(self):
+        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+        player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
+
+        adapter1.start()
+        print('adapter1 started')
+        adapter2.start()
+        print('adapter2 started')
+        adapter3.start()
+        print('adapter3 started')
+
+        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier1 connected')
+        vernier2 = adapter1.connect(player2.deviceID)
+        print('vernier2 connected')
+        vernier3 = adapter3.connect(player3.deviceID)
+        print('vernier3 connected')
+
+        adapter1.stop()
+        adapter2.stop()
+        adapter3.stop()
+
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+    def four_players(self):
+        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+        player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
+        player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
+
+        adapter1.start()
+        print('adapter1 started')
+        adapter2.start()
+        print('adapter2 started')
+        adapter3.start()
+        print('adapter3 started')
+        adapter4.start()
+        print('adapter4 started')
+
+        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier1 connected')
+        vernier2 = adapter1.connect(player2.deviceID)
+        print('vernier2 connected')
+        vernier3 = adapter3.connect(player3.deviceID)
+        print('vernier3 connected')
+        vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+        print('vernier4 connected')
+
+        adapter1.stop()
+        adapter2.stop()
+        adapter3.stop()
+        adapter4.stop()
+
+        SCREEN_MANAGER.transition.direction = "left"
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+
+    print("Beginning Screen Created")
+
+
+class BaselineScreen(Screen):
+
+    def find_baseline(self):
+        return
+
+    def switch_screen(self):
+        SCREEN_MANAGER.transition.direction = "right"
+        SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
+
+    print("Baseline Screen Created")
 
 class TrajectoryScreen(Screen):
     """
@@ -490,19 +590,30 @@ class TrajectoryScreen(Screen):
         SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
     def submit_trapezoidal_traj(self):
+        horse1.set_vel_limit(10)
+        horse2.set_vel_limit(10)
         horse3.set_vel_limit(10)
+        horse4.set_vel_limit(10)
+        horse1.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+        horse2.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
         horse3.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+        horse4.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+
 
 class GPIOScreen(Screen):
     """
     Class to handle the GPIO screen and its associated touch/listening events
     """
 
-    #horse3.home_with_endstop(self, vel, offset, min_gpio_num):
+    #horseNUM.home_with_endstop(self, vel, offset, min_gpio_num):
 
     def homing_switch(self):
-        horse3.home_with_endstop(1, 1, 2)
-        horse4.home_with_endstop(1, 1, 2)
+        horses = [horse1, horse2, horse3, horse4]
+        for horse in horses:
+            horse.set_ramped_vel(1, 1)
+        sleep(1)
+        for horse in horses:
+            horse.home_with_endstop(1, 1, 2)
 
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "left"
@@ -565,9 +676,13 @@ Widget additions
 """
 
 Builder.load_file('main.kv')
+Builder.load_file('BeginningScreen.kv')
+Builder.load_file('BaselineScreen.kv')
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
-#SCREEN_MANAGER.add_widget(TrajectoryScreen(name=TRAJ_SCREEN_NAME))
-#SCREEN_MANAGER.add_widget(GPIOScreen(name=GPIO_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(TrajectoryScreen(name=TRAJ_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(GPIOScreen(name=GPIO_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(BeginningScreen(name=BEGINNING_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(BaselineScreen(name=BASELINE_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(PassCodeScreen(name='passCode'))
 SCREEN_MANAGER.add_widget(PauseScreen(name='pauseScene'))
 SCREEN_MANAGER.add_widget(AdminScreen(name=ADMIN_SCREEN_NAME))
