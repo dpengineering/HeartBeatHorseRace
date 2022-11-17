@@ -26,7 +26,7 @@ try:
 
     # These two adapters are connecting to H7 Polar devices
     chest_polar = adapter0.connect("F8:FF:5C:77:2A:A1", address_type=pygatt.BLEAddressType.random)
-    #hand_polar = adapter1.connect("A0:9E:1A:5E:EF:F6", address_type=pygatt.BLEAddressType.random)
+    #hand_polar = adapter1.connect("A0:9E:1A:5E:EF:F6")
 
     # USE THIS FOR CONNECTING TO THE NEWER H9 POLAR
     # H9_Polar = adapter.connect("F8:FF:5C:77:2A:A1", address_type=pygatt.BLEAddressType.random)
