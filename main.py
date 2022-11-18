@@ -106,7 +106,14 @@ od_2.clear_errors()
 od_1.axis0.controller.config.enable_overspeed_error = False
 od_1.axis1.controller.config.enable_overspeed_error = False
 od_2.axis0.controller.config.enable_overspeed_error = False
-od_2.axis1.controller.config.enable_overspeed_error = False\
+od_2.axis1.controller.config.enable_overspeed_error = False
+
+player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
+player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
+player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
+
+numberOfPlayers = 0
 
 
 # Homes the Horses to Left Side
@@ -485,34 +492,27 @@ class MainScreen(Screen):
 class BeginningScreen(Screen):
     def switch_screen1(self):
         SCREEN_MANAGER.transition.direction = "down"
-        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
     def two_players(self):
-        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
-        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
+        global numberOfPlayers
 
         adapter1.start()
         print('adapter1 started')
         adapter2.start()
         print('adapter2 started')
 
-        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-        print('vernier1 connected')
-        vernier2 = adapter1.connect(player2.deviceID)
-        print('vernier2 connected')
-
-        adapter1.stop()
-        print('adapter1 stopped')
-        adapter2.stop()
-        print('adapter2 stopped')
-
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
+        numberOfPlayers = 2
+
+        print(numberOfPlayers)
+
+        return numberOfPlayers
+
     def three_players(self):
-        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
-        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
-        player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
+        global numberOfPlayers
 
         adapter1.start()
         print('adapter1 started')
@@ -521,25 +521,15 @@ class BeginningScreen(Screen):
         adapter3.start()
         print('adapter3 started')
 
-        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-        print('vernier1 connected')
-        vernier2 = adapter1.connect(player2.deviceID)
-        print('vernier2 connected')
-        vernier3 = adapter3.connect(player3.deviceID)
-        print('vernier3 connected')
-
-        adapter1.stop()
-        adapter2.stop()
-        adapter3.stop()
-
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
+        numberOfPlayers = 3
+
+        return numberOfPlayers
+
     def four_players(self):
-        player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
-        player2 = Player("A0:9E:1A:49:A8:51", od_1, horse2)
-        player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
-        player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
+        global numberOfPlayers
 
         adapter1.start()
         print('adapter1 started')
@@ -550,31 +540,68 @@ class BeginningScreen(Screen):
         adapter4.start()
         print('adapter4 started')
 
-        vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-        print('vernier1 connected')
-        vernier2 = adapter1.connect(player2.deviceID)
-        print('vernier2 connected')
-        vernier3 = adapter3.connect(player3.deviceID)
-        print('vernier3 connected')
-        vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
-        print('vernier4 connected')
-
-        adapter1.stop()
-        adapter2.stop()
-        adapter3.stop()
-        adapter4.stop()
-
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
+        numberOfPlayers = 4
+
+        return numberOfPlayers
 
     print("Beginning Screen Created")
 
-
 class BaselineScreen(Screen):
-
     def find_baseline(self):
-        return
+        if numberOfPlayers == 2:
+            vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+            print('vernier1 connected')
+            vernier2 = adapter2.connect(player2.deviceID)
+            print('vernier2 connected')
+
+            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
+            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
+
+            adapter1.stop()
+            adapter2.stop()
+
+        elif numberOfPlayers == 3:
+            vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+            print('vernier1 connected')
+            vernier2 = adapter2.connect(player2.deviceID)
+            print('vernier2 connected')
+            vernier3 = adapter3.connect(player3.deviceID)
+            print('vernier3 connected')
+
+            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
+            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
+            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(3))
+
+            adapter1.stop()
+            adapter2.stop()
+            adapter3.stop()
+
+        elif numberOfPlayers == 4:
+            vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+            print('vernier1 connected')
+            vernier2 = adapter2.connect(player2.deviceID)
+            print('vernier2 connected')
+            vernier3 = adapter3.connect(player3.deviceID)
+            print('vernier3 connected')
+            vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+            print('vernier4 connected')
+
+            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
+            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
+            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(3))
+            vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(4))
+
+            adapter1.stop()
+            adapter2.stop()
+            adapter3.stop()
+            adapter4.stop()
+
+        else:
+            print('not working L')
+            return
 
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "right"
