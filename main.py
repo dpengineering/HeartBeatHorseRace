@@ -2,6 +2,7 @@ import os
 import sys
 from Player import Player
 import pygatt
+import kivy
 from binascii import hexlify
 
 os.environ['DISPLAY'] = ":0.0"
@@ -11,6 +12,7 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from odrive_helpers import digital_read
@@ -483,7 +485,7 @@ class MainScreen(Screen):
 class BeginningScreen(Screen):
     def switch_screen1(self):
         SCREEN_MANAGER.transition.direction = "down"
-        SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
     def two_players(self):
         player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)

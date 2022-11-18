@@ -15,8 +15,8 @@
         id: traj_button
         text: 'TRAJ'
         size: 100, 100
-        x: root.width * 0.85
-        y: root.height * 0.5
+        center_x: root.width * 0.85
+        center_y: root.height * 0.5
         color: 0, 1, 0, 1
         on_press: root.switch_to_traj()
 
@@ -24,8 +24,8 @@
         id: gpio_button
         text: "GPIO"
         size: 100, 100
-        x: root.width * 0.15
-        y: root.height * 0.5
+        center_x: root.width * 0.15
+        center_y: root.height * 0.5
         color: 1, 0, 0, 1
         on_press: root.switch_to_gpio()
 
@@ -33,8 +33,8 @@
         id: beginning_button
         text: "Beginning"
         size: 100, 100
-        x: root.width * 0.5
-        y: root.height * 0.25
+        center_x: root.width * 0.5
+        center_y: root.height * 0.25
         color: 1, 0, 0, 1
         on_press: root.switch_to_beginning()
 
@@ -49,8 +49,8 @@
     DPEAButton:
         text: 'Home'
         size: 100, 100
-        x: root.width * .15
-        y: root.height * .8
+        center_x: root.width * .15
+        center_y: root.height * .8
         color: 0, .5, .5, 1
         on_press: root.home_all_horses()
 
@@ -119,8 +119,8 @@
         id: start_time_button
         text: 'Start Timer'
         size: 100, 100
-        x: root.width * .35
-        y: root.height * .8
+        center_x: root.width * .35
+        center_y: root.height * .8
         color: 0, 1, 0, 1
         on_press: root.start_time_thread()
 
@@ -128,8 +128,8 @@
         id: stop_time_button
         text: 'Stop Timer'
         size: 100, 100
-        x: root.width * .55
-        y: root.height * .8
+        center_x: root.width * .55
+        center_y: root.height * .8
         color: 0, 1, 0, 1
         on_press: root.stop_time()
 
@@ -137,8 +137,8 @@
         id: quit
         text: 'Quit'
         size: 100, 100
-        x: root.width * 0.85
-        y: root.height * 0.1
+        center_x: root.width * 0.85
+        center_y: root.height * 0.1
         color: 1, 0, 0, 1
         on_press: root.quit()
 
@@ -211,8 +211,8 @@
         id: newHome
         text: 'New Home'
         size: 100, 100
-        x: root.width * 0.5
-        y: root.height * 0.25
+        center_x: root.width * 0.5
+        center_y: root.height * 0.25
         color: 0, 1, 0, 1
         on_press: root.homing_switch()
 
