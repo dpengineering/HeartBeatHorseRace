@@ -496,56 +496,102 @@ class BeginningScreen(Screen):
 
     def two_players(self):
         global numberOfPlayers
+        if numberOfPlayers == 2:
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
-        adapter1.start()
-        print('adapter1 started')
-        adapter2.start()
-        print('adapter2 started')
+            return numberOfPlayers
 
-        SCREEN_MANAGER.transition.direction = "left"
-        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+        else:
 
-        numberOfPlayers = 2
+            adapter1.start()
+            print('adapter1 started')
+            adapter2.start()
+            print('adapter2 started')
 
-        print(numberOfPlayers)
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
-        return numberOfPlayers
+            numberOfPlayers = 2
+            return numberOfPlayers
 
     def three_players(self):
         global numberOfPlayers
+        if numberOfPlayers == 3:
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
-        adapter1.start()
-        print('adapter1 started')
-        adapter2.start()
-        print('adapter2 started')
-        adapter3.start()
-        print('adapter3 started')
+            return numberOfPlayers
 
-        SCREEN_MANAGER.transition.direction = "left"
-        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+        elif numberOfPlayers == 2:
+            adapter3.start()
+            print('adapter3 started')
 
-        numberOfPlayers = 3
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
-        return numberOfPlayers
+            numberOfPlayers = 3
+            return numberOfPlayers
+
+        else:
+            adapter1.start()
+            print('adapter1 started')
+            adapter2.start()
+            print('adapter2 started')
+            adapter3.start()
+            print('adapter3 started')
+
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+            numberOfPlayers = 3
+            return numberOfPlayers
 
     def four_players(self):
         global numberOfPlayers
+        if numberOfPlayers == 4:
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
-        adapter1.start()
-        print('adapter1 started')
-        adapter2.start()
-        print('adapter2 started')
-        adapter3.start()
-        print('adapter3 started')
-        adapter4.start()
-        print('adapter4 started')
+            return numberOfPlayers
 
-        SCREEN_MANAGER.transition.direction = "left"
-        SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+        elif numberOfPlayers == 3:
+            adapter4.start()
+            print('adapter4 started')
 
-        numberOfPlayers = 4
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
-        return numberOfPlayers
+            numberOfPlayers = 4
+            return numberOfPlayers
+
+        elif numberOfPlayers == 2:
+            adapter3.start()
+            print('adapter3 started')
+            adapter4.start()
+            print('adapter4 started')
+
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+            numberOfPlayers = 4
+            return numberOfPlayers
+
+        else:
+            adapter1.start()
+            print('adapter1 started')
+            adapter2.start()
+            print('adapter2 started')
+            adapter3.start()
+            print('adapter3 started')
+            adapter4.start()
+            print('adapter4 started')
+
+            SCREEN_MANAGER.transition.direction = "left"
+            SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
+
+            numberOfPlayers = 4
+            return numberOfPlayers
 
     print("Beginning Screen Created")
 
@@ -560,8 +606,12 @@ class BaselineScreen(Screen):
             vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
             vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
 
+            vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+            vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+
             adapter1.stop()
             adapter2.stop()
+
 
         elif numberOfPlayers == 3:
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
