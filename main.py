@@ -60,7 +60,7 @@ horse2 = ODriveAxis(od_2.axis1, current_lim=10, vel_lim=10)
 horse3 = ODriveAxis(od_1.axis0, current_lim=10, vel_lim=10)
 horse4 = ODriveAxis(od_1.axis1, current_lim=10, vel_lim=10)
 
-#digital_read(od, 2) #od defined after od is defined
+# digital_read(od, 2) #od defined after od is defined
 # Basic motor tuning, for more precise tuning,
 # follow this guide: https://docs.odriverobotics.com/v/latest/control.html#tuning
 
@@ -115,6 +115,10 @@ player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
 
 numberOfPlayers = 0
 
+baseline1 = []
+baseline2 = []
+baseline3 = []
+baseline4 = []
 
 # Homes the Horses to Left Side
 horses = [horse1, horse2, horse3, horse4]
@@ -122,7 +126,7 @@ for horse in horses:
     horse.set_ramped_vel(1, 1)
 sleep(1)
 for horse in horses:
-    horse.wait_for_motor_to_stop()# waiting until motor slowly hits wall
+    horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
 for horse in horses:
     horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
 sleep(3)  # allows motor to start moving to offset position
@@ -131,22 +135,52 @@ for horse in horses:
 for horse in horses:
     horse.set_home()
 
-def handle_data_for_player(player_num):
+def heartrate_is_real(heartrate):
+    if heartrate > 30:
+        if heartrate < 170:
+            return True
+    else:
+        return False
+def velocity_movement(player_num):
     def handle_data(handle, value):
-        """
-        handle -- integer, characteristic read handle the data was received on
-        value -- bytearray, the data returned in the notification
-        """
-        # print("Received data: %s" % hexlify(value))
-        #print(" " * (32 * player_num) + "Player %s Heart Rate: %s" % (player_num, int(hexlify(value)[2:4], 16)))
+        base_velo = 0.3
+        heart_weight = 30
+        baseline_rate = 60
 
-        # This sets each heart rate to a scaled value
-        t = int(hexlify(value)[2:4], 16)
-        print("Player ", player_num, "'s Heartrate is ", str(t))
+        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
+        data = int(hexlify(value)[2:4], 16)
+        t = (data - baseline_rate) / heart_weight
+
+        if not heartrate_is_real(data):
+            return None
+
+        velocity = (base_velo + t) * -1
+        print(t)
+        print("Player " + str(player_num) + "'s velocity is " + str(velocity))
+
+        if player_num == 1:
+            horse1.set_vel(velocity)
+
     return handle_data
 
+def heartrate_baseline(player_num):
+    def handle_data(handle, value):
+        heartrate = int(hexlify(value)[2:4], 16)
+
+        if player_num == 1:
+            baseline1.append(heartrate)
+        elif player_num == 2:
+            baseline2.append(heartrate)
+        elif player_num == 3:
+            baseline3.append(heartrate)
+        elif player_num == 4:
+            baseline4.append(heartrate)
+        else:
+            print('not good')
+    return handle_data
 
 print("end of beginning")
+
 
 class ProjectNameGUI(App):
     """
@@ -178,30 +212,31 @@ class MainScreen(Screen):
     elapsed = ObjectProperty()
 
     def run_players(self):
-        #adapter3 = pygatt.BGAPIBackend()
-        #adapter4 = pygatt.BGAPIBackend()
+        # adapter3 = pygatt.BGAPIBackend()
+        # adapter4 = pygatt.BGAPIBackend()
         player1 = Player("C6:4B:DF:A5:36:0B", od_1, horse1)
-        #player2 = Player("F8:FF:5C:77:2A:A1", od_1, horse3)
-        #player3 = Player("", od_1, horse3)
-        #player4 = Player("", od_1, horse4)
+        # player2 = Player("F8:FF:5C:77:2A:A1", od_1, horse3)
+        # player3 = Player("", od_1, horse3)
+        # player4 = Player("", od_1, horse4)
         try:
             adapter1.start()
-            #adapter2.start()
-            #adapter3.start()
-            #adapter4.start()
+            # adapter2.start()
+            # adapter3.start()
+            # adapter4.start()
             hand_polar1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-            #hand_polar2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
-            #hand_polar3 = adapter3.connect(player3.deviceID, address_type=pygatt.BLEAddressType.random)
-            #hand_polar4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
-            #dump_errors(od_2)
-            #dump_errors(od_1)
-            hand_polar1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player1.handle_data_for_axis(0, [], 2))
-            #hand_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player2.handle_data_for_axis(0, [], 2))
-            #hand_polar3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player3.handle_data_for_axis(0, []))
-            #hand_polar4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player4.handle_data_for_axis(0, []))
-            #horse1_finished = False
-            #horse2_finished = False
-            #while not horse1_finished or not horse2_finished:
+            # hand_polar2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
+            # hand_polar3 = adapter3.connect(player3.deviceID, address_type=pygatt.BLEAddressType.random)
+            # hand_polar4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+            # dump_errors(od_2)
+            # dump_errors(od_1)
+            hand_polar1.subscribe("00002a37-0000-1000-8000-00805f9b34fb",
+                                  callback=player1.handle_data_for_axis(0, [], 2))
+            # hand_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player2.handle_data_for_axis(0, [], 2))
+            # hand_polar3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player3.handle_data_for_axis(0, []))
+            # hand_polar4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=player4.handle_data_for_axis(0, []))
+            # horse1_finished = False
+            # horse2_finished = False
+            # while not horse1_finished or not horse2_finished:
             #   if digital_read(od_2, 2) == 0:
             #        horse1.set_vel(2)
             #        sleep(1)
@@ -213,26 +248,26 @@ class MainScreen(Screen):
             #       horse2.set_vel(0)
             #       horse2_finished = True
             #    sleep(.1)
-            #horse1.set_rel_pos_traj(1, 1, 1, 1)
-            #sleep(1)
-            #horse1.wait_for_motor_to_stop()
-            
+            # horse1.set_rel_pos_traj(1, 1, 1, 1)
+            # sleep(1)
+            # horse1.wait_for_motor_to_stop()
+
             print("done with try code")
-            while player1.is_playing: #or player2.is_playing:
+            while player1.is_playing:  # or player2.is_playing:
                 sleep(1)
-            #adapter1.stop()
-            #YOU CAN ALSO TRY ADAPTER1.STOP SO THAT IT DOESN'T EXIT TRY CODE
+            # adapter1.stop()
+            # YOU CAN ALSO TRY ADAPTER1.STOP SO THAT IT DOESN'T EXIT TRY CODE
 
         finally:
             print("exited 'try' code")
             adapter1.stop()
             adapter2.stop()
-            #adapter3.stop()
-            #adapter4.stop()
+            # adapter3.stop()
+            # adapter4.stop()
             horse1.set_vel(0)
             horse3.set_vel(0)
-            #horse3.set_vel(0)
-            #horse4.set_vel(0)
+            # horse3.set_vel(0)
+            # horse4.set_vel(0)
             horse1.idle()
             horse3.idle()
             horse3.idle()
@@ -246,15 +281,14 @@ class MainScreen(Screen):
         self.start_time_button.disabled = False
         self.timer_status = False
 
-
     def start_time_thread(self):
         Thread(target=self.start_time, daemon=True).start()
 
     def start_time(self):
-        #horse1_time = time()
-        #horse2_time = time()
-        #horse3_time = time()
-        #horse4_time = time()
+        # horse1_time = time()
+        # horse2_time = time()
+        # horse3_time = time()
+        # horse4_time = time()
         start = time()
         print("Start: Seconds since epoch =", start)
         self.horse1_running = True
@@ -266,20 +300,20 @@ class MainScreen(Screen):
         while True:
             self.elapsed = str(round((time() - start), 2))
             if self.timer_status == False:
-                #self.elapsed = 0
-                #self.timer_horse1.text = self.elapsed
-                #self.timer_horse2.text = self.elapsed
-                #self.timer_horse3.text = self.elapsed
-                #self.timer_horse4.text = self.elapsed
+                # self.elapsed = 0
+                # self.timer_horse1.text = self.elapsed
+                # self.timer_horse2.text = self.elapsed
+                # self.timer_horse3.text = self.elapsed
+                # self.timer_horse4.text = self.elapsed
                 break
             else:
                 print("you have not pressed 'stop timer' yet")
-            if digital_read(od_2, 2) == 1 and self.horse1_running: #horse 1 is not sensing and variable reads True
+            if digital_read(od_2, 2) == 1 and self.horse1_running:  # horse 1 is not sensing and variable reads True
                 self.timer_horse1.text = self.elapsed
             else:
                 print("horse 1 sensed")
                 self.horse1_running = False
-            if digital_read(od_2, 8) == 1 and self.horse2_running: #horse 2 is not sensing
+            if digital_read(od_2, 8) == 1 and self.horse2_running:  # horse 2 is not sensing
                 self.timer_horse2.text = self.elapsed
             else:
                 print("horse 2 sensed")
@@ -295,7 +329,6 @@ class MainScreen(Screen):
                 print("horse 4 sensed")
                 self.horse4_running = False
             sleep(.03)
-
 
         # while digital_read(od_1, 8) == 1 & digital_read(od_1, 2) == 1 & digital_read(od_2, 8) == 1 & digital_read(od_2, 2) == 1:
         #    print("No sensors sensing")
@@ -315,12 +348,12 @@ class MainScreen(Screen):
         #     else:
         #         print("a sensor is sensing, or there is an error")
         #         break
-#----------------------------------------------------------------------------------------------------------------#
-          # digital_read(od_1, 8) == 0:  # ==0 means the sensor is on and sensing; this is for horse 4
-          # digital_read(od_1, 2) == 0:  # ==0 means the sensor is on and sensing; this is for horse 3
-          # digital_read(od_2, 8) == 0:  # ==0 means the sensor is on and sensing; this is for horse 2
-          # digital_read(od_2, 2) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
 
+    # ----------------------------------------------------------------------------------------------------------------#
+    # digital_read(od_1, 8) == 0:  # ==0 means the sensor is on and sensing; this is for horse 4
+    # digital_read(od_1, 2) == 0:  # ==0 means the sensor is on and sensing; this is for horse 3
+    # digital_read(od_2, 8) == 0:  # ==0 means the sensor is on and sensing; this is for horse 2
+    # digital_read(od_2, 2) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
 
     def check_end_sensor(self, horse, od_name, pin_number):
         if digital_read(od_name, pin_number) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
@@ -341,49 +374,49 @@ class MainScreen(Screen):
     def thread_check_all_sensors(self):
         Thread(target=self.check_all_sensors, daemon=True).start()
 
-
     def thread_end_sensor_horse1(self):
         Thread(target=self.end_sensor_horse1, daemon=True).start()
+
     def end_sensor_horse1(self):
         while True:
-            #print("while True 1 running")
+            # print("while True 1 running")
             sleep(.1)
             self.check_end_sensor(horse1, od_2, 2)
-            #if digital_read(od_2, 2) == 0: # ==0 means the sensor is on and sensing; this is for horse 1
+            # if digital_read(od_2, 2) == 0: # ==0 means the sensor is on and sensing; this is for horse 1
             #    print("sensor hit for horse1")
             #    horse1.set_vel(0)
             #    sleep(.5)
             #    print("slept")
             #    horse1.set_rel_pos_traj(1, 1, 1, 1)
             #    horse1.wait_for_motor_to_stop()
-            #else:
+            # else:
             #    #print("sensor1 not currently being hit")
             #    sleep(.1)
 
-
     def thread_end_sensor_horse2(self):
         Thread(target=self.end_sensor_horse2, daemon=True).start()
+
     def end_sensor_horse2(self):
         while True:
-            #print("while True 2 running")
+            # print("while True 2 running")
             sleep(.1)
             self.check_end_sensor(horse2, od_2, 8)
 
-
     def thread_end_sensor_horse3(self):
         Thread(target=self.end_sensor_horse3, daemon=True).start()
+
     def end_sensor_horse3(self):
         while True:
-            #print("while True 3 running")
+            # print("while True 3 running")
             sleep(.1)
             self.check_end_sensor(horse3, od_1, 2)
 
-
     def thread_end_sensor_horse4(self):
         Thread(target=self.end_sensor_horse4, daemon=True).start()
+
     def end_sensor_horse4(self):
         while True:
-            #print("while True 4 running")
+            # print("while True 4 running")
             sleep(.1)
             self.check_end_sensor(horse4, od_1, 8)
 
@@ -399,8 +432,7 @@ class MainScreen(Screen):
         SCREEN_MANAGER.transition.direction = "down"
         SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
 
-
-##CONNECTED TO THE HOME BUTTON##
+    ##CONNECTED TO THE HOME BUTTON##
 
     def home_all_horses(self):
         horses = [horse1, horse2, horse3, horse4]
@@ -408,7 +440,7 @@ class MainScreen(Screen):
             horse.set_ramped_vel(1, 1)
         sleep(1)
         for horse in horses:
-            horse.wait_for_motor_to_stop()# waiting until motor slowly hits wall
+            horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
         for horse in horses:
             horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
         sleep(3)  # allows motor to start moving to offset position
@@ -417,9 +449,7 @@ class MainScreen(Screen):
         for horse in horses:
             horse.set_home()
 
-
-
-    #def thread_home_without_endstop(self):
+    # def thread_home_without_endstop(self):
     #    Thread(target=self.horse1_home_without_endstop, daemon=True).start()
     #    Thread(target=self.horse2_home_without_endstop, daemon=True).start()
     #    Thread(target=self.horse3_home_without_endstop, daemon=True).start()
@@ -428,48 +458,50 @@ class MainScreen(Screen):
     #   # self.horse2_home_without_endstop()
     #   # self.horse3_home_without_endstop()
     #   # self.horse4_home_without_endstop( )
-#
-    #def horse1_home_without_endstop(self):
+    #
+    # def horse1_home_without_endstop(self):
     #    horse1.home_without_endstop(1, -.5)
     #    print("thread ran for horse1")
-    #def horse2_home_without_endstop(self):
+    # def horse2_home_without_endstop(self):
     #    horse2.home_without_endstop(1, -.5)
     #    print("thread ran for horse2")
-    #def horse3_home_without_endstop(self):
+    # def horse3_home_without_endstop(self):
     #    horse3.home_without_endstop(1, -.5)
     #    print("thread ran for horse3")
-    #def horse4_home_without_endstop(self):
+    # def horse4_home_without_endstop(self):
     #    horse4.home_without_endstop(1, -.5)
     #    print("thread ran for horse4")
 
-##CONNECTED TO MOTOR TOGGLE BUTTON##
+    ##CONNECTED TO MOTOR TOGGLE BUTTON##
     def motor_toggle(self):
-        #horse3.set_relative_pos(0)
+        # horse3.set_relative_pos(0)
         print(horse3.get_vel())
-        #dump_errors(od)
+        # dump_errors(od)
         if horse3.get_vel() <= 0.2:
-            if self.count%2 == 0:
+            if self.count % 2 == 0:
                 horse3.set_rel_pos_traj(10, self.acceleration_slider.value, 10, self.acceleration_slider.value)
                 print('If vel = 0 and count% = 0 : horse3.set_rel_pos_traj(-5, .5, 1, .5)')
                 self.count += 1
-            elif self.count%2 == 1:
+            elif self.count % 2 == 1:
                 horse3.set_rel_pos_traj(-10, self.acceleration_slider.value, 10, self.acceleration_slider.value)
                 print('If vel = 0 and count% = 1 : horse3.set_rel_pos_traj(5, .5, 1, .5)')
                 self.count += 1
             else:
                 print("motor_toggle command malfunction")
         else:
-            if self.count%2 == 0:
-                horse3.set_rel_pos_traj(5, self.acceleration_slider.value, self.velocity_slider_horse3.value, self.acceleration_slider.value)
+            if self.count % 2 == 0:
+                horse3.set_rel_pos_traj(5, self.acceleration_slider.value, self.velocity_slider_horse3.value,
+                                        self.acceleration_slider.value)
                 print('If vel = moving and count% = 0 : horse3.set_rel_pos_traj(5, .5, var, .5)')
-                #horse3.set_vel_limit(self.velocity_slider.value)
-                #horse3.set_relative_pos(-5)
+                # horse3.set_vel_limit(self.velocity_slider.value)
+                # horse3.set_relative_pos(-5)
                 self.count += 1
-            elif self.count%2 == 1:
-                horse3.set_rel_pos_traj(-5, self.acceleration_slider.value, self.velocity_slider_horse3.value, self.acceleration_slider.value)
+            elif self.count % 2 == 1:
+                horse3.set_rel_pos_traj(-5, self.acceleration_slider.value, self.velocity_slider_horse3.value,
+                                        self.acceleration_slider.value)
                 print('If vel = moving and count% = 1 : horse3.set_rel_pos_traj(-5, .5, var, .5)')
-                #horse3.set_vel_limit(self.velocity_slider.value)
-                #horse3.set_relative_pos(5)
+                # horse3.set_vel_limit(self.velocity_slider.value)
+                # horse3.set_relative_pos(5)
                 self.count += 1
             else:
                 print("motor_toggle command malfunction")
@@ -595,22 +627,32 @@ class BeginningScreen(Screen):
 
     print("Beginning Screen Created")
 
+
 class BaselineScreen(Screen):
     def find_baseline(self):
         if numberOfPlayers == 2:
+            i = 0
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
             print('vernier2 connected')
 
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
+            while i < 5:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
+                sleep(1)
+                print(baseline1)
+                print(baseline2)
+                i += 1
 
             vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
             vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
 
             adapter1.stop()
             adapter2.stop()
+
+            print(baseline1)
+            print(baseline2)
 
 
         elif numberOfPlayers == 3:
@@ -621,9 +663,9 @@ class BaselineScreen(Screen):
             vernier3 = adapter3.connect(player3.deviceID)
             print('vernier3 connected')
 
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
-            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(3))
+            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
+            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
 
             adapter1.stop()
             adapter2.stop()
@@ -639,10 +681,10 @@ class BaselineScreen(Screen):
             vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier4 connected')
 
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(2))
-            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(3))
-            vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_data_for_player(4))
+            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
+            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
+            vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
 
             adapter1.stop()
             adapter2.stop()
@@ -659,6 +701,7 @@ class BaselineScreen(Screen):
 
     print("Baseline Screen Created")
 
+
 class TrajectoryScreen(Screen):
     """
     Class to handle the trajectory control screen and its associated touch events
@@ -673,10 +716,14 @@ class TrajectoryScreen(Screen):
         horse2.set_vel_limit(10)
         horse3.set_vel_limit(10)
         horse4.set_vel_limit(10)
-        horse1.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
-        horse2.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
-        horse3.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
-        horse4.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text), int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+        horse1.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text),
+                            int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+        horse2.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text),
+                            int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+        horse3.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text),
+                            int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
+        horse4.set_pos_traj(int(self.target_position.text), int(self.acceleration.text), int(self.target_speed.text),
+                            int(self.deceleration.text))  # position 5, acceleration 1 turn/s^2, target velocity 10 turns/s, deceleration 1 turns/s^2
 
 
 class GPIOScreen(Screen):
@@ -684,7 +731,7 @@ class GPIOScreen(Screen):
     Class to handle the GPIO screen and its associated touch/listening events
     """
 
-    #horseNUM.home_with_endstop(self, vel, offset, min_gpio_num):
+    # horseNUM.home_with_endstop(self, vel, offset, min_gpio_num):
 
     def homing_switch(self):
         horses = [horse1, horse2, horse3, horse4]
@@ -786,8 +833,7 @@ def send_event(event_name):
 
 
 if __name__ == "__main__":
-    #send_event("Project Initialized")
+    # send_event("Project Initialized")
     # Window.fullscreen = 'auto'
     print("done setting up")
     ProjectNameGUI().run()
-
