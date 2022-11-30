@@ -115,10 +115,10 @@ player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
 
 numberOfPlayers = 0
 
-baseline1 = []
-baseline2 = []
-baseline3 = []
-baseline4 = []
+baseline1List = []
+baseline2List = []
+baseline3List = []
+baseline4List = []
 
 # Homes the Horses to Left Side
 horses = [horse1, horse2, horse3, horse4]
@@ -167,17 +167,26 @@ def heartrate_baseline(player_num):
     def handle_data(handle, value):
         heartrate = int(hexlify(value)[2:4], 16)
 
-        if player_num == 1:
-            baseline1.append(heartrate)
-        elif player_num == 2:
-            baseline2.append(heartrate)
-        elif player_num == 3:
-            baseline3.append(heartrate)
-        elif player_num == 4:
-            baseline4.append(heartrate)
+        if heartrate_is_real(heartrate):
+            if player_num == 1:
+                baseline1List.append(heartrate)
+            elif player_num == 2:
+                baseline2List.append(heartrate)
+            elif player_num == 3:
+                baseline3List.append(heartrate)
+            elif player_num == 4:
+                baseline4List.append(heartrate)
+            else:
+                print('not good')
         else:
-            print('not good')
+            print('unlucky')
     return handle_data
+
+def average_heartrate(lst):
+    if not len(lst) == 0:
+        return sum(lst)/len(lst)
+    else:
+        return 'not averaged'
 
 print("end of beginning")
 
@@ -641,21 +650,22 @@ class BaselineScreen(Screen):
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 sleep(1)
-                print(baseline1)
-                print(baseline2)
                 i += 1
 
             vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
             vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
 
-            adapter1.stop()
-            adapter2.stop()
+            baseline1 = round(average_heartrate(baseline1List))
+            baseline2 = round(average_heartrate(baseline2List))
 
-            print(baseline1)
-            print(baseline2)
+            self.ids.player1Baseline.text = str(baseline1)
+            self.ids.player2Baseline.text = str(baseline2)
+            self.ids.player3Baseline.text = "No Player!"
+            self.ids.player4Baseline.text = "No Player!"
 
 
         elif numberOfPlayers == 3:
+            i = 0
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -663,15 +673,27 @@ class BaselineScreen(Screen):
             vernier3 = adapter3.connect(player3.deviceID)
             print('vernier3 connected')
 
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
+            while i < 5:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
+                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
+                sleep(1)
+                i += 1
 
-            adapter1.stop()
-            adapter2.stop()
-            adapter3.stop()
+            vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+            vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+            vernier3.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
 
-        elif numberOfPlayers == 4:
+            baseline1 = round(average_heartrate(baseline1List))
+            baseline2 = round(average_heartrate(baseline2List))
+            baseline3 = round(average_heartrate(baseline3List))
+
+            self.ids.player1Baseline.text = str(baseline1)
+            self.ids.player2Baseline.text = str(baseline2)
+            self.ids.player3Baseline.text = str(baseline3)
+            self.ids.player3Baseline.text = "No Player!"
+
+        elif numberOfPlayers == 4: #WIP
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
