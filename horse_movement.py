@@ -59,7 +59,7 @@ if not horse4.is_calibrated():
 horses = [horse1, horse2, horse3, horse4]
 for horse in horses:
     horse.set_ramped_vel(1, 1)
-sleep(2)
+sleep(3)
 for horse in horses:
     horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
 for horse in horses:
@@ -106,20 +106,92 @@ def heartrate_is_real(heartrate):
         return False
 
 
-def velocity_movement(player_num):
-    def handle_data(handle, value):
-        base_velo = 0.3  # will get this from something else later
-        heart_weight = 30  # will set at some point
-        baseline_rate = 60 # get from something else as well
+h1_laps = 0
+h2_laps = 0
+h3_laps = 0
+h4_laps = 0
+
+
+def setup(player_num):
+
+    print("hello?")
+
+
+
+    def end_game(player_num):
+        print("Player " + str(player_num) + " Wins!")
+        horse1.set_vel(0)
+        horse2.set_vel(0)
+        horse3.set_vel(0)
+        horse4.set_vel(0)
+
+        adapter0.stop()
+        adapter1.stop()
+        adapter2.stop()
+
+    def track_laps(player_num):
+
+        global h1_laps, h2_laps, h3_laps, h4_laps
+
+        total_laps = 3
+        print(h1_laps)
+        if player_num == 1:
+            h1_laps += 1
+            print(h1_laps)
+            if h1_laps == total_laps:
+                end_game(player_num)
+        elif player_num == 2:
+            h2_laps += 1
+            if h2_laps == total_laps:
+                end_game(player_num)
+        elif player_num == 3:
+            h3_laps += 1
+            if h3_laps == total_laps:
+                end_game(player_num)
+        else:
+            h4_laps += 1
+            if h3_laps == total_laps:
+                end_game(player_num)
+
+    def at_end():
+        base_velo = -0.8
+        if player_num == 1:
+            track_laps(player_num)
+            horse1.set_ramped_vel(2, 1)
+            horse1.wait_for_motor_to_stop()
+            horse1.set_vel(-0.8)
+
+
+        elif player_num == 2:
+            horse2.set_ramped_vel(2, 1)
+            horse2.wait_for_motor_to_stop()
+            track_laps(player_num)
+        elif player_num == 3:
+            horse3.set_ramped_vel(2, 1)
+            horse3.wait_for_motor_to_stop()
+            track_laps(player_num)
+        else:
+            horse4.set_ramped_vel(2, 1)
+            horse4.wait_for_motor_to_stop()
+            track_laps(player_num)
+        return
+
+    def velocity_movement(handle, value):
+        base_velo = 0.8  # will get this from something else later
+        heart_weight = 70  # will set at some point
+        baseline_rate = 60  # get from something else as well
 
         print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
         data = int(hexlify(value)[2:4], 16)
         t = (data - baseline_rate) / heart_weight
 
-        if not heartrate_is_real(data):
-            return None
 
-        velocity = (base_velo + t)  * -1
+
+        velocity = (base_velo + t) * -1
+
+        if not heartrate_is_real(data):
+            velocity = base_velo * -1
+
         print(t)
         print("Player " + str(player_num) + "'s velocity is " + str(velocity))
 
@@ -132,19 +204,8 @@ def velocity_movement(player_num):
         else:
             horse4.set_vel(velocity)
 
-    return handle_data
 
-
-def position_movement(player_num):
-    def handle_data(handle, value):
-        heart_weight = 20  # will set at some point
-        baseline_rate = 60  # get from something else as well
-
-        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
-        t = (int(hexlify(value)[2:4], 16) - baseline_rate) / heart_weight
-
-        if not heartrate_is_real(t):
-            return
+    def handle_tick(handle, value):
 
         if player_num == 1:
             horse = horse1
@@ -155,11 +216,34 @@ def position_movement(player_num):
         else:
             horse = horse4
 
-        horse.set_pos(horse.get_pos + t)
+        #if (abs(horse.get_vel()) > 0.1):
+        #    if horse.get_vel() < 0:
+        #        velocity_movement(handle, value)
+        #    else:
+        #        return
+        #else:
+        #    if horse.get_pos() > -5:
+        #        horse.set_vel(-.75)
+        #    else:
 
-        print("Player " + str(player_num) + " will move" + str(t) + " rotations")
+        #        at_end()
 
-        return handle_data
+        total = digital_read(od_1, 2) + digital_read(od_2, 2) + digital_read(od_1, 8) + digital_read(od_2, 8)
+        print(total)
+        if (total < 4):
+            at_end()
+        else:
+            if horse.get_vel() > 0:
+                return
+
+            velocity_movement(handle, value)
+
+
+
+
+
+    return handle_tick
+
 
 
 try:
@@ -175,12 +259,12 @@ try:
 
     # Each address can be found in the HeartRateExample DPEA repo
     chest_polar = adapter0.connect("C6:4B:DF:A5:36:0B", address_type=pygatt.BLEAddressType.random)
-    hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
-    #chest_polar2 = adapter2.connect("A0:9E:1A:49:A8:51")
+    #hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
+    #chest_polar2 = adapter2.connect("A0:9E:1A:5E:EF:F6")
 
-    chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=velocity_movement(1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
-    hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=velocity_movement(2))
-    #chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=velocity_movement(3))
+    chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
+    #hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+    #chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_tick(3))
 
     # The subscription runs on a background thread. You must stop this main
     # thread from exiting, otherwise you will not receive any messages, and

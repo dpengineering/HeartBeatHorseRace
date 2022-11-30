@@ -4,6 +4,7 @@ import odrive
 import odrive.configuration
 from odrive.enums import *
 import fibre
+import datetime
 
 print(f"ODrive Version: {odrive.version.get_version_str()}")
 

@@ -5,7 +5,6 @@ import time
 adapter0 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
 #adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
 
-
 def handle_data_for_player(player_num):
     def handle_data(handle, value):
         """
