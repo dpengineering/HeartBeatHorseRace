@@ -1,39 +1,11 @@
-<BaselineScreen>:
+<RunScreen>:
 
-    name: 'baseline'
+    name: 'run'
+    on_pre_enter: root.update_baseline()
+    on_enter: root.start_game()
 
     FloatLayout:
         size_hint: None, None
-
-    Button:
-        id: heart
-        width: 100
-        center_x: root.width * 0.5
-        center_y: root.height * 0.5
-        size_hint: None, None
-        size: 225, 225
-        background_normal: "heart.png"
-        on_press: root.find_baseline()
-
-    Label:
-        text: "Press the heart to take your baseline heartrate!"
-        size_hint: None, None
-        color: 1, 1, 1, 1
-        center_x: root.width * 0.5
-        center_y: root.height * 0.7
-        font_size: 50
-        bold: True
-        outline_width: self.font_size * 0.1
-        outline_color: 0, 0, 0
-
-    DPEAButton:
-        id: goBack
-        text: 'Go Back'
-        size: 100, 100
-        center_x: root.width * 0.5
-        center_y: root.height * 0.05
-        color: 1, 0, 0, 1
-        on_press: root.switch_screen()
 
     Label:
         id: player1Baseline
@@ -52,7 +24,7 @@
         text: ""
         size_hint: None, None
         color: 1, 1, 1, 1
-        center_x: root.width * 0.35
+        center_x: root.width * 0.36
         center_y: root.height * 0.2
         font_size: 50
         bold: True
@@ -64,7 +36,7 @@
         text: ""
         size_hint: None, None
         color: 1, 1, 1, 1
-        center_x: root.width * 0.6
+        center_x: root.width * 0.63
         center_y: root.height * 0.2
         font_size: 50
         bold: True
@@ -76,8 +48,20 @@
         text: ""
         size_hint: None, None
         color: 1, 1, 1, 1
-        center_x: root.width * 0.85
+        center_x: root.width * 0.9
         center_y: root.height * 0.2
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+    Label:
+        id: count
+        text: "Get Ready!"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.5
+        center_y: root.height * 0.85
         font_size: 50
         bold: True
         outline_width: self.font_size * 0.1

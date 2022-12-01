@@ -20,6 +20,7 @@ from threading import Thread
 from time import time, sleep
 from kivy.properties import ObjectProperty
 from kivy.uix.image import Image
+from kivy.clock import Clock
 
 from pidev.MixPanel import MixPanel
 from pidev.kivy.PassCodeScreen import PassCodeScreen
@@ -40,6 +41,7 @@ GPIO_SCREEN_NAME = 'gpio'
 ADMIN_SCREEN_NAME = 'admin'
 BEGINNING_SCREEN_NAME = 'beginning'
 BASELINE_SCREEN_NAME = 'baseline'
+RUN_SCREEN_NAME = 'run'
 
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
@@ -114,6 +116,10 @@ player3 = Player("A0:9E:1A:5E:EF:F6", od_2, horse3)
 player4 = Player("F8:FF:5C:77:2A:A1", od_2, horse4)
 
 numberOfPlayers = 0
+baseline1 = 0
+baseline2 = 0
+baseline3 = 0
+baseline4 = 0
 
 baseline1List = []
 baseline2List = []
@@ -639,6 +645,7 @@ class BeginningScreen(Screen):
 
 class BaselineScreen(Screen):
     def find_baseline(self):
+        global baseline1, baseline2, baseline3, baseline4
         if numberOfPlayers == 2:
             i = 0
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
@@ -663,6 +670,10 @@ class BaselineScreen(Screen):
             self.ids.player3Baseline.text = "No Player!"
             self.ids.player4Baseline.text = "No Player!"
 
+            sleep(5)
+
+            SCREEN_MANAGER.transition.direction = "right"
+            SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
         elif numberOfPlayers == 3:
             i = 0
@@ -693,6 +704,11 @@ class BaselineScreen(Screen):
             self.ids.player3Baseline.text = str(baseline3)
             self.ids.player3Baseline.text = "No Player!"
 
+            sleep(5)
+
+            SCREEN_MANAGER.transition.direction = "right"
+            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+
         elif numberOfPlayers == 4: #WIP
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
@@ -717,11 +733,30 @@ class BaselineScreen(Screen):
             print('not working L')
             return
 
+        return baseline1, baseline2, baseline3, baseline4
+
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "right"
         SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
 
     print("Baseline Screen Created")
+
+
+class RunScreen(Screen):
+
+    def update_baseline(self):
+        self.ids.player1Baseline.text = str(baseline1)
+        self.ids.player2Baseline.text = str(baseline2)
+        self.ids.player3Baseline.text = str(baseline3)
+        self.ids.player4Baseline.text = str(baseline4)
+
+    def start_game(self):
+        t = "5"
+        while int(t) > 0:
+            t = str(int(t) - 1)
+            sleep(1)
+        self.ids.count.text = "GO!"
+        # **RUN THE HORSE VELOCITY FUNCTIONS**
 
 
 class TrajectoryScreen(Screen):
@@ -826,11 +861,13 @@ Widget additions
 Builder.load_file('main.kv')
 Builder.load_file('BeginningScreen.kv')
 Builder.load_file('BaselineScreen.kv')
+Builder.load_file('RunScreen.kv')
 SCREEN_MANAGER.add_widget(MainScreen(name=MAIN_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(TrajectoryScreen(name=TRAJ_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(GPIOScreen(name=GPIO_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(BeginningScreen(name=BEGINNING_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(BaselineScreen(name=BASELINE_SCREEN_NAME))
+SCREEN_MANAGER.add_widget(RunScreen(name=RUN_SCREEN_NAME))
 SCREEN_MANAGER.add_widget(PassCodeScreen(name='passCode'))
 SCREEN_MANAGER.add_widget(PauseScreen(name='pauseScene'))
 SCREEN_MANAGER.add_widget(AdminScreen(name=ADMIN_SCREEN_NAME))
