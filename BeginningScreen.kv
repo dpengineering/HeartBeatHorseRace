@@ -10,8 +10,8 @@
         id: twoPlayer
         text: '2 Players'
         size: 100, 100
-        x: root.width * 0.2
-        y: root.height * 0.5
+        center_x: root.width * 0.25
+        center_y: root.height * 0.5
         color: 0, 0, 1, 1
         on_press: root.two_players()
 
@@ -19,8 +19,8 @@
         id: threePlayer
         text: '3 Players'
         size: 100, 100
-        x: root.width * 0.4
-        y: root.height * 0.5
+        center_x: root.width * 0.5
+        center_y: root.height * 0.5
         color: 0, 0, 1, 1
         on_press: root.three_players()
 
@@ -28,8 +28,8 @@
         id: fourPlayer
         text: '4 Players'
         size: 100, 100
-        x: root.width * 0.6
-        y: root.height * 0.5
+        center_x: root.width * 0.75
+        center_y: root.height * 0.5
         color: 0, 0, 1, 1
         on_press: root.four_players()
 
@@ -38,23 +38,35 @@
         id: chaos
         text: 'Chaos Mode'
         size: 100, 100
-        x: root.width * 0.3
-        y: root.height * 0.85
+        center_x: root.width * 0.33
+        center_y: root.height * 0.85
         color: 0, 0, 1, 1
 
     DPEAButton:
         id: zen
         text: 'Zen Mode'
         size: 100, 100
-        x: root.width * 0.5
-        y: root.height * 0.85
+        center_x: root.width * 0.66
+        center_y: root.height * 0.85
         color: 0, 0, 1, 1
+
+    Label:
+        id: playerNum
+        text: "0"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.5
+        center_y: root.height * 0.9
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
 
     DPEAButton:
         id: goBack
         text: 'Go Back'
         size: 100, 100
-        x: root.width * 0.5
-        y: root.height * 0.05
+        center_x: root.width * 0.5
+        center_y: root.height * 0.05
         color: 1, 0, 0, 1
         on_press: root.switch_screen1()
