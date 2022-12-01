@@ -50,7 +50,7 @@ horse4.set_gains()
 
 horses = [horse1, horse2, horse3, horse4]
 for horse in horses:
-    horse.set_ramped_vel(1, 1)
+    horse.set_ramped_vel(-1, 1)
 sleep(3)
 for horse in horses:
     horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
@@ -62,7 +62,7 @@ print("nuts")
 for i in range(10000):
 
     print(horse1.get_pos())
-    digital_read(od_1, 2)
+    print(digital_read(od_1, 2))
     sleep(1)
 
 

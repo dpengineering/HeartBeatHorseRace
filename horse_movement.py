@@ -111,6 +111,11 @@ h2_laps = 0
 h3_laps = 0
 h4_laps = 0
 
+h1_timer = time.time()
+h2_timer = time.time()
+h3_timer = time.time()
+h4_timer = time.time()
+
 
 def setup(player_num):
 
@@ -118,62 +123,85 @@ def setup(player_num):
 
 
 
-    def end_game(player_num):
+
+    def end_game():
         print("Player " + str(player_num) + " Wins!")
-        horse1.set_vel(0)
-        horse2.set_vel(0)
-        horse3.set_vel(0)
-        horse4.set_vel(0)
 
         adapter0.stop()
         adapter1.stop()
         adapter2.stop()
 
-    def track_laps(player_num):
+        horse1.set_vel(0)
+        horse2.set_vel(0)
+        horse3.set_vel(0)
+        horse4.set_vel(0)
 
-        global h1_laps, h2_laps, h3_laps, h4_laps
+
+
+    def track_laps():
+
+        global h1_laps, h2_laps, h3_laps, h4_laps, h1_timer, h2_timer, h3_timer, h4_timer
 
         total_laps = 3
-        print(h1_laps)
+
+        buffer = 4
+
         if player_num == 1:
-            h1_laps += 1
-            print(h1_laps)
-            if h1_laps == total_laps:
-                end_game(player_num)
+            if buffer < round((time.time() - h1_timer), 2):
+                h1_laps += 1
+
+                if h1_laps == total_laps:
+                    end_game()
+
+                h1_timer = time.time()
         elif player_num == 2:
-            h2_laps += 1
-            if h2_laps == total_laps:
-                end_game(player_num)
+            if buffer < round((time.time() - h2_timer), 2):
+                h2_laps += 1
+
+                if h2_laps == total_laps:
+                    end_game()
+
+                h2_timer = time.time()
         elif player_num == 3:
-            h3_laps += 1
-            if h3_laps == total_laps:
-                end_game(player_num)
+            if buffer < round((time.time() - h3_timer), 2):
+                h3_laps += 1
+
+                if h3_laps == total_laps:
+                    end_game()
+
+                h3_timer = time.time()
         else:
-            h4_laps += 1
-            if h3_laps == total_laps:
-                end_game(player_num)
+            if buffer < round((time.time() - h4_timer), 2):
+                h4_laps += 1
+
+                if h4_laps == total_laps:
+                    end_game()
+
+                h4_timer = time.time()
 
     def at_end():
         base_velo = -0.8
         if player_num == 1:
-            track_laps(player_num)
-            horse1.set_ramped_vel(2, 1)
+            track_laps()
+            horse1.set_vel(2)
             horse1.wait_for_motor_to_stop()
             horse1.set_vel(-0.8)
 
-
         elif player_num == 2:
-            horse2.set_ramped_vel(2, 1)
+            track_laps()
+            horse2.set_vel(2)
             horse2.wait_for_motor_to_stop()
-            track_laps(player_num)
+            horse2.set_vel(-0.8)
         elif player_num == 3:
-            horse3.set_ramped_vel(2, 1)
+            track_laps()
+            horse3.set_vel(2)
             horse3.wait_for_motor_to_stop()
-            track_laps(player_num)
+            horse3.set_vel(-0.8)
         else:
-            horse4.set_ramped_vel(2, 1)
+            track_laps()
+            horse4.set_vel(2)
             horse4.wait_for_motor_to_stop()
-            track_laps(player_num)
+            horse4.set_vel(-0.8)
         return
 
     def velocity_movement(handle, value):
@@ -209,36 +237,58 @@ def setup(player_num):
 
         if player_num == 1:
             horse = horse1
+            time.sleep(0.5)
+            if horse.get_vel() <= 0:
+                if (digital_read(od_2, 2) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
+
         elif player_num == 2:
             horse = horse2
+
+            if horse.get_vel() <= 0:
+                if (digital_read(od_2, 8) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
         elif player_num == 3:
             horse = horse3
+
+            if horse.get_vel() <= 0:
+                if (digital_read(od_1, 2) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
         else:
             horse = horse4
 
-        #if (abs(horse.get_vel()) > 0.1):
-        #    if horse.get_vel() < 0:
-        #        velocity_movement(handle, value)
-        #    else:
-        #        return
-        #else:
-        #    if horse.get_pos() > -5:
-        #        horse.set_vel(-.75)
-        #    else:
+            if horse.get_vel() <= 0:
+                if (digital_read(od_1, 8) == 0):
 
-        #        at_end()
+                    at_end()
+                else:
 
-        total = digital_read(od_1, 2) + digital_read(od_2, 2) + digital_read(od_1, 8) + digital_read(od_2, 8)
-        print(total)
-        if (total < 4):
-            at_end()
-        else:
-            if horse.get_vel() > 0:
+                    velocity_movement(handle, value)
+            else:
                 return
 
-            velocity_movement(handle, value)
-
-
+    horse1.set_vel(-0.5)
+    horse2.set_vel(-0.5)
+    #horse3.set_vel(-0.3)
+    #horse4.set_vel(-0.3)
 
 
 
@@ -259,12 +309,12 @@ try:
 
     # Each address can be found in the HeartRateExample DPEA repo
     chest_polar = adapter0.connect("C6:4B:DF:A5:36:0B", address_type=pygatt.BLEAddressType.random)
-    #hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
+    hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
     #chest_polar2 = adapter2.connect("A0:9E:1A:5E:EF:F6")
 
     chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
-    #hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
-    #chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=handle_tick(3))
+    hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+    #chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
 
     # The subscription runs on a background thread. You must stop this main
     # thread from exiting, otherwise you will not receive any messages, and
