@@ -4,6 +4,9 @@ from Player import Player
 import pygatt
 import kivy
 from binascii import hexlify
+import time
+
+sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
 os.environ['DISPLAY'] = ":0.0"
 # os.environ['KIVY_WINDOW'] = 'egl_rpi'
@@ -17,7 +20,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from odrive_helpers import digital_read
 from threading import Thread
-from time import time, sleep
+from time import sleep
 from kivy.properties import ObjectProperty
 from kivy.uix.image import Image
 from kivy.clock import Clock
@@ -29,6 +32,7 @@ from pidev.kivy import DPEAButton
 from pidev.kivy import ImageButton
 
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
+
 from odrive_helpers import *
 
 MIXPANEL_TOKEN = "x"
@@ -125,6 +129,193 @@ baseline1List = []
 baseline2List = []
 baseline3List = []
 baseline4List = []
+
+global vernier1
+global vernier2
+global vernier3
+global vernier4
+
+h1_laps = 0
+h2_laps = 0
+h3_laps = 0
+h4_laps = 0
+
+h1_timer = time.time()
+h2_timer = time.time()
+h3_timer = time.time()
+h4_timer = time.time()
+
+def setup(player_num):
+
+    print("hello?")
+    def end_game():
+        print("Player " + str(player_num) + " Wins!")
+
+        adapter1.stop()
+        adapter2.stop()
+        adapter3.stop()
+
+        horse1.set_vel(0)
+        horse2.set_vel(0)
+        horse3.set_vel(0)
+        horse4.set_vel(0)
+
+    def track_laps():
+
+        global h1_laps, h2_laps, h3_laps, h4_laps, h1_timer, h2_timer, h3_timer, h4_timer
+
+        total_laps = 3
+
+        buffer = 4
+
+        if player_num == 1:
+            if buffer < round((time() - h1_timer), 2):
+                h1_laps += 1
+
+                if h1_laps == total_laps:
+                    end_game()
+
+                h1_timer = time.time()
+        elif player_num == 2:
+            if buffer < round((time() - h2_timer), 2):
+                h2_laps += 1
+
+                if h2_laps == total_laps:
+                    end_game()
+
+                h2_timer = time.time()
+        elif player_num == 3:
+            if buffer < round((time.time() - h3_timer), 2):
+                h3_laps += 1
+
+                if h3_laps == total_laps:
+                    end_game()
+
+                h3_timer = time.time()
+        else:
+            if buffer < round((time.time() - h4_timer), 2):
+                h4_laps += 1
+
+                if h4_laps == total_laps:
+                    end_game()
+
+                h4_timer = time.time()
+
+    def at_end():
+        base_velo = -0.8
+        if player_num == 1:
+            track_laps()
+            horse1.set_vel(2)
+            horse1.wait_for_motor_to_stop()
+            horse1.set_vel(-0.8)
+
+        elif player_num == 2:
+            track_laps()
+            horse2.set_vel(2)
+            horse2.wait_for_motor_to_stop()
+            horse2.set_vel(-0.8)
+        elif player_num == 3:
+            track_laps()
+            horse3.set_vel(2)
+            horse3.wait_for_motor_to_stop()
+            horse3.set_vel(-0.8)
+        else:
+            track_laps()
+            horse4.set_vel(2)
+            horse4.wait_for_motor_to_stop()
+            horse4.set_vel(-0.8)
+        return
+
+    def velocity_movement(handle, value):
+        base_velo = 0.8  # will get this from something else later
+        heart_weight = 70  # will set at some point
+        baseline_rate = 60  # get from something else as well
+
+        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
+        data = int(hexlify(value)[2:4], 16)
+        t = (data - baseline_rate) / heart_weight
+
+
+
+        velocity = (base_velo + t) * -1
+
+        if not heartrate_is_real(data):
+            velocity = base_velo * -1
+
+        print(t)
+        print("Player " + str(player_num) + "'s velocity is " + str(velocity))
+
+        if player_num == 1:
+            horse1.set_vel(velocity)
+        elif player_num == 2:
+            horse2.set_vel(velocity)
+        elif player_num == 3:
+            horse3.set_vel(velocity)
+        else:
+            horse4.set_vel(velocity)
+
+
+    def handle_tick(handle, value):
+
+        if player_num == 1:
+            horse = horse1
+            time.sleep(0.5)
+            if horse.get_vel() <= 0:
+                if (digital_read(od_2, 2) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
+
+        elif player_num == 2:
+            horse = horse2
+
+            if horse.get_vel() <= 0:
+                if (digital_read(od_2, 8) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
+        elif player_num == 3:
+            horse = horse3
+
+            if horse.get_vel() <= 0:
+                if (digital_read(od_1, 2) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
+        else:
+            horse = horse4
+
+            if horse.get_vel() <= 0:
+                if (digital_read(od_1, 8) == 0):
+
+                    at_end()
+                else:
+
+                    velocity_movement(handle, value)
+            else:
+                return
+
+    horse1.set_vel(-0.5)
+    horse2.set_vel(-0.5)
+    #horse3.set_vel(-0.3)
+    #horse4.set_vel(-0.3)
+
+
+
+    return handle_tick
+
 
 # Homes the Horses to Left Side
 horses = [horse1, horse2, horse3, horse4]
@@ -646,6 +837,7 @@ class BeginningScreen(Screen):
 class BaselineScreen(Screen):
     def find_baseline(self):
         global baseline1, baseline2, baseline3, baseline4
+        global vernier1, vernier2, vernier3, vernier4
         if numberOfPlayers == 2:
             i = 0
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
@@ -733,7 +925,8 @@ class BaselineScreen(Screen):
             print('not working L')
             return
 
-        return baseline1, baseline2, baseline3, baseline4
+        return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2
+
 
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "right"
@@ -756,6 +949,9 @@ class RunScreen(Screen):
             t = str(int(t) - 1)
             sleep(1)
         self.ids.count.text = "GO!"
+        sleep(.5)
+        vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+        vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
         # **RUN THE HORSE VELOCITY FUNCTIONS**
 
 
