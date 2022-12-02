@@ -11,6 +11,11 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 os.environ['DISPLAY'] = ":0.0"
 # os.environ['KIVY_WINDOW'] = 'egl_rpi'
 
+h1_timer = time.time()
+h2_timer = time.time()
+h3_timer = time.time()
+h4_timer = time.time()
+
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -140,12 +145,43 @@ h2_laps = 0
 h3_laps = 0
 h4_laps = 0
 
-h1_timer = time.time()
-h2_timer = time.time()
-h3_timer = time.time()
-h4_timer = time.time()
-
 def setup(player_num):
+
+    def velocity_movement(handle, value):
+        base_velo = 0.5  # will get this from something else later
+        heart_weight = 70  # will set at some point
+        baseline_rate = 60  # get from something else as well
+
+        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
+        data = int(hexlify(value)[2:4], 16)
+        t = (data - baseline_rate) / heart_weight
+
+        velocity = (base_velo + t) * -1
+        if -2 < ((base_velo + ((data - baseline1) / heart_weight)) * -1) < 0:
+            velocity1 = ((base_velo + ((data - baseline1) / heart_weight)) * -1)
+        else:
+            velocity1 = 0
+            print('1 positive velocity')
+        if -2 < ((base_velo + ((data - baseline2) / heart_weight)) * -1) < 0:
+            velocity2 = ((base_velo + ((data - baseline2) / heart_weight)) * -1)
+        else:
+            velocity2 = 0
+            print('2 positive velocity')
+
+        if not heartrate_is_real(data):
+            velocity = base_velo * -1
+
+        print("Player 1's velocity is " + str(velocity1))
+        print("Player 2's velocity is " + str(velocity2))
+
+        if player_num == 1:
+            horse1.set_vel(velocity1)
+        elif player_num == 2:
+            horse2.set_vel(velocity2)
+        elif player_num == 3:
+            horse3.set_vel(velocity)
+        else:
+            horse4.set_vel(velocity)
 
     print("hello?")
     def end_game():
@@ -202,12 +238,16 @@ def setup(player_num):
                 h4_timer = time.time()
 
     def at_end():
-        base_velo = -0.8
         if player_num == 1:
+            print('a')
             track_laps()
+            print('b')
             horse1.set_vel(2)
+            print('c')
             horse1.wait_for_motor_to_stop()
+            print('d')
             horse1.set_vel(-0.8)
+            print('e')
 
         elif player_num == 2:
             track_laps()
@@ -226,48 +266,21 @@ def setup(player_num):
             horse4.set_vel(-0.8)
         return
 
-    def velocity_movement(handle, value):
-        base_velo = 0.8  # will get this from something else later
-        heart_weight = 70  # will set at some point
-        baseline_rate = 60  # get from something else as well
-
-        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
-        data = int(hexlify(value)[2:4], 16)
-        t = (data - baseline_rate) / heart_weight
-
-
-
-        velocity = (base_velo + t) * -1
-
-        if not heartrate_is_real(data):
-            velocity = base_velo * -1
-
-        print(t)
-        print("Player " + str(player_num) + "'s velocity is " + str(velocity))
-
-        if player_num == 1:
-            horse1.set_vel(velocity)
-        elif player_num == 2:
-            horse2.set_vel(velocity)
-        elif player_num == 3:
-            horse3.set_vel(velocity)
-        else:
-            horse4.set_vel(velocity)
-
-
     def handle_tick(handle, value):
 
         if player_num == 1:
             horse = horse1
-            time.sleep(0.5)
+            print('pass 1')
             if horse.get_vel() <= 0:
+                print('pass 2')
                 if (digital_read(od_2, 2) == 0):
-
+                    print('sensor 1 hit')
                     at_end()
                 else:
 
                     velocity_movement(handle, value)
             else:
+                print('not working')
                 return
 
         elif player_num == 2:
@@ -275,7 +288,7 @@ def setup(player_num):
 
             if horse.get_vel() <= 0:
                 if (digital_read(od_2, 8) == 0):
-
+                    print('sensor 2 hit')
                     at_end()
                 else:
 
@@ -307,13 +320,6 @@ def setup(player_num):
             else:
                 return
 
-    horse1.set_vel(-0.5)
-    horse2.set_vel(-0.5)
-    #horse3.set_vel(-0.3)
-    #horse4.set_vel(-0.3)
-
-
-
     return handle_tick
 
 
@@ -338,27 +344,6 @@ def heartrate_is_real(heartrate):
             return True
     else:
         return False
-def velocity_movement(player_num):
-    def handle_data(handle, value):
-        base_velo = 0.3
-        heart_weight = 30
-        baseline_rate = 60
-
-        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
-        data = int(hexlify(value)[2:4], 16)
-        t = (data - baseline_rate) / heart_weight
-
-        if not heartrate_is_real(data):
-            return None
-
-        velocity = (base_velo + t) * -1
-        print(t)
-        print("Player " + str(player_num) + "'s velocity is " + str(velocity))
-
-        if player_num == 1:
-            horse1.set_vel(velocity)
-
-    return handle_data
 
 def heartrate_baseline(player_num):
     def handle_data(handle, value):
@@ -845,7 +830,7 @@ class BaselineScreen(Screen):
             vernier2 = adapter2.connect(player2.deviceID)
             print('vernier2 connected')
 
-            while i < 5:
+            while i < 3:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 sleep(1)
@@ -876,7 +861,7 @@ class BaselineScreen(Screen):
             vernier3 = adapter3.connect(player3.deviceID)
             print('vernier3 connected')
 
-            while i < 5:
+            while i < 3:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
