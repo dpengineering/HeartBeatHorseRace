@@ -94,6 +94,21 @@ if not horse4.is_calibrated():
     print("calibrating horse4...")
     horse4.calibrate_with_current_lim(15)
 
+# Homes the Horses to Left Side
+horses = [horse1, horse2, horse3, horse4]
+for horse in horses:
+    horse.set_ramped_vel(1, 1)
+sleep(1)
+for horse in horses:
+    horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
+for horse in horses:
+    horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
+sleep(3)  # allows motor to start moving to offset position
+for horse in horses:
+    horse.wait_for_motor_to_stop()
+for horse in horses:
+    horse.set_home()
+
 print("Current Limit Horse1: ", horse1.get_current_limit())
 print("Velocity Limit Horse1: ", horse1.get_vel_limit())
 print("Current Limit Horse2: ", horse2.get_current_limit())
@@ -145,8 +160,16 @@ h2_laps = 0
 h3_laps = 0
 h4_laps = 0
 
-def setup(player_num):
 
+def heartrate_is_real(heartrate):
+    if heartrate > 30:
+        if heartrate < 170:
+            return True
+    else:
+        return False
+
+
+def setup(player_num):
     def velocity_movement(handle, value):
         base_velo = 0.5  # will get this from something else later
         heart_weight = 70  # will set at some point
@@ -167,23 +190,30 @@ def setup(player_num):
         else:
             velocity2 = 0
             print('2 positive velocity')
+        if -2 < ((base_velo + ((data - baseline3) / heart_weight)) * -1) < 0:
+            velocity3 = ((base_velo + ((data - baseline3) / heart_weight)) * -1)
+        else:
+            velocity3 = 0
+            print('3 positive velocity')
 
         if not heartrate_is_real(data):
             velocity = base_velo * -1
 
         print("Player 1's velocity is " + str(velocity1))
         print("Player 2's velocity is " + str(velocity2))
+        print("Player 2's velocity is " + str(velocity3))
 
         if player_num == 1:
             horse1.set_vel(velocity1)
         elif player_num == 2:
             horse2.set_vel(velocity2)
         elif player_num == 3:
-            horse3.set_vel(velocity)
+            horse3.set_vel(velocity3)
         else:
             horse4.set_vel(velocity)
 
     print("hello?")
+
     def end_game():
         print("Player " + str(player_num) + " Wins!")
 
@@ -323,28 +353,6 @@ def setup(player_num):
     return handle_tick
 
 
-# Homes the Horses to Left Side
-horses = [horse1, horse2, horse3, horse4]
-for horse in horses:
-    horse.set_ramped_vel(1, 1)
-sleep(1)
-for horse in horses:
-    horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
-for horse in horses:
-    horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
-sleep(3)  # allows motor to start moving to offset position
-for horse in horses:
-    horse.wait_for_motor_to_stop()
-for horse in horses:
-    horse.set_home()
-
-def heartrate_is_real(heartrate):
-    if heartrate > 30:
-        if heartrate < 170:
-            return True
-    else:
-        return False
-
 def heartrate_baseline(player_num):
     def handle_data(handle, value):
         heartrate = int(hexlify(value)[2:4], 16)
@@ -362,13 +370,16 @@ def heartrate_baseline(player_num):
                 print('not good')
         else:
             print('unlucky')
+
     return handle_data
+
 
 def average_heartrate(lst):
     if not len(lst) == 0:
-        return sum(lst)/len(lst)
+        return sum(lst) / len(lst)
     else:
         return 'not averaged'
+
 
 print("end of beginning")
 
@@ -866,6 +877,7 @@ class BaselineScreen(Screen):
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
                 sleep(1)
+                print(baseline3List)
                 i += 1
 
             vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
@@ -886,7 +898,7 @@ class BaselineScreen(Screen):
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-        elif numberOfPlayers == 4: #WIP
+        elif numberOfPlayers == 4:  # WIP
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -912,7 +924,6 @@ class BaselineScreen(Screen):
 
         return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2
 
-
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "right"
         SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
@@ -937,6 +948,7 @@ class RunScreen(Screen):
         sleep(.5)
         vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
         vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+        #vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
         # **RUN THE HORSE VELOCITY FUNCTIONS**
 
 
