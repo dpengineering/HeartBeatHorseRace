@@ -8,9 +8,6 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 from odrive_helpers import *
 import time
 
-
-
-
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
 
@@ -40,8 +37,6 @@ horse2.set_gains()
 horse3.set_gains()
 horse4.set_gains()
 
-
-
 if not horse1.is_calibrated():
     print("calibrating horse1...")
     horse1.calibrate_with_current_lim(15)
@@ -54,7 +49,6 @@ if not horse3.is_calibrated():
 if not horse4.is_calibrated():
     print("calibrating horse4...")
     horse4.calibrate_with_current_lim(15)
-
 
 horses = [horse1, horse2, horse3, horse4]
 for horse in horses:
@@ -69,7 +63,6 @@ for horse in horses:
     horse.wait_for_motor_to_stop()
 for horse in horses:
     horse.set_home()
-
 
 print("Current Limit Horse1: ", horse1.get_current_limit())
 print("Velocity Limit Horse1: ", horse1.get_vel_limit())
@@ -98,7 +91,6 @@ od_2.axis1.controller.config.enable_overspeed_error = False
 
 
 def heartrate_is_real(heartrate):
-
     if (heartrate > 30):
         if (heartrate < 170):
             return True
@@ -118,11 +110,7 @@ h4_timer = time.time()
 
 
 def setup(player_num):
-
     print("hello?")
-
-
-
 
     def end_game():
         print("Player " + str(player_num) + " Wins!")
@@ -135,8 +123,6 @@ def setup(player_num):
         horse2.set_vel(0)
         horse3.set_vel(0)
         horse4.set_vel(0)
-
-
 
     def track_laps():
 
@@ -213,8 +199,6 @@ def setup(player_num):
         data = int(hexlify(value)[2:4], 16)
         t = (data - baseline_rate) / heart_weight
 
-
-
         velocity = (base_velo + t) * -1
 
         if not heartrate_is_real(data):
@@ -231,7 +215,6 @@ def setup(player_num):
             horse3.set_vel(velocity)
         else:
             horse4.set_vel(velocity)
-
 
     def handle_tick(handle, value):
 
@@ -287,13 +270,10 @@ def setup(player_num):
 
     horse1.set_vel(-0.5)
     horse2.set_vel(-0.5)
-    #horse3.set_vel(-0.3)
-    #horse4.set_vel(-0.3)
-
-
+    # horse3.set_vel(-0.3)
+    # horse4.set_vel(-0.3)
 
     return handle_tick
-
 
 
 try:
@@ -310,11 +290,12 @@ try:
     # Each address can be found in the HeartRateExample DPEA repo
     chest_polar = adapter0.connect("C6:4B:DF:A5:36:0B", address_type=pygatt.BLEAddressType.random)
     hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
-    #chest_polar2 = adapter2.connect("A0:9E:1A:5E:EF:F6")
+    # chest_polar2 = adapter2.connect("A0:9E:1A:5E:EF:F6")
 
-    chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
+    chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(
+        1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
     hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
-    #chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+    # chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
 
     # The subscription runs on a background thread. You must stop this main
     # thread from exiting, otherwise you will not receive any messages, and
