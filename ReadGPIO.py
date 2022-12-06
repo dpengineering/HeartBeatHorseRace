@@ -24,8 +24,6 @@ from odrive_helpers import *
 import time
 
 
-
-
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
 
@@ -65,9 +63,6 @@ for i in range(10000):
     print(digital_read(od_1, 2))
     sleep(1)
 
-
-
     time.sleep(0.1)
 
 print("done")
-
