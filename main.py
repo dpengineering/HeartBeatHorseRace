@@ -4,23 +4,19 @@ from Player import Player
 import pygatt
 import kivy
 from binascii import hexlify
-import time
 
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
 os.environ['DISPLAY'] = ":0.0"
 # os.environ['KIVY_WINDOW'] = 'egl_rpi'
 
-h1_timer = time.time()
-h2_timer = time.time()
-h3_timer = time.time()
-h4_timer = time.time()
-
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
+from kivymd.app import MDApp
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from odrive_helpers import digital_read
@@ -29,6 +25,7 @@ from time import sleep
 from kivy.properties import ObjectProperty
 from kivy.uix.image import Image
 from kivy.clock import Clock
+import kivy
 
 from pidev.MixPanel import MixPanel
 from pidev.kivy.PassCodeScreen import PassCodeScreen
@@ -39,6 +36,8 @@ from pidev.kivy import ImageButton
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
 from odrive_helpers import *
+import time
+import Player
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -54,11 +53,6 @@ RUN_SCREEN_NAME = 'run'
 
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
-
-digital_read(od_1, 8)
-digital_read(od_1, 2)
-digital_read(od_2, 8)
-digital_read(od_2, 2)
 
 assert od_1.config.enable_brake_resistor is True, "Check for faulty brake resistor."
 assert od_2.config.enable_brake_resistor is True, "Check for faulty brake resistor."
@@ -94,6 +88,7 @@ if not horse4.is_calibrated():
     print("calibrating horse4...")
     horse4.calibrate_with_current_lim(15)
 
+
 # Homes the Horses to Left Side
 horses = [horse1, horse2, horse3, horse4]
 for horse in horses:
@@ -108,6 +103,7 @@ for horse in horses:
     horse.wait_for_motor_to_stop()
 for horse in horses:
     horse.set_home()
+
 
 print("Current Limit Horse1: ", horse1.get_current_limit())
 print("Velocity Limit Horse1: ", horse1.get_vel_limit())
@@ -160,6 +156,10 @@ h2_laps = 0
 h3_laps = 0
 h4_laps = 0
 
+h1_timer = time.time()
+h2_timer = time.time()
+h3_timer = time.time()
+h4_timer = time.time()
 
 def heartrate_is_real(heartrate):
     if heartrate > 30:
@@ -167,7 +167,6 @@ def heartrate_is_real(heartrate):
             return True
     else:
         return False
-
 
 def setup(player_num):
     def velocity_movement(handle, value):
@@ -195,13 +194,19 @@ def setup(player_num):
         else:
             velocity3 = 0
             print('3 positive velocity')
+        if -2 < ((base_velo + ((data - baseline4) / heart_weight)) * -1) < 0:
+            velocity4 = ((base_velo + ((data - baseline4) / heart_weight)) * -1)
+        else:
+            velocity4 = 0
+            print('3 positive velocity')
 
         if not heartrate_is_real(data):
             velocity = base_velo * -1
 
         print("Player 1's velocity is " + str(velocity1))
         print("Player 2's velocity is " + str(velocity2))
-        print("Player 2's velocity is " + str(velocity3))
+        print("Player 3's velocity is " + str(velocity3))
+        print("Player 4's velocity is " + str(velocity4))
 
         if player_num == 1:
             horse1.set_vel(velocity1)
@@ -210,12 +215,17 @@ def setup(player_num):
         elif player_num == 3:
             horse3.set_vel(velocity3)
         else:
-            horse4.set_vel(velocity)
+            horse4.set_vel(velocity4)
 
     print("hello?")
 
     def end_game():
         print("Player " + str(player_num) + " Wins!")
+
+        vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+        vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+        vernier3.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+        vernier4.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
 
         adapter1.stop()
         adapter2.stop()
@@ -226,6 +236,11 @@ def setup(player_num):
         horse3.set_vel(0)
         horse4.set_vel(0)
 
+        horse1.idle()
+        horse2.idle()
+        horse3.idle()
+        horse4.idle()
+
     def track_laps():
 
         global h1_laps, h2_laps, h3_laps, h4_laps, h1_timer, h2_timer, h3_timer, h4_timer
@@ -235,7 +250,7 @@ def setup(player_num):
         buffer = 4
 
         if player_num == 1:
-            if buffer < round((time() - h1_timer), 2):
+            if buffer < round((time.time() - h1_timer), 2):
                 h1_laps += 1
 
                 if h1_laps == total_laps:
@@ -243,7 +258,7 @@ def setup(player_num):
 
                 h1_timer = time.time()
         elif player_num == 2:
-            if buffer < round((time() - h2_timer), 2):
+            if buffer < round((time.time() - h2_timer), 2):
                 h2_laps += 1
 
                 if h2_laps == total_laps:
@@ -269,15 +284,10 @@ def setup(player_num):
 
     def at_end():
         if player_num == 1:
-            print('a')
             track_laps()
-            print('b')
             horse1.set_vel(2)
-            print('c')
             horse1.wait_for_motor_to_stop()
-            print('d')
             horse1.set_vel(-0.8)
-            print('e')
 
         elif player_num == 2:
             track_laps()
@@ -300,11 +310,8 @@ def setup(player_num):
 
         if player_num == 1:
             horse = horse1
-            print('pass 1')
             if horse.get_vel() <= 0:
-                print('pass 2')
                 if (digital_read(od_2, 2) == 0):
-                    print('sensor 1 hit')
                     at_end()
                 else:
 
@@ -318,7 +325,6 @@ def setup(player_num):
 
             if horse.get_vel() <= 0:
                 if (digital_read(od_2, 8) == 0):
-                    print('sensor 2 hit')
                     at_end()
                 else:
 
@@ -351,7 +357,6 @@ def setup(player_num):
                 return
 
     return handle_tick
-
 
 def heartrate_baseline(player_num):
     def handle_data(handle, value):
@@ -412,6 +417,11 @@ class MainScreen(Screen):
     """
     count = 0
     elapsed = ObjectProperty()
+
+    def redraw(self, args):
+        self.bg_rect.size = self.size
+        self.bg_rect.pos = self.pos
+
 
     def run_players(self):
         # adapter3 = pygatt.BGAPIBackend()
@@ -946,10 +956,19 @@ class RunScreen(Screen):
             sleep(1)
         self.ids.count.text = "GO!"
         sleep(.5)
-        vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-        vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
-        #vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
-        # **RUN THE HORSE VELOCITY FUNCTIONS**
+        try:
+            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+            #vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+            while True:
+                time.sleep(10)
+                print("while True is running")
+        finally:
+            adapter1.stop()
+            adapter2.stop()
+            adapter3.stop()
+            adapter4.stop()
+
 
 
 class TrajectoryScreen(Screen):

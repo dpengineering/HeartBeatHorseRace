@@ -11,6 +11,13 @@
     FloatLayout:
         size_hint: None, None
 
+    Widget:
+        canvas:
+            Rectangle:
+                source: "Images/HorseBackground.png"
+                size: self.size
+                pos: self.pos
+
     DPEAButton:
         id: traj_button
         text: 'TRAJ'
@@ -29,13 +36,13 @@
         color: 1, 0, 0, 1
         on_press: root.switch_to_gpio()
 
-    DPEAButton:
+    Button:
         id: beginning_button
-        text: "Beginning"
-        size: 100, 100
-        center_x: root.width * 0.5
+        center_x: root.width * 0.36
         center_y: root.height * 0.25
-        color: 1, 0, 0, 1
+        background_normal: "Images/PlayImg.png"
+        background_down: "Images/PlayImg.png"
+        size_hint: 0.3, 0.3
         on_press: root.switch_to_beginning()
 
     #DPEAButton:
