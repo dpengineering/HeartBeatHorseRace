@@ -6,6 +6,7 @@ from threading import Thread
 
 total_laps = 3
 
+
 def horse_setup(horses):
 
     for horse in horses:

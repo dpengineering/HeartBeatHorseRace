@@ -94,11 +94,9 @@ class Player:
     def get_laps(self):
         return self.laps
 
-
     def heartrate_is_real(self, heartrate):
         if heartrate > 30:
             if heartrate < 170:
                 return True
         else:
             return False
-

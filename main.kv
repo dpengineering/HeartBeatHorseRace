@@ -1,12 +1,8 @@
 <MainScreen>:
 
     name: 'main'
+    on_enter: root.beginning_setup()
     on_enter: root.thread_check_all_sensors()
-    timer_horse1: timer_horse1
-    timer_horse2: timer_horse2
-    timer_horse3: timer_horse3
-    timer_horse4: timer_horse4
-    start_time_button: start_time_button
 
     FloatLayout:
         size_hint: None, None
@@ -22,123 +18,19 @@
         id: traj_button
         text: 'TRAJ'
         size: 100, 100
-        center_x: root.width * 0.85
-        center_y: root.height * 0.5
+        center_x: root.width * 0.15
+        center_y: root.height * 0.1
         color: 0, 1, 0, 1
         on_press: root.switch_to_traj()
-
-    DPEAButton:
-        id: gpio_button
-        text: "GPIO"
-        size: 100, 100
-        center_x: root.width * 0.15
-        center_y: root.height * 0.5
-        color: 1, 0, 0, 1
-        on_press: root.switch_to_gpio()
 
     Button:
         id: beginning_button
         center_x: root.width * 0.36
-        center_y: root.height * 0.25
+        center_y: root.height * 0.35
         background_normal: "Images/PlayImg.png"
         background_down: "Images/PlayImg.png"
         size_hint: 0.3, 0.3
         on_press: root.switch_to_beginning()
-
-    #DPEAButton:
-    #    text: 'Motor Toggle'
-    #    size: 100, 100
-    #    x: root.width * .15
-    #    y: root.height * .6
-    #    color: 0, .5, .5, 1
-    #    on_press: root.motor_toggle()
-
-    DPEAButton:
-        text: 'Home'
-        size: 100, 100
-        center_x: root.width * .15
-        center_y: root.height * .8
-        color: 0, .5, .5, 1
-        on_press: root.home_all_horses()
-
-    #DPEAButton:
-    #    text: 'Horse Start'
-    #    size: 100, 100
-    #   x: root.width * .45
-    #   y: root.height * .2
-    #   color: 0, .5, .5, 1
-    #   on_press: root.run_players()
-
-############################################################# TIME LABELS
-    Label:
-        id: timer_horse1
-        text: '0.0'
-        #text: str(100.25)
-        size_hint: None, None
-        color: 0, .5, .5, 1
-        center_x: root.width * 0.2
-        center_y: root.height * 0.7
-        bold: True
-        outline_width: self.font_size * 0.1
-        outline_color: 0, 0, 0
-        font_size: 50
-
-    Label:
-        id: timer_horse2
-        #text: str(round(velocity_slider_horse1.value, 2))
-        text: '0.0'
-        size_hint: None, None
-        color: 0, .5, .5, 1
-        center_x: root.width * 0.4
-        center_y: root.height * 0.7
-        bold: True
-        outline_width: self.font_size * 0.1
-        outline_color: 0, 0, 0
-        font_size: 50
-
-    Label:
-        id: timer_horse3
-        #text: str(round(velocity_slider_horse1.value, 2))
-        text: '0.0'
-        size_hint: None, None
-        color: 0, .5, .5, 1
-        center_x: root.width * 0.6
-        center_y: root.height * 0.7
-        bold: True
-        outline_width: self.font_size * 0.1
-        outline_color: 0, 0, 0
-        font_size: 50
-
-    Label:
-        id: timer_horse4
-        text: '0.0'
-        #text: str(round(velocity_slider_horse1.value, 2))
-        size_hint: None, None
-        color: 0, .5, .5, 1
-        center_x: root.width * 0.8
-        center_y: root.height * 0.7
-        bold: True
-        outline_width: self.font_size * 0.1
-        outline_color: 0, 0, 0
-        font_size: 50
-
-    DPEAButton:
-        id: start_time_button
-        text: 'Start Timer'
-        size: 100, 100
-        center_x: root.width * .35
-        center_y: root.height * .8
-        color: 0, 1, 0, 1
-        on_press: root.start_time_thread()
-
-    DPEAButton:
-        id: stop_time_button
-        text: 'Stop Timer'
-        size: 100, 100
-        center_x: root.width * .55
-        center_y: root.height * .8
-        color: 0, 1, 0, 1
-        on_press: root.stop_time()
 
     DPEAButton:
         id: quit
@@ -206,27 +98,3 @@
         pos_hint: {"center_x": 0.75, "center_y":0.2}
         color: 0, 1, 0, 1
         on_press: root.submit_trapezoidal_traj()
-
-<GPIOScreen>:
-
-    name: 'main'
-
-    FloatLayout:
-        size_hint: None, None
-
-    DPEAButton:
-        id: newHome
-        text: 'New Home'
-        size: 100, 100
-        center_x: root.width * 0.5
-        center_y: root.height * 0.25
-        color: 0, 1, 0, 1
-        on_press: root.homing_switch()
-
-    DPEAButton:
-        id: test_button
-        text:'back'
-        size: 100, 100
-        pos_hint: {"center_x": 0.5, "center_y":0.5}
-        color: 0, 1, 0, 1
-        on_press: root.switch_screen()

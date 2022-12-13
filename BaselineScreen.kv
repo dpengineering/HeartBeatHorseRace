@@ -5,6 +5,13 @@
     FloatLayout:
         size_hint: None, None
 
+    Widget:
+        canvas:
+            Rectangle:
+                source: "Images/HorseBackground.png"
+                size: self.size
+                pos: self.pos
+
     Button:
         id: heart
         width: 100
@@ -12,7 +19,7 @@
         center_y: root.height * 0.5
         size_hint: None, None
         size: 225, 225
-        background_normal: "Images/heart.png"
+        background_normal: "Images/heart_pixelated.png"
         on_press: root.find_baseline()
 
     Label:
@@ -20,7 +27,7 @@
         size_hint: None, None
         color: 1, 1, 1, 1
         center_x: root.width * 0.5
-        center_y: root.height * 0.7
+        center_y: root.height * 0.88
         font_size: 50
         bold: True
         outline_width: self.font_size * 0.1

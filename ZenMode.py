@@ -1,5 +1,3 @@
-#testing code, no longer useful
-
 import sys
 from binascii import hexlify
 
@@ -39,6 +37,42 @@ horse2.set_gains()
 horse3.set_gains()
 horse4.set_gains()
 
+if not horse1.is_calibrated():
+    print("calibrating horse1...")
+    horse1.calibrate_with_current_lim(15)
+if not horse2.is_calibrated():
+    print("calibrating horse2...")
+    horse2.calibrate_with_current_lim(15)
+if not horse3.is_calibrated():
+    print("calibrating horse3...")
+    horse3.calibrate_with_current_lim(15)
+if not horse4.is_calibrated():
+    print("calibrating horse4...")
+    horse4.calibrate_with_current_lim(15)
+
+horses = [horse1, horse2, horse3, horse4]
+for horse in horses:
+    horse.set_ramped_vel(1, 1)
+sleep(3)
+for horse in horses:
+    horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
+for horse in horses:
+    horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
+sleep(3)  # allows motor to start moving to offset position
+for horse in horses:
+    horse.wait_for_motor_to_stop()
+for horse in horses:
+    horse.set_home()
+
+print("Current Limit Horse1: ", horse1.get_current_limit())
+print("Velocity Limit Horse1: ", horse1.get_vel_limit())
+print("Current Limit Horse2: ", horse2.get_current_limit())
+print("Velocity Limit Horse2: ", horse2.get_vel_limit())
+print("Current Limit Horse3: ", horse3.get_current_limit())
+print("Velocity Limit Horse3: ", horse3.get_vel_limit())
+print("Current Limit Horse4: ", horse4.get_current_limit())
+print("Velocity Limit Horse4: ", horse4.get_vel_limit())
+
 horse1.set_vel(0)
 horse2.set_vel(0)
 horse3.set_vel(0)
@@ -54,6 +88,25 @@ od_1.axis0.controller.config.enable_overspeed_error = False
 od_1.axis1.controller.config.enable_overspeed_error = False
 od_2.axis0.controller.config.enable_overspeed_error = False
 od_2.axis1.controller.config.enable_overspeed_error = False
+
+
+def heartrate_is_real(heartrate):
+    if (heartrate > 30):
+        if (heartrate < 170):
+            return True
+    else:
+        return False
+
+
+h1_laps = 0
+h2_laps = 0
+h3_laps = 0
+h4_laps = 0
+
+h1_timer = time.time()
+h2_timer = time.time()
+h3_timer = time.time()
+h4_timer = time.time()
 
 
 def setup(player_num):
@@ -138,48 +191,30 @@ def setup(player_num):
         return
 
     def velocity_movement(handle, value):
-        base_velo = 0.5  # will get this from something else later
+        base_velo = 0.8  # will get this from something else later
         heart_weight = 70  # will set at some point
+        baseline_rate = 60  # get from something else as well
 
         print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
         data = int(hexlify(value)[2:4], 16)
+        t = (data - baseline_rate) / heart_weight
 
-        if -2 < ((base_velo + ((data - baseline1) / heart_weight)) * -1) < 0:
-            velocity1 = ((base_velo + ((data - baseline1) / heart_weight)) * -1)
-        else:
-            velocity1 = 0
-            print('1 positive velocity')
-        if -2 < ((base_velo + ((data - baseline2) / heart_weight)) * -1) < 0:
-            velocity2 = ((base_velo + ((data - baseline2) / heart_weight)) * -1)
-        else:
-            velocity2 = 0
-            print('2 positive velocity')
-        if -2 < ((base_velo + ((data - baseline3) / heart_weight)) * -1) < 0:
-            velocity3 = ((base_velo + ((data - baseline3) / heart_weight)) * -1)
-        else:
-            velocity3 = 0
-            print('3 positive velocity')
-        if -2 < ((base_velo + ((data - baseline4) / heart_weight)) * -1) < 0:
-            velocity4 = ((base_velo + ((data - baseline4) / heart_weight)) * -1)
-        else:
-            velocity4 = 0
-            print('3 positive velocity')
+        velocity = (base_velo + t) * -1
 
-        print("Player 1's velocity is " + str(velocity1))
-        print("Player 2's velocity is " + str(velocity2))
-        print("Player 3's velocity is " + str(velocity3))
-        print("Player 4's velocity is " + str(velocity4))
+        if not heartrate_is_real(data):
+            velocity = base_velo * -1
+
+        print(t)
+        print("Player " + str(player_num) + "'s velocity is " + str(velocity))
 
         if player_num == 1:
-            horse1.set_vel(velocity1)
+            horse1.set_vel(velocity)
         elif player_num == 2:
-            horse2.set_vel(velocity2)
+            horse2.set_vel(velocity)
         elif player_num == 3:
-            horse3.set_vel(velocity3)
+            horse3.set_vel(velocity)
         else:
-            horse4.set_vel(velocity4)
-
-    print("hello?")
+            horse4.set_vel(velocity)
 
     def handle_tick(handle, value):
 

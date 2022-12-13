@@ -5,6 +5,12 @@
     FloatLayout:
         size_hint: None, None
 
+    Widget:
+        canvas:
+            Rectangle:
+                source: "Images/HorseBackground.png"
+                size: self.size
+                pos: self.pos
 
     DPEAButton:
         id: twoPlayer
@@ -49,18 +55,6 @@
         center_x: root.width * 0.66
         center_y: root.height * 0.85
         color: 0, 0, 1, 1
-
-    Label:
-        id: playerNum
-        text: "0"
-        size_hint: None, None
-        color: 1, 1, 1, 1
-        center_x: root.width * 0.5
-        center_y: root.height * 0.9
-        font_size: 50
-        bold: True
-        outline_width: self.font_size * 0.1
-        outline_color: 0, 0, 0
 
     DPEAButton:
         id: goBack
