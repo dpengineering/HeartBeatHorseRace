@@ -34,7 +34,7 @@ class Player:
         self.base_velo = 0.5
         self.heart_weight = 70
         self.baseline_rate = baseline_rate
-        self.is_done = False
+        self.is_done = True
 
 
     def handle_tick(self, value):
@@ -86,6 +86,9 @@ class Player:
 
     def game_done(self):
         self.is_done = True
+
+    def start_game(self):
+        self.is_done = False
 
 
     def get_laps(self):

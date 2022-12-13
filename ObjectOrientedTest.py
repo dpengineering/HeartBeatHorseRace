@@ -94,7 +94,7 @@ def setup(player_num):
                 end_game(2)
         elif player_num == 3:
             p3.handle_tick(value)
-            if p2.get_laps() >= total_laps:
+            if p3.get_laps() >= total_laps:
                 end_game(3)
         else:
             p4.handle_tick(value)
@@ -151,12 +151,18 @@ try:
     hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
     chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
 
+
+
     # The subscription runs on a background thread. You must stop this main
     # thread from exiting, otherwise you will not receive any messages, and
     # the program will exit. Sleeping in a while loop like this is a simple
     # solution that won't eat up unnecessary CPU, but there are many other
     # ways to handle this in more complicated program. Multi-threaded
     # programming is outside the scope of this README.
+
+    p1.start_game()
+    p2.start_game()
+    p3.start_game()
 
     while True:
         sleep(10)
