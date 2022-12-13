@@ -2,6 +2,7 @@ import sys
 from binascii import hexlify
 
 import pygatt
+import horserace_helpers
 
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
