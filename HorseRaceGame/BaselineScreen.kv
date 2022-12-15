@@ -1,0 +1,43 @@
+<BaselineScreen>:
+
+    name: 'baseline'
+
+    FloatLayout:
+        size_hint: None, None
+
+    Widget:
+        canvas:
+            Rectangle:
+                source: "Images/HorseBackground.png"
+                size: self.size
+                pos: self.pos
+
+    Button:
+        id: heart
+        width: 100
+        center_x: root.width * 0.5
+        center_y: root.height * 0.5
+        size_hint: None, None
+        size: 524, 225
+        background_normal: "Images/heart_pixelated.png"
+        on_press: root.find_baseline()
+
+    Label:
+        text: "Press the heart to take your baseline heartrate!"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.5
+        center_y: root.height * 0.88
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+#    DPEAButton:
+#        id: goBack
+#        text: 'Go Back'
+#        size: 100, 100
+#        center_x: root.width * 0.5
+#        center_y: root.height * 0.05
+#        color: 1, 0, 0, 1
+#        on_press: root.switch_screen()

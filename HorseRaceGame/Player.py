@@ -1,8 +1,5 @@
-import pygatt
 from binascii import hexlify
-from time import sleep
 from odrive_helpers import *
-from threading import Thread
 import horserace_helpers
 
 class Player:
@@ -63,7 +60,6 @@ class Player:
                 self.axis.wait_for_motor_to_stop()
                 self.track_lap = True
                 self.is_backward = False
-
         else:
             return False
 
@@ -123,7 +119,9 @@ class Player:
         self.track_lap = False
         self.laps += 1
         if self.laps >= horserace_helpers.total_laps:
-            self.axis.set_vel(0)
+            self.axis.set_vel(2)
+            self.is_backward = True
+            self.axis.wait_for_motor_to_stop()
 
     def game_done(self):
         self.is_done = True
