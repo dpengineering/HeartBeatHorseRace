@@ -1,8 +1,5 @@
-import pygatt
 from binascii import hexlify
-from time import sleep
 from odrive_helpers import *
-from threading import Thread
 import horserace_helpers
 
 class Player:
