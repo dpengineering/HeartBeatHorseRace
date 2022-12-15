@@ -63,6 +63,7 @@ baseline3List = []
 baseline4List = []
 
 homed = False
+new_game = False
 print(homed)
 i = 0
 total_laps = 3
@@ -72,8 +73,6 @@ player2 = Player("A0:9E:1A:49:A8:51", od_2, 2, horse2, baseline2, 0)
 player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3, 0)
 player4 = Player("", od_1, 4, horse4, baseline4, 0)
 
-new_game = False
-
 
 def heartrate_is_real(heartrate):
     if (heartrate > 30):
@@ -81,25 +80,6 @@ def heartrate_is_real(heartrate):
             return True
     else:
         return False
-
-    def end_game(player_num):
-        global new_game
-        print("Player " + str(player_num) + " Wins!")
-
-        # vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
-        # vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
-        # vernier3.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
-        # vernier4.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
-
-        horse1.get_home()
-        horse2.get_home()
-        horse3.get_home()
-        horse4.get_home()
-
-        print('horses home')
-        new_game = True
-        print('new game is true')
-        return new_game
 
 
 def heartrate_baseline(player_num):
@@ -154,30 +134,17 @@ def setup(player_num):
                 end_game(4)
 
     def end_game(num):
+        global new_game
         print("Player " + str(num) + " Wins!")
 
         # vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
         # vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
         # vernier3.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
         # vernier4.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
-        player1.game_done()
-        player2.game_done()
-        player3.game_done()
-        player4.game_done()
 
-        adapter1.stop()
-        adapter2.stop()
-        # adapter3.stop()
-
-        horse1.set_vel(0)
-        horse2.set_vel(0)
-        horse3.set_vel(0)
-        horse4.set_vel(0)
-
-        horse1.idle()
-        horse2.idle()
-        horse3.idle()
-        horse4.idle()
+        new_game = True
+        print('new game is true')
+        return new_game
 
     return handle_data
 

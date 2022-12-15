@@ -12,12 +12,13 @@
                 size: self.size
                 pos: self.pos
 
-    DPEAButton:
+    Button:
         id: onePlayer
-        text: '1 Player'
-        size: 100, 100
-        center_x: root.width * 0.25
+        size: 384, 96
+        center_x: root.width * 0.5
         center_y: root.height * 0.8
+        size_hint: None, None
+        background_normal: "Images/1_Player_Button.png"
         color: 0, 0, 1, 1
         on_press: root.one_player()
 
@@ -52,27 +53,27 @@
         on_press: root.four_players()
 
 
-    DPEAButton:
-        id: chaos
-        text: 'Chaos Mode'
-        size: 100, 100
-        center_x: root.width * 0.33
-        center_y: root.height * 0.85
-        color: 0, 0, 1, 1
+#    DPEAButton:
+#        id: chaos
+#        text: 'Chaos Mode'
+#        size: 100, 100
+#        center_x: root.width * 0.33
+#        center_y: root.height * 0.85
+#        color: 0, 0, 1, 1
+#
+#    DPEAButton:
+#        id: zen
+#        text: 'Zen Mode'
+#        size: 100, 100
+#        center_x: root.width * 0.66
+#        center_y: root.height * 0.85
+#        color: 0, 0, 1, 1
 
-    DPEAButton:
-        id: zen
-        text: 'Zen Mode'
-        size: 100, 100
-        center_x: root.width * 0.66
-        center_y: root.height * 0.85
-        color: 0, 0, 1, 1
-
-    DPEAButton:
-        id: goBack
-        text: 'Go Back'
-        size: 100, 100
-        center_x: root.width * 0.5
-        center_y: root.height * 0.05
-        color: 1, 0, 0, 1
-        on_press: root.switch_screen1()
+#    DPEAButton:
+#        id: goBack
+#        text: 'Go Back'
+#        size: 100, 100
+#        center_x: root.width * 0.5
+#        center_y: root.height * 0.05
+#        color: 1, 0, 0, 1
+#        on_press: root.switch_screen1()
