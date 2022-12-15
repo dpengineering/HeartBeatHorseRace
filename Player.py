@@ -50,7 +50,6 @@ class Player:
             if not self.is_backward:
                 print("sensor hit")
                 self.axis.set_vel(2)
-                sleep(.5)
                 self.track_laps()
                 self.is_backward = True
                 sleep(.5)

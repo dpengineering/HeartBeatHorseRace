@@ -73,7 +73,7 @@ class MainScreen(Screen):
 
     def beginning_setup(self):
         global homed
-        if homed == 0:
+        if homed is False:
             assert od_1.config.enable_brake_resistor is True, "Check for faulty brake resistor."
             assert od_2.config.enable_brake_resistor is True, "Check for faulty brake resistor."
 
@@ -122,7 +122,7 @@ class MainScreen(Screen):
             od_1.clear_errors()
             od_2.clear_errors()
 
-            homed = 1
+            homed = True
             return homed
 
     def redraw(self, args):
@@ -233,6 +233,10 @@ class BeginningScreen(Screen):
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
+    def one_adapater_start(self):
+        adapter1.start()
+        print('adapter1 started')
+
     def two_adapter_start(self):
         adapter1.start()
         print('adapter1 started')
@@ -256,6 +260,15 @@ class BeginningScreen(Screen):
         print('adapter3 started')
         adapter4.start()
         print('adapter4 started')
+
+    def one_player(self):
+        global numberOfPlayers
+
+        self.one_adapater_start()
+        self.move_to_baseline_screen()
+
+        numberOfPlayers = 1
+        return numberOfPlayers
 
     def two_players(self):
         global numberOfPlayers
@@ -329,6 +342,25 @@ class BaselineScreen(Screen):
 
     def find_baseline(self):
         global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i
+        if numberOfPlayers == 1:
+            vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
+            print('vernier1 connected')
+
+            while i < 2:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+                sleep(1)
+                print('searching')
+                i += 1
+
+            baseline1 = round(average_heartrate(baseline1List))
+
+            self.ids.player1Baseline.text = str(baseline1)
+
+            sleep(5)
+
+            SCREEN_MANAGER.transition.direction = "right"
+            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+
         if numberOfPlayers == 2:
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
@@ -434,30 +466,53 @@ class RunScreen(Screen):
             sleep(1)
         self.ids.count.text = "GO!"
         sleep(.5)
-        try:
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+        if numberOfPlayers == 1:
+            try:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
 
-            player1.start_game()
-            player2.start_game()
-            player3.start_game()
+                player1.start_game()
 
-            while new_game is False:
-                time.sleep(2)
-                print("while True is running")
+                while new_game is False:
+                    time.sleep(2)
+                    print("while True is running")
 
-            print('new game')
-            horse1.set_vel(0)
-            horse2.set_vel(0)
-            horse3.set_vel(0)
-            horse4.set_vel(0)
-            SCREEN_MANAGER.transition.direction = "right"
-            SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-            new_game = False
-            return new_game
+                print('new game')
+                horse1.set_vel(0)
+                horse2.set_vel(0)
+                horse3.set_vel(0)
+                horse4.set_vel(0)
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+                new_game = False
+                return new_game
 
-        finally:
-            print('quit?')
+            finally:
+                print('quit?')
+
+        elif numberOfPlayers == 2:
+            try:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+
+                player1.start_game()
+                player2.start_game()
+
+                while new_game is False:
+                    time.sleep(2)
+                    print("while True is running")
+
+                print('new game')
+                horse1.set_vel(0)
+                horse2.set_vel(0)
+                horse3.set_vel(0)
+                horse4.set_vel(0)
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+                new_game = False
+                return new_game
+
+            finally:
+                print('quit?')
 
 
 

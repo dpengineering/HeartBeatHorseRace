@@ -13,6 +13,15 @@
                 pos: self.pos
 
     DPEAButton:
+        id: onePlayer
+        text: '1 Player'
+        size: 100, 100
+        center_x: root.width * 0.25
+        center_y: root.height * 0.8
+        color: 0, 0, 1, 1
+        on_press: root.one_player()
+
+    DPEAButton:
         id: twoPlayer
         text: '2 Players'
         size: 100, 100
@@ -40,21 +49,21 @@
         on_press: root.four_players()
 
 
-    DPEAButton:
-        id: chaos
-        text: 'Chaos Mode'
-        size: 100, 100
-        center_x: root.width * 0.33
-        center_y: root.height * 0.85
-        color: 0, 0, 1, 1
+#    DPEAButton:
+#        id: chaos
+#        text: 'Chaos Mode'
+#        size: 100, 100
+#        center_x: root.width * 0.33
+#        center_y: root.height * 0.85
+#        color: 0, 0, 1, 1
 
-    DPEAButton:
-        id: zen
-        text: 'Zen Mode'
-        size: 100, 100
-        center_x: root.width * 0.66
-        center_y: root.height * 0.85
-        color: 0, 0, 1, 1
+#    DPEAButton:
+#        id: zen
+#        text: 'Zen Mode'
+#        size: 100, 100
+#        center_x: root.width * 0.66
+#        center_y: root.height * 0.85
+#        color: 0, 0, 1, 1
 
     DPEAButton:
         id: goBack

@@ -62,7 +62,7 @@ baseline2List = []
 baseline3List = []
 baseline4List = []
 
-homed = 0
+homed = False
 i = 0
 total_laps = 3
 
