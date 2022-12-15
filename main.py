@@ -1,11 +1,10 @@
 import os
 import sys
-from Player import Player
 import pygatt
 import kivy
 from binascii import hexlify
-from horserace_helpers import *
 from ObjectOrientedTest import *
+from Player import *
 
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
@@ -46,6 +45,7 @@ global vernier1
 global vernier2
 global vernier3
 global vernier4
+global new_game
 
 class ProjectNameGUI(App):
     """
@@ -130,55 +130,11 @@ class MainScreen(Screen):
         self.bg_rect.pos = self.pos
 
 #delete at some point
-
-    def check_end_sensor(self, horse, od_name, pin_number):
-        if digital_read(od_name, pin_number) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
-            print("sensor hit")
-            #horse.set_vel(0)
-            #sleep(.5)
-            #horse.set_rel_pos_traj(1, 1, 1, 1)
-            #horse.wait_for_motor_to_stop()
-
     def check_all_sensors(self):
-        while True:
-            self.check_end_sensor(horse1, od_2, 2)
-            self.check_end_sensor(horse2, od_2, 8)
-            self.check_end_sensor(horse3, od_1, 2)
-            self.check_end_sensor(horse4, od_1, 8)
-            sleep(.1)
+        return
 
     def thread_check_all_sensors(self):
-        Thread(target=self.check_all_sensors, daemon=True).start()
-
-    def thread_end_sensor_horse1(self):
-        Thread(target=self.end_sensor_horse1, daemon=True).start()
-
-    def thread_end_sensor_horse2(self):
-        Thread(target=self.end_sensor_horse2, daemon=True).start()
-
-    def end_sensor_horse2(self):
-        while True:
-            # print("while True 2 running")
-            sleep(.1)
-            self.check_end_sensor(horse2, od_2, 8)
-
-    def thread_end_sensor_horse3(self):
-        Thread(target=self.end_sensor_horse3, daemon=True).start()
-
-    def end_sensor_horse3(self):
-        while True:
-            # print("while True 3 running")
-            sleep(.1)
-            self.check_end_sensor(horse3, od_1, 2)
-
-    def thread_end_sensor_horse4(self):
-        Thread(target=self.end_sensor_horse4, daemon=True).start()
-
-    def end_sensor_horse4(self):
-        while True:
-            # print("while True 4 running")
-            sleep(.1)
-            self.check_end_sensor(horse4, od_1, 8)
+        return
 
     def switch_to_traj(self):
         SCREEN_MANAGER.transition.direction = "left"
@@ -189,25 +145,11 @@ class MainScreen(Screen):
         SCREEN_MANAGER.current = GPIO_SCREEN_NAME
 
     def switch_to_beginning(self):
+        new_game = False
         SCREEN_MANAGER.transition.direction = "down"
         SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
-
-    ##CONNECTED TO THE HOME BUTTON##
-
-    def home_all_horses(self):
-        horses = [horse1, horse2, horse3, horse4]
-        for horse in horses:
-            horse.set_ramped_vel(1, 1)
-        sleep(1)
-        for horse in horses:
-            horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
-        for horse in horses:
-            horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
-        sleep(3)  # allows motor to start moving to offset position
-        for horse in horses:
-            horse.wait_for_motor_to_stop()
-        for horse in horses:
-            horse.set_home()
+        print(str(new_game))
+        return new_game
 
     def admin_action(self):
         """
@@ -349,14 +291,10 @@ class BaselineScreen(Screen):
             while i < 4:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 sleep(1)
-                print('searching')
+                print('Finding Average')
                 i += 1
 
             baseline1 = round(average_heartrate(baseline1List))
-
-            self.ids.player1Baseline.text = str(baseline1)
-
-            sleep(5)
 
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
@@ -371,18 +309,11 @@ class BaselineScreen(Screen):
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 sleep(1)
-                print('searching')
+                print('Finding Average')
                 i += 1
 
             baseline1 = round(average_heartrate(baseline1List))
             baseline2 = round(average_heartrate(baseline2List))
-
-            self.ids.player1Baseline.text = str(baseline1)
-            self.ids.player2Baseline.text = str(baseline2)
-            self.ids.player3Baseline.text = "No Player!"
-            self.ids.player4Baseline.text = "No Player!"
-
-            sleep(5)
 
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
@@ -401,24 +332,20 @@ class BaselineScreen(Screen):
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
                 sleep(1)
-                print(baseline3List)
+                print('Finding Average')
                 i += 1
 
             baseline1 = round(average_heartrate(baseline1List))
             baseline2 = round(average_heartrate(baseline2List))
             baseline3 = round(average_heartrate(baseline3List))
 
-            self.ids.player1Baseline.text = str(baseline1)
-            self.ids.player2Baseline.text = str(baseline2)
-            self.ids.player3Baseline.text = str(baseline3)
-            self.ids.player3Baseline.text = "No Player!"
-
             sleep(5)
 
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-        elif numberOfPlayers == 4:  # WIP
+        elif numberOfPlayers == 4:
+            i = 0
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -428,15 +355,23 @@ class BaselineScreen(Screen):
             vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier4 connected')
 
-            vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-            vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-            vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-            vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
+            while i < 4:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
+                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
+                vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
+                print('Finding Average')
+                i += 1
 
-            adapter1.stop()
-            adapter2.stop()
-            adapter3.stop()
-            adapter4.stop()
+            baseline1 = round(average_heartrate(baseline1List))
+            baseline2 = round(average_heartrate(baseline2List))
+            baseline3 = round(average_heartrate(baseline3List))
+            baseline4 = round(average_heartrate(baseline4List))
+
+            sleep(5)
+
+            SCREEN_MANAGER.transition.direction = "right"
+            SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
         else:
             print('not working L')
@@ -469,22 +404,16 @@ class RunScreen(Screen):
         if numberOfPlayers == 1:
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-
                 player1.start_game()
 
-                while new_game is False:
+                if new_game is False:
                     time.sleep(2)
                     print("while True is running")
+                    print('new game is ' + str(new_game))
 
                 print('new game')
-                horse1.set_vel(0)
-                horse2.set_vel(0)
-                horse3.set_vel(0)
-                horse4.set_vel(0)
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-                new_game = False
-                return new_game
 
             finally:
                 print('quit?')
