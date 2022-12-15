@@ -5,7 +5,7 @@ from odrive_helpers import *
 from threading import Thread
 
 total_laps = 3
-
+steadymove_baseline = 40
 
 def horse_setup(horses):
 

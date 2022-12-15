@@ -346,7 +346,7 @@ class BaselineScreen(Screen):
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
 
-            while i < 2:
+            while i < 4:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 sleep(1)
                 print('searching')
@@ -367,7 +367,7 @@ class BaselineScreen(Screen):
             vernier2 = adapter2.connect(player2.deviceID)
             print('vernier2 connected')
 
-            while i < 2:
+            while i < 4:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 sleep(1)
@@ -396,7 +396,7 @@ class BaselineScreen(Screen):
             vernier3 = adapter3.connect(player3.deviceID)
             print('vernier3 connected')
 
-            while i < 3:
+            while i < 4:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))

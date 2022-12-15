@@ -63,13 +63,14 @@ baseline3List = []
 baseline4List = []
 
 homed = False
+print(homed)
 i = 0
 total_laps = 3
 
-player1 = Player("C6:4B:DF:A5:36:0B", od_2, 1, horse1, baseline1)
-player2 = Player("A0:9E:1A:49:A8:51", od_2, 2, horse2, baseline2)
-player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3)
-player4 = Player("", od_1, 4, horse4, baseline4)
+player1 = Player("C6:4B:DF:A5:36:0B", od_2, 1, horse1, baseline1, 0)
+player2 = Player("A0:9E:1A:49:A8:51", od_2, 2, horse2, baseline2, 0)
+player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3, 0)
+player4 = Player("", od_1, 4, horse4, baseline4, 0)
 
 new_game = False
 
