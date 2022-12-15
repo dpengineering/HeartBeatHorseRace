@@ -129,56 +129,11 @@ class MainScreen(Screen):
         self.bg_rect.size = self.size
         self.bg_rect.pos = self.pos
 
-#delete at some point
-
-    def check_end_sensor(self, horse, od_name, pin_number):
-        if digital_read(od_name, pin_number) == 0:  # ==0 means the sensor is on and sensing; this is for horse 1
-            print("sensor hit")
-            #horse.set_vel(0)
-            #sleep(.5)
-            #horse.set_rel_pos_traj(1, 1, 1, 1)
-            #horse.wait_for_motor_to_stop()
-
     def check_all_sensors(self):
-        while True:
-            self.check_end_sensor(horse1, od_2, 2)
-            self.check_end_sensor(horse2, od_2, 8)
-            self.check_end_sensor(horse3, od_1, 2)
-            self.check_end_sensor(horse4, od_1, 8)
-            sleep(.1)
+        return
 
     def thread_check_all_sensors(self):
-        Thread(target=self.check_all_sensors, daemon=True).start()
-
-    def thread_end_sensor_horse1(self):
-        Thread(target=self.end_sensor_horse1, daemon=True).start()
-
-    def thread_end_sensor_horse2(self):
-        Thread(target=self.end_sensor_horse2, daemon=True).start()
-
-    def end_sensor_horse2(self):
-        while True:
-            # print("while True 2 running")
-            sleep(.1)
-            self.check_end_sensor(horse2, od_2, 8)
-
-    def thread_end_sensor_horse3(self):
-        Thread(target=self.end_sensor_horse3, daemon=True).start()
-
-    def end_sensor_horse3(self):
-        while True:
-            # print("while True 3 running")
-            sleep(.1)
-            self.check_end_sensor(horse3, od_1, 2)
-
-    def thread_end_sensor_horse4(self):
-        Thread(target=self.end_sensor_horse4, daemon=True).start()
-
-    def end_sensor_horse4(self):
-        while True:
-            # print("while True 4 running")
-            sleep(.1)
-            self.check_end_sensor(horse4, od_1, 8)
+        return
 
     def switch_to_traj(self):
         SCREEN_MANAGER.transition.direction = "left"
@@ -513,7 +468,6 @@ class RunScreen(Screen):
 
             finally:
                 print('quit?')
-
 
 
 class TrajectoryScreen(Screen):
