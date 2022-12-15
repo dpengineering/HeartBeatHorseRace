@@ -16,7 +16,7 @@ class Player:
         "A3DDDD2F": "EF:FD:6F:EE:D7:81" #horse1
     }
 
-    def __init__(self, deviceID, od, player_num,  axis, baseline_rate):
+    def __init__(self, deviceID, od, player_num,  axis, baseline_rate, mode):
         self.track_lap = True
         self.laps = 0
         self.velocity = 0
@@ -35,13 +35,20 @@ class Player:
         self.heart_weight = 70
         self.baseline_rate = baseline_rate
         self.is_done = True
+        self.mode = mode
 
 
     def handle_tick(self, value):
         if not self.is_done:
             if not self.is_backward:
                 if not self.check_end_sensor():
-                    self.move(value)
+                    if self.mode == 0:
+                        self.move(value)
+                    elif self.mode == 1:
+                        self.zenmove(value)
+                    else:
+                        self.steadymove(value)
+
         else:
             self.axis.set_vel(0)
 
@@ -77,6 +84,41 @@ class Player:
         print("Player" +str(self.player_num) + " velocity is " + str(self.velocity))
 
         self.axis.set_vel(self.velocity)
+
+    def zenmove(self, value):
+
+        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
+        data = int(hexlify(value)[2:4], 16)
+        t = (self.baseline_rate - data) / self.heart_weight
+
+        self.velocity = (self.base_velo + t) * -1
+        if self.velocity > 0:
+            self.velocity = 0
+
+        if not self.heartrate_is_real(data):
+            self.velocity = self.base_velo * -1
+
+        print("Player" +str(self.player_num) + " velocity is " + str(self.velocity))
+
+        self.axis.set_vel(self.velocity)
+
+    def steadymove(self, value):
+
+        print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
+        data = int(hexlify(value)[2:4], 16)
+        t = (horserace_helpers.steadymove_baseline - abs(self.baseline_rate - data)) / self.heart_weight
+
+        self.velocity = (self.base_velo + t) * -1
+        if self.velocity > 0:
+            self.velocity = 0
+
+        if not self.heartrate_is_real(data):
+            self.velocity = self.base_velo * -1
+
+        print("Player" +str(self.player_num) + " velocity is " + str(self.velocity))
+
+        self.axis.set_vel(self.velocity)
+
 
     def track_laps(self):
         self.track_lap = False

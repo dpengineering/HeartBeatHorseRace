@@ -353,7 +353,7 @@ class BaselineScreen(Screen):
             sleep(5)
 
             SCREEN_MANAGER.transition.direction = "right"
-            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+            SCREEN_MANAGER.current = RUN_SCREEN_NFAME
 
         elif numberOfPlayers == 3:
             i = 0
