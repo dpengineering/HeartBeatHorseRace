@@ -12,31 +12,34 @@
                 size: self.size
                 pos: self.pos
 
-    DPEAButton:
+    Button:
         id: twoPlayer
-        text: '2 Players'
-        size: 100, 100
-        center_x: root.width * 0.25
-        center_y: root.height * 0.5
+        size: 384, 96
+        center_x: root.width * 0.5
+        center_y: root.height * 0.6
+        size_hint: None, None
+        background_normal: "Images/2_Player_Button.png"
         color: 0, 0, 1, 1
         on_press: root.two_players()
 
-    DPEAButton:
+    Button:
         id: threePlayer
-        text: '3 Players'
-        size: 100, 100
+        size: 384, 96
         center_x: root.width * 0.5
-        center_y: root.height * 0.5
+        center_y: root.height * 0.4
+        size_hint: None, None
         color: 0, 0, 1, 1
+        background_normal: "Images/3_Player_Button.png"
         on_press: root.three_players()
 
-    DPEAButton:
+    Button:
         id: fourPlayer
-        text: '4 Players'
-        size: 100, 100
-        center_x: root.width * 0.75
-        center_y: root.height * 0.5
+        size: 384, 96
+        center_x: root.width * 0.5
+        center_y: root.height * 0.2
+        size_hint: None, None
         color: 0, 0, 1, 1
+        background_normal: "Images/4_Player_Button.png"
         on_press: root.four_players()
 
 
