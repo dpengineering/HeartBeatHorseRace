@@ -45,7 +45,6 @@ global vernier1
 global vernier2
 global vernier3
 global vernier4
-global new_game
 
 class ProjectNameGUI(App):
     """
@@ -145,6 +144,7 @@ class MainScreen(Screen):
         SCREEN_MANAGER.current = GPIO_SCREEN_NAME
 
     def switch_to_beginning(self):
+        global new_game
         new_game = False
         SCREEN_MANAGER.transition.direction = "down"
         SCREEN_MANAGER.current = BEGINNING_SCREEN_NAME
@@ -406,17 +406,17 @@ class RunScreen(Screen):
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
                 player1.start_game()
 
-                if new_game is False:
-                    time.sleep(2)
+                while True:
+                    time.sleep(10)
                     print("while True is running")
-                    print('new game is ' + str(new_game))
+                    if player1.get_laps() >= total_laps:
+                        break
 
+            finally:
+                adapter1.stop()
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-
-            finally:
-                print('quit?')
 
         elif numberOfPlayers == 2:
             try:
@@ -426,22 +426,81 @@ class RunScreen(Screen):
                 player1.start_game()
                 player2.start_game()
 
-                while new_game is False:
+                while True:
                     time.sleep(2)
                     print("while True is running")
-
-                print('new game')
-                horse1.set_vel(0)
-                horse2.set_vel(0)
-                horse3.set_vel(0)
-                horse4.set_vel(0)
-                SCREEN_MANAGER.transition.direction = "right"
-                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-                new_game = False
-                return new_game
+                    if player1.get_laps() >= total_laps:
+                        break
+                    elif player2.get_laps() >= total_laps:
+                        break
 
             finally:
-                print('quit?')
+                adapter1.stop()
+                adapter2.stop()
+                print('new game')
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+
+        elif numberOfPlayers == 3:
+            try:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+
+                player1.start_game()
+                player2.start_game()
+                player3.start_game()
+
+                while True:
+                    time.sleep(2)
+                    print("while True is running")
+                    if player1.get_laps() >= total_laps:
+                        break
+                    elif player2.get_laps() >= total_laps:
+                        break
+                    elif player3.get_laps() >= total_laps:
+                        break
+
+            finally:
+                adapter1.stop()
+                adapter2.stop()
+                adapter3.stop()
+                print('new game')
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+
+        elif numberOfPlayers == 4:
+            try:
+                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+                vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(4))
+
+                player1.start_game()
+                player2.start_game()
+                player3.start_game()
+                player4.start_game()
+
+                while True:
+                    time.sleep(2)
+                    print("while True is running")
+                    if player1.get_laps() >= total_laps:
+                        break
+                    elif player2.get_laps() >= total_laps:
+                        break
+                    elif player3.get_laps() >= total_laps:
+                        break
+                    elif player4.get_laps() >= total_laps:
+                        break
+
+            finally:
+                adapter1.stop()
+                adapter2.stop()
+                adapter3.stop()
+                adapter4.stop()
+                print('new game')
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
 
 

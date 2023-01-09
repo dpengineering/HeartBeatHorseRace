@@ -140,6 +140,7 @@ def setup(player_num):
     def velocity_movement(handle, value):
         base_velo = 0.5  # will get this from something else later
         heart_weight = 70  # will set at some point
+        baseline1 = 80
 
         print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
         data = int(hexlify(value)[2:4], 16)
