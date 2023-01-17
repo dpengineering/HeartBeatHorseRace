@@ -81,7 +81,7 @@ class PacketType(enum.Enum):
     COMMAND2 = 2
     COMMAND3 = 3
 
-s = Server("172.17.21.2", 5001, PacketType)
+s = Server("172.17.21.3", 5001, PacketType)
 
 
 def heartrate_is_real(heartrate):
