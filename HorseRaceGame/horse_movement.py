@@ -21,8 +21,6 @@ digital_read(od_2, 2)
 assert od_1.config.enable_brake_resistor is True, "Check for faulty brake resistor."
 assert od_2.config.enable_brake_resistor is True, "Check for faulty brake resistor."
 
-#
-
 # Each adapter finds a Bluetooth Serial Port connected to the Raspberry Pi
 
 adapter0 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
@@ -150,35 +148,35 @@ def setup(player_num):
         else:
             velocity1 = 0
             print('1 positive velocity')
-        if -2 < ((base_velo + ((data - baseline2) / heart_weight)) * -1) < 0:
-            velocity2 = ((base_velo + ((data - baseline2) / heart_weight)) * -1)
-        else:
-            velocity2 = 0
-            print('2 positive velocity')
-        if -2 < ((base_velo + ((data - baseline3) / heart_weight)) * -1) < 0:
-            velocity3 = ((base_velo + ((data - baseline3) / heart_weight)) * -1)
-        else:
-            velocity3 = 0
-            print('3 positive velocity')
-        if -2 < ((base_velo + ((data - baseline4) / heart_weight)) * -1) < 0:
-            velocity4 = ((base_velo + ((data - baseline4) / heart_weight)) * -1)
-        else:
-            velocity4 = 0
-            print('3 positive velocity')
+        # if -2 < ((base_velo + ((data - baseline2) / heart_weight)) * -1) < 0:
+        #     velocity2 = ((base_velo + ((data - baseline2) / heart_weight)) * -1)
+        # else:
+        #     velocity2 = 0
+        #     print('2 positive velocity')
+        # if -2 < ((base_velo + ((data - baseline3) / heart_weight)) * -1) < 0:
+        #     velocity3 = ((base_velo + ((data - baseline3) / heart_weight)) * -1)
+        # else:
+        #     velocity3 = 0
+        #     print('3 positive velocity')
+        # if -2 < ((base_velo + ((data - baseline4) / heart_weight)) * -1) < 0:
+        #     velocity4 = ((base_velo + ((data - baseline4) / heart_weight)) * -1)
+        # else:
+        #     velocity4 = 0
+        #     print('3 positive velocity')
 
         print("Player 1's velocity is " + str(velocity1))
-        print("Player 2's velocity is " + str(velocity2))
-        print("Player 3's velocity is " + str(velocity3))
-        print("Player 4's velocity is " + str(velocity4))
+        # print("Player 2's velocity is " + str(velocity2))
+        # print("Player 3's velocity is " + str(velocity3))
+        # print("Player 4's velocity is " + str(velocity4))
 
         if player_num == 1:
             horse1.set_vel(velocity1)
-        elif player_num == 2:
-            horse2.set_vel(velocity2)
-        elif player_num == 3:
-            horse3.set_vel(velocity3)
-        else:
-            horse4.set_vel(velocity4)
+        # elif player_num == 2:
+        #     horse2.set_vel(velocity2)
+        # elif player_num == 3:
+        #     horse3.set_vel(velocity3)
+        # else:
+        #     horse4.set_vel(velocity4)
 
     print("hello?")
 
@@ -245,22 +243,22 @@ def setup(player_num):
 try:
     adapter0.start()
     print("adapter0 started")
-    adapter1.start()
-    print("adapter1 started")
-    adapter2.start()
-    print("adapter2 started")
+    # adapter1.start()
+    # print("adapter1 started")
+    # adapter2.start()
+    # print("adapter2 started")
 
     # These two adapters are connecting to H7 Polar devices
     # DO NOT SPECIFY AN ADDRESS TYPE AS RANDOM FOR H7 POLARS
 
     # Each address can be found in the HeartRateExample DPEA repo
     chest_polar = adapter0.connect("C6:4B:DF:A5:36:0B", address_type=pygatt.BLEAddressType.random)
-    hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
+    # hand_polar = adapter1.connect("A0:9E:1A:49:A8:51")
     # chest_polar2 = adapter2.connect("A0:9E:1A:5E:EF:F6")
 
     chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(
         1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
-    hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+    # hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
     # chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
 
     # The subscription runs on a background thread. You must stop this main
@@ -275,5 +273,5 @@ try:
         print("while True is running")
 finally:
     adapter0.stop()
-    adapter1.stop()
-    adapter2.stop()
+    # adapter1.stop()
+    # adapter2.stop()

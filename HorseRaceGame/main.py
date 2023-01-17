@@ -37,17 +37,9 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
 from odrive_helpers import *
 import time
-import enum
-from p2p.dpea_p2p import Server
 
 
 print('starting server')
-class PacketType(enum.Enum):
-    NULL = 0
-    COMMAND1 = 1
-    COMMAND2 = 2
-
-s = Server("172.17.21.3", 5001, PacketType)
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -186,6 +178,14 @@ class MainScreen(Screen):
 
 
 class BeginningScreen(Screen):
+    def quit(self):
+        print("Exit")
+        s.close_connection()
+        print('connection closed')
+        s.close_server()
+        print('server closed')
+        quit()
+
     def switch_screen1(self):
         SCREEN_MANAGER.transition.direction = "down"
         SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -301,6 +301,14 @@ class BeginningScreen(Screen):
 
 class BaselineScreen(Screen):
 
+    def quit(self):
+        print("Exit")
+        s.close_connection()
+        print('connection closed')
+        s.close_server()
+        print('server closed')
+        quit()
+
     def find_baseline(self):
         global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i
         if numberOfPlayers == 1:
@@ -406,6 +414,14 @@ class BaselineScreen(Screen):
 
 
 class RunScreen(Screen):
+    def quit(self):
+        print("Exit")
+        s.close_connection()
+        print('connection closed')
+        s.close_server()
+        print('server closed')
+        quit()
+
     def update_baseline(self):
         self.ids.player1Baseline.text = str(baseline1)
         self.ids.player2Baseline.text = str(baseline2)

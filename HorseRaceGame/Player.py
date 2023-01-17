@@ -42,9 +42,9 @@ class Player:
                     if self.mode == 0:
                         self.move(value)
                     elif self.mode == 1:
-                        self.zenmove(value)
-                    else:
                         self.steadymove(value)
+                    else:
+                        self.zenmove(value)
 
         else:
             self.axis.set_vel(0)
