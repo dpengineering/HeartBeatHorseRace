@@ -37,6 +37,17 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
 from odrive_helpers import *
 import time
+import enum
+from p2p.dpea_p2p import Server
+
+
+print('starting server')
+class PacketType(enum.Enum):
+    NULL = 0
+    COMMAND1 = 1
+    COMMAND2 = 2
+
+s = Server("172.17.21.3", 5001, PacketType)
 
 MIXPANEL_TOKEN = "x"
 MIXPANEL = MixPanel("Project Name", MIXPANEL_TOKEN)
@@ -70,6 +81,8 @@ class MainScreen(Screen):
     count = 0
     elapsed = ObjectProperty()
 
+    # Automatically runs when MainScreen is created. Homes/Calibrates the oDrives if not already done, and sets up the
+    # server. 'IF STATEMENT' WILL NOT FULLY RUN UNTIL A CONNECTION TO A CLIENT IS FOUND.
     def beginning_setup(self):
         global homed
         if homed is False:
@@ -115,11 +128,13 @@ class MainScreen(Screen):
             horse3.set_vel(0)
             horse4.set_vel(0)
 
-            dump_errors(od_1)
-            dump_errors(od_2)
-
             od_1.clear_errors()
             od_2.clear_errors()
+
+            print('server created')
+            s.open_server()
+            print('server opened, now waiting for connection!')
+            s.wait_for_connection()
 
             homed = True
             return homed
@@ -163,6 +178,10 @@ class MainScreen(Screen):
 
     def quit(self):
         print("Exit")
+        s.close_connection()
+        print('connection closed')
+        s.close_server()
+        print('server closed')
         quit()
 
 
@@ -614,7 +633,5 @@ def send_event(event_name):
 
 
 if __name__ == "__main__":
-    # send_event("Project Initialized")
-    # Window.fullscreen = 'auto'
     print("done setting up")
     ProjectNameGUI().run()
