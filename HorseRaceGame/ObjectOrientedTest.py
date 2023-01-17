@@ -10,6 +10,8 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
 from odrive_helpers import *
 import time
+import enum
+from p2p.dpea_p2p import Server
 
 od_1 = find_odrive(serial_number="208D3388304B")
 od_2 = find_odrive(serial_number="20553591524B")
@@ -73,6 +75,15 @@ player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3, 0)
 player4 = Player("", od_1, 4, horse4, baseline4, 0)
 
 
+class PacketType(enum.Enum):
+    NULL = 0
+    COMMAND1 = 1
+    COMMAND2 = 2
+    COMMAND3 = 3
+
+s = Server("172.17.21.2", 5001, PacketType)
+
+
 def heartrate_is_real(heartrate):
     if (heartrate > 30):
         if (heartrate < 170):
@@ -89,6 +100,7 @@ def heartrate_baseline(player_num):
         if heartrate_is_real(heartrate):
             if player_num == 1:
                 baseline1List.append(heartrate)
+                s.send_packet(PacketType.COMMAND1, heartrate)
             elif player_num == 2:
                 baseline2List.append(heartrate)
             elif player_num == 3:
