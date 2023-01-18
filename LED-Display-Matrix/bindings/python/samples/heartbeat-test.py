@@ -4,27 +4,9 @@ from binascii import hexlify
 import pygatt
 import time
 
-adapter0 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM0')
-adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM1')
-
 heartrate0 = 0
 heartrate1 = 0
 timeInSeconds = 0
-
-def handle_data_for_player(player_num):
-    def handle_data(handle, value):
-        """
-        handle -- integer, characteristic read handle the data was received on
-        value -- bytearray, the data returned in the notification
-        """
-        #print("Received data: %s" % hexlify(value))
-        if player_num == 0:
-            heartrate0 = int(hexlify(value)[2:4])
-        elif player_num == 1:
-            heartrate1 = int(hexlify(value)[2:4])
-
-
-    return handle_data
 
 class Timer(SampleBase):
     def __init__(self, *args, **kwargs):

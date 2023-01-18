@@ -100,7 +100,7 @@ def heartrate_baseline(player_num):
         if heartrate_is_real(heartrate):
             if player_num == 1:
                 baseline1List.append(heartrate)
-                s.send_packet(PacketType.COMMAND1, heartrate)
+                s.send_packet(PacketType.COMMAND2, heartrate)
             elif player_num == 2:
                 baseline2List.append(heartrate)
             elif player_num == 3:
