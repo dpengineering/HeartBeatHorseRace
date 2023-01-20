@@ -51,15 +51,18 @@ class Player:
 
     def check_end_sensor(self):
         if digital_read(self.od, self.od_num) == 0:
-            if not self.is_backward:
-                print("sensor hit")
-                self.axis.set_vel(2)
-                self.track_laps()
-                self.is_backward = True
-                sleep(.5)
-                self.axis.wait_for_motor_to_stop()
-                self.track_lap = True
-                self.is_backward = False
+            if self.is_done is False:
+                if not self.is_backward:
+                    print("sensor hit")
+                    self.axis.set_vel(2)
+                    self.track_laps()
+                    self.is_backward = True
+                    sleep(.5)
+                    self.axis.wait_for_motor_to_stop()
+                    self.track_lap = True
+                    self.is_backward = False
+            else:
+                self.axis.set_vel(0)
         else:
             return False
 

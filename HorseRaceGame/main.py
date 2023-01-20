@@ -1,4 +1,5 @@
 import os
+import select
 import sys
 import pygatt
 import kivy
@@ -66,6 +67,11 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
+print('server created')
+s.open_server()
+print('server opened, now waiting for connection!')
+s.wait_for_connection()
+
 class MainScreen(Screen):
     """
     Class to handle the main screen and its associated touch events
@@ -123,10 +129,7 @@ class MainScreen(Screen):
             od_1.clear_errors()
             od_2.clear_errors()
 
-            print('server created')
-            s.open_server()
-            print('server opened, now waiting for connection!')
-            s.wait_for_connection()
+            s.send_packet(PacketType.COMMAND0, b'game start')
 
             homed = True
             return homed
@@ -134,6 +137,7 @@ class MainScreen(Screen):
     def redraw(self, args):
         self.bg_rect.size = self.size
         self.bg_rect.pos = self.pos
+
 
 #delete at some point
     def check_all_sensors(self):
@@ -310,13 +314,15 @@ class BaselineScreen(Screen):
         quit()
 
     def find_baseline(self):
-        global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i
+        global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed
         if numberOfPlayers == 1:
+
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
 
             while i < 4:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
+                s.send_packet(PacketType.COMMAND0, b'baseline')
                 sleep(1)
                 print('Finding Average')
                 i += 1
@@ -326,7 +332,11 @@ class BaselineScreen(Screen):
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
+            homed = False
+            print(homed)
+
         if numberOfPlayers == 2:
+            s.send_packet(PacketType.COMMAND1, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -345,8 +355,11 @@ class BaselineScreen(Screen):
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
+            homed = False
+            print(homed)
+
         elif numberOfPlayers == 3:
-            i = 0
+            s.send_packet(PacketType.COMMAND1, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -366,13 +379,14 @@ class BaselineScreen(Screen):
             baseline2 = round(average_heartrate(baseline2List))
             baseline3 = round(average_heartrate(baseline3List))
 
-            sleep(5)
-
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
+            homed = False
+            print(homed)
+
         elif numberOfPlayers == 4:
-            i = 0
+            s.send_packet(PacketType.COMMAND1, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -400,11 +414,15 @@ class BaselineScreen(Screen):
             SCREEN_MANAGER.transition.direction = "right"
             SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
+            homed = False
+            print(homed)
+
         else:
             print('not working L')
             return
 
-        return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, i
+
+        return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, i, homed
 
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "right"
@@ -444,11 +462,20 @@ class RunScreen(Screen):
                 while True:
                     time.sleep(10)
                     print("while True is running")
+                    print(player1.get_laps())
+                    print(total_laps)
                     if player1.get_laps() >= total_laps:
                         break
 
             finally:
-                adapter1.stop()
+                player1.game_done()
+                player2.game_done()
+                player3.game_done()
+                player4.game_done()
+                player1.laps = 0
+                player2.laps = 0
+                player3.laps = 0
+                player4.laps = 0
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -462,7 +489,7 @@ class RunScreen(Screen):
                 player2.start_game()
 
                 while True:
-                    time.sleep(2)
+                    time.sleep(10)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
                         break
@@ -470,8 +497,16 @@ class RunScreen(Screen):
                         break
 
             finally:
-                adapter1.stop()
-                adapter2.stop()
+                player1.game_done()
+                vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+                player2.game_done()
+                vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
+                player3.game_done()
+                player4.game_done()
+                player1.laps = 0
+                player2.laps = 0
+                player3.laps = 0
+                player4.laps = 0
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -497,9 +532,14 @@ class RunScreen(Screen):
                         break
 
             finally:
-                adapter1.stop()
-                adapter2.stop()
-                adapter3.stop()
+                player1.game_done()
+                player2.game_done()
+                player3.game_done()
+                player4.game_done()
+                player1.laps = 0
+                player2.laps = 0
+                player3.laps = 0
+                player4.laps = 0
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -529,10 +569,14 @@ class RunScreen(Screen):
                         break
 
             finally:
-                adapter1.stop()
-                adapter2.stop()
-                adapter3.stop()
-                adapter4.stop()
+                player1.game_done()
+                player2.game_done()
+                player3.game_done()
+                player4.game_done()
+                player1.laps = 0
+                player2.laps = 0
+                player3.laps = 0
+                player4.laps = 0
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME

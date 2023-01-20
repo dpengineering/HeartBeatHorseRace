@@ -14,20 +14,11 @@
                 size: self.size
                 pos: self.pos
 
-    DPEAButton:
-        id: quit
-        text: 'Quit'
-        size: 100, 100
-        center_x: root.width * 0.85
-        center_y: root.height * 0.1
-        color: 1, 0, 0, 1
-        on_press: root.quit()
-
     Label:
         id: player1Baseline
         text: ""
         size_hint: None, None
-        color: 1, 1, 1, 1
+        color: .6, .4, .2, 1
         center_x: root.width * 0.1
         center_y: root.height * 0.2
         font_size: 50
@@ -39,7 +30,7 @@
         id: player2Baseline
         text: ""
         size_hint: None, None
-        color: 1, 1, 1, 1
+        color: .9, .8, .7, 1
         center_x: root.width * 0.36
         center_y: root.height * 0.2
         font_size: 50
@@ -51,7 +42,7 @@
         id: player3Baseline
         text: ""
         size_hint: None, None
-        color: 1, 1, 1, 1
+        color: 0.1, 0.1, 0.1, 0.9
         center_x: root.width * 0.63
         center_y: root.height * 0.2
         font_size: 50
@@ -72,6 +63,51 @@
         outline_color: 0, 0, 0
 
     Label:
+        text: "Player 1"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.1
+        center_y: root.height * 0.35
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+    Label:
+        text: "Player 2"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.36
+        center_y: root.height * 0.35
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+    Label:
+        text: "Player 3"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.63
+        center_y: root.height * 0.35
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+
+    Label:
+        text: "Player 4"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.9
+        center_y: root.height * 0.35
+        font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+    Label:
         id: count
         text: "Get Ready!"
         size_hint: None, None
@@ -79,6 +115,17 @@
         center_x: root.width * 0.5
         center_y: root.height * 0.85
         font_size: 50
+        bold: True
+        outline_width: self.font_size * 0.1
+        outline_color: 0, 0, 0
+
+    Label:
+        text: "Baselines:"
+        size_hint: None, None
+        color: 1, 1, 1, 1
+        center_x: root.width * 0.9
+        center_y: root.height * 0.5
+        font_size: 60
         bold: True
         outline_width: self.font_size * 0.1
         outline_color: 0, 0, 0

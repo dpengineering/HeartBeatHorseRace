@@ -67,16 +67,18 @@ baseline4List = []
 homed = False
 print(homed)
 i = 0
-total_laps = 1
+total_laps = 3
 
 player1 = Player("C6:4B:DF:A5:36:0B", od_2, 1, horse1, baseline1, 0)
 player2 = Player("A0:9E:1A:49:A8:51", od_2, 2, horse2, baseline2, 0)
 player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3, 0)
 player4 = Player("", od_1, 4, horse4, baseline4, 0)
 
+byteHeartrate = 0
+
 
 class PacketType(enum.Enum):
-    NULL = 0
+    COMMAND0 = 0
     COMMAND1 = 1
     COMMAND2 = 2
     COMMAND3 = 3
@@ -94,24 +96,30 @@ def heartrate_is_real(heartrate):
 
 def heartrate_baseline(player_num):
     def handle_data(handle, value):
-        global i
+        global i, byteHeartrate
         heartrate = int(hexlify(value)[2:4], 16)
+        byteHeartrate = bytes(str(heartrate), 'utf-8')
 
         if heartrate_is_real(heartrate):
             if player_num == 1:
                 baseline1List.append(heartrate)
-                s.send_packet(PacketType.COMMAND2, heartrate)
+                s.send_packet(PacketType.COMMAND0, byteHeartrate)
             elif player_num == 2:
                 baseline2List.append(heartrate)
+                s.send_packet(PacketType.COMMAND1, byteHeartrate)
             elif player_num == 3:
                 baseline3List.append(heartrate)
+                s.send_packet(PacketType.COMMAND2, byteHeartrate)
             elif player_num == 4:
                 baseline4List.append(heartrate)
+                s.send_packet(PacketType.COMMAND3, byteHeartrate)
             else:
                 print('not good')
         else:
             print('unlucky')
             i -= 1
+
+        return byteHeartrate
 
     return handle_data
 
@@ -124,70 +132,40 @@ def average_heartrate(lst):
 
 
 def setup(player_num):
+    global byteHeartrate
     total_laps = horserace_helpers.total_laps
 
     def handle_data(self, value):
         if player_num == 1:
             player1.handle_tick(value)
+            s.send_packet(PacketType.COMMAND0, byteHeartrate)
             if player1.get_laps() >= total_laps:
                 end_game(1)
+                s.send_packet(PacketType.COMMAND0, b'FINISHED')
         elif player_num == 2:
             player2.handle_tick(value)
+            s.send_packet(PacketType.COMMAND1, byteHeartrate)
             if player2.get_laps() >= total_laps:
                 end_game(2)
+                s.send_packet(PacketType.COMMAND1, b'FINISHED')
         elif player_num == 3:
             player3.handle_tick(value)
+            s.send_packet(PacketType.COMMAND2, byteHeartrate)
             if player3.get_laps() >= total_laps:
                 end_game(3)
+                s.send_packet(PacketType.COMMAND2, b'FINISHED')
         else:
             player4.handle_tick(value)
+            s.send_packet(PacketType.COMMAND3, byteHeartrate)
             if player4.get_laps() >= total_laps:
                 end_game(4)
+                s.send_packet(PacketType.COMMAND3, b'FINISHED')
     def end_game(num):
         print("Player " + str(num) + " Wins!")
+        player1.is_done = True
+        player2.is_done = True
+        player3.is_done = True
+        player4.is_done = True
 
 
     return handle_data
-
-
-# try:
-#     adapter1.start()
-#     print("adapter0 started")
-#     adapter2.start()
-#     print("adapter1 started")
-#     adapter3.start()
-#     print("adapter2 started")
-#
-#     # These two adapters are connecting to H7 Polar devices
-#     # DO NOT SPECIFY AN ADDRESS TYPE AS RANDOM FOR H7 POLARS
-#
-#     # Each address can be found in the HeartRateExample DPEA repo
-#     chest_polar = adapter1.connect("C6:4B:DF:A5:36:0B", address_type=pygatt.BLEAddressType.random)
-#     hand_polar = adapter2.connect("A0:9E:1A:49:A8:51")
-#     chest_polar2 = adapter3.connect("A0:9E:1A:5E:EF:F6")
-#
-#     chest_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(
-#         1))  # subscribing to heart rate measurement with the long letter-number ; when this line recieves new data, the callback function runs
-#     hand_polar.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
-#     chest_polar2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
-#
-#
-#
-#     # The subscription runs on a background thread. You must stop this main
-#     # thread from exiting, otherwise you will not receive any messages, and
-#     # the program will exit. Sleeping in a while loop like this is a simple
-#     # solution that won't eat up unnecessary CPU, but there are many other
-#     # ways to handle this in more complicated program. Multi-threaded
-#     # programming is outside the scope of this README.
-#
-#     player1.start_game()
-#     player2.start_game()
-#     player3.start_game()
-#
-#     while True:
-#         sleep(10)
-#         print("while True is running")
-# finally:
-#     adapter1.stop()
-#     adapter2.stop()
-#     adapter3.stop()
