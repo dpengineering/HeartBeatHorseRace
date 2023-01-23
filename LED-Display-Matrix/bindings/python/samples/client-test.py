@@ -66,6 +66,7 @@ class RunText(SampleBase):
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
 
+
 # Main function
 if __name__ == "__main__":
     run_text = RunText()

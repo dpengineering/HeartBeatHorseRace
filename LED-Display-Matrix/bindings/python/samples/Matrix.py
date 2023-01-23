@@ -25,12 +25,8 @@ class PacketType(enum.Enum):
 
 #          |Server IP           |Port |Packet enum
 c = Client("172.17.21.3", 5001, PacketType)
-c.connect()
 
 joyvalue = None
-
-
-print("poggers")
 
 class Matrix(SampleBase):
     def __init__(self, *args, **kwargs):
@@ -58,11 +54,13 @@ class Matrix(SampleBase):
 
     def listen(self):
         global packetvalue
+        print("deez nutz")
         # original code commented out by Roshan
-        # c.connect()
         while True:
             pack = c.recv_packet()
+
             packetvalue = pack[1].decode()
+            print(packetvalue)
             sleep(0.05)
     def idle_screen(self):
 
@@ -93,10 +91,10 @@ class Matrix(SampleBase):
             # big tippy maze text
             self.board.Clear()
             self.text_with_outline("HEART", "white", "blue", self.font5, 2, y_offset[y1])
-
             self.text_with_outline("BEAT", "white", "blue", self.font5, self.board.width/4+8, y_offset[y2])
             self.text_with_outline("HORSE", "white", "blue", self.font5, self.board.width*2/4+2, y_offset[y3])
             self.text_with_outline("RACE", "white", "blue", self.font5, self.board.width*3/4+8, y_offset[y4])
+
 
             y1 = y1 + 1
             y2 = y2 + 1
@@ -116,8 +114,7 @@ class Matrix(SampleBase):
                 pos = self.board.width
 
             self.board = self.matrix.SwapOnVSync(self.board)
-
-            if c.recv_packet == (PacketType.COMMAND1, b'baseline'):
+            if str(packetvalue) == b'baseline':
                 offscreen_canvas.Clear()
                 break
 
@@ -158,6 +155,12 @@ class Matrix(SampleBase):
             len = graphics.DrawText(offscreen_canvas, font, pos, p, textColor, heartrate)
             time.sleep(2)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
+
+    def quitting(self):
+        if c.recv_packet() == (PacketType.COMMAND0, b'quit'):
+            c.close_connection()
+            quit()
+
 
     def text_with_outline(self, word, outer_color, inner_color, font, x_pos, y_pos):
         if outer_color == "red":
@@ -203,4 +206,3 @@ if __name__ == "__main__":
     matrix = Matrix()
     if (not matrix.process()):
         matrix.print_help()
-    c.close_connection()
