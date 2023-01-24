@@ -39,7 +39,6 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 from odrive_helpers import *
 import time
 
-
 print('starting server')
 
 MIXPANEL_TOKEN = "x"
@@ -67,10 +66,11 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-print('server created')
-s.open_server()
-print('server opened, now waiting for connection!')
-s.wait_for_connection()
+create_server()
+# Refer to ObjectOrientedTest. This function creates the P2P server on the main.py RaspberryPi and WAITS for the
+# Matrix.py RaspberryPi to build a connection. The rest of the file will NOT run until this connection
+# is found. From building this connection, you are able to send packet of information back and forth through
+# different packet types. For more information, visit https://github.com/dpengineering/dpea-p2p
 
 class MainScreen(Screen):
     """
@@ -138,21 +138,11 @@ class MainScreen(Screen):
         self.bg_rect.size = self.size
         self.bg_rect.pos = self.pos
 
-
-#delete at some point
-    def check_all_sensors(self):
-        return
-
-    def thread_check_all_sensors(self):
-        return
-
     def switch_to_traj(self):
+        # No button currently calls this function. Used for demonstrating control over the horses, but not necessary
+        # for the game.
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = TRAJ_SCREEN_NAME
-
-    def switch_to_gpio(self):
-        SCREEN_MANAGER.transition.direction = "right"
-        SCREEN_MANAGER.current = GPIO_SCREEN_NAME
 
     def switch_to_beginning(self):
         global new_game
@@ -182,6 +172,9 @@ class MainScreen(Screen):
 
 
 class BeginningScreen(Screen):
+    """
+    Class to handle the beginning screen and its associated events for starting a race
+    """
     def quit(self):
         print("Exit")
         s.close_connection()
@@ -198,6 +191,7 @@ class BeginningScreen(Screen):
         SCREEN_MANAGER.transition.direction = "left"
         SCREEN_MANAGER.current = BASELINE_SCREEN_NAME
 
+    # Starting the adapters does NOT require human interaction
     def one_adapater_start(self):
         adapter1.start()
         print('adapter1 started')
@@ -226,6 +220,7 @@ class BeginningScreen(Screen):
         adapter4.start()
         print('adapter4 started')
 
+    # Defines number of players for each game.
     def one_player(self):
         global numberOfPlayers
 
@@ -304,7 +299,9 @@ class BeginningScreen(Screen):
 
 
 class BaselineScreen(Screen):
-
+    """
+    Class to handle the baseline screen and finding each individual's heart rate
+    """
     def quit(self):
         print("Exit")
         s.close_connection()
@@ -316,77 +313,90 @@ class BaselineScreen(Screen):
     def find_baseline(self):
         global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed
         if numberOfPlayers == 1:
-
+            s.send_packet(PacketType.COMMAND0, b'baseline')
+            # Refer to dpea-p2p repo for more info on sending packets
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
+            vernier2 = 0
+            vernier3 = 0
+            vernier4 = 0
 
-            while i < 4:
+            try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                s.send_packet(PacketType.COMMAND0, b'baseline')
-                sleep(1)
-                print('Finding Average')
-                i += 1
+                while i < 4:
+                    sleep(1)
+                    print('Finding Average')
+                    i += 1
+                    # When loop breaks, the subscription breaks as well! Refer to HeartrateRate Example Repo
 
-            baseline1 = round(average_heartrate(baseline1List))
+            finally:
+                baseline1 = round(average_heartrate(baseline1List))
 
-            SCREEN_MANAGER.transition.direction = "right"
-            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-            homed = False
-            print(homed)
+                homed = False
+                print(homed)
 
-        if numberOfPlayers == 2:
-            s.send_packet(PacketType.COMMAND1, b'baseline')
+        elif numberOfPlayers == 2:
+            s.send_packet(PacketType.COMMAND0, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
             print('vernier2 connected')
+            vernier3 = 0
+            vernier4 = 0
 
-            while i < 4:
+            try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-                sleep(1)
-                print('Finding Average')
-                i += 1
+                while i < 4:
+                    sleep(1)
+                    print('Finding Average')
+                    i += 1
 
-            baseline1 = round(average_heartrate(baseline1List))
-            baseline2 = round(average_heartrate(baseline2List))
+            finally:
+                baseline1 = round(average_heartrate(baseline1List))
+                baseline2 = round(average_heartrate(baseline2List))
 
-            SCREEN_MANAGER.transition.direction = "right"
-            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-            homed = False
-            print(homed)
+                homed = False
+                print(homed)
 
         elif numberOfPlayers == 3:
-            s.send_packet(PacketType.COMMAND1, b'baseline')
+            s.send_packet(PacketType.COMMAND0, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
             print('vernier2 connected')
             vernier3 = adapter3.connect(player3.deviceID)
             print('vernier3 connected')
+            vernier4 = 0
 
-            while i < 4:
+            try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                sleep(1)
-                print('Finding Average')
-                i += 1
+                while i < 4:
+                    sleep(1)
+                    print('Finding Average')
+                    i += 1
 
-            baseline1 = round(average_heartrate(baseline1List))
-            baseline2 = round(average_heartrate(baseline2List))
-            baseline3 = round(average_heartrate(baseline3List))
+            finally:
+                baseline1 = round(average_heartrate(baseline1List))
+                baseline2 = round(average_heartrate(baseline2List))
+                baseline3 = round(average_heartrate(baseline3List))
 
-            SCREEN_MANAGER.transition.direction = "right"
-            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-            homed = False
-            print(homed)
+                homed = False
+                print(homed)
 
         elif numberOfPlayers == 4:
-            s.send_packet(PacketType.COMMAND1, b'baseline')
+            s.send_packet(PacketType.COMMAND0, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -396,33 +406,36 @@ class BaselineScreen(Screen):
             vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier4 connected')
 
-            while i < 4:
+            try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
-                print('Finding Average')
-                i += 1
+                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
+                while i < 4:
+                    sleep(1)
+                    print('Finding Average')
+                    i += 1
 
-            baseline1 = round(average_heartrate(baseline1List))
-            baseline2 = round(average_heartrate(baseline2List))
-            baseline3 = round(average_heartrate(baseline3List))
-            baseline4 = round(average_heartrate(baseline4List))
+            finally:
+                baseline1 = round(average_heartrate(baseline1List))
+                baseline2 = round(average_heartrate(baseline2List))
+                baseline3 = round(average_heartrate(baseline3List))
+                baseline4 = round(average_heartrate(baseline4List))
 
-            sleep(5)
+                sleep(5)
 
-            SCREEN_MANAGER.transition.direction = "right"
-            SCREEN_MANAGER.current = RUN_SCREEN_NAME
+                SCREEN_MANAGER.transition.direction = "right"
+                SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-            homed = False
-            print(homed)
+                homed = False
+                print(homed)
 
         else:
             print('not working L')
             return
 
 
-        return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, i, homed
+        return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed
 
     def switch_screen(self):
         SCREEN_MANAGER.transition.direction = "right"
@@ -432,6 +445,9 @@ class BaselineScreen(Screen):
 
 
 class RunScreen(Screen):
+    """
+    Class to handle the run screen and heart beat horse race
+    """
     def quit(self):
         print("Exit")
         s.close_connection()
@@ -445,10 +461,14 @@ class RunScreen(Screen):
         self.ids.player2Baseline.text = str(baseline2)
         self.ids.player3Baseline.text = str(baseline3)
         self.ids.player4Baseline.text = str(baseline4)
+        player1.baseline_rate = baseline1
+        player2.baseline_rate = baseline2
+        player3.baseline_rate = baseline3
+        player4.baseline_rate = baseline4
 
     def start_game(self):
         global new_game
-        t = "5"
+        t = "3"
         while int(t) > 0:
             t = str(int(t) - 1)
             sleep(1)
@@ -466,8 +486,10 @@ class RunScreen(Screen):
                     print(total_laps)
                     if player1.get_laps() >= total_laps:
                         break
+                    # To end a subscription, you MUST break the while loop.
 
             finally:
+                s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -497,10 +519,9 @@ class RunScreen(Screen):
                         break
 
             finally:
+                s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
-                vernier1.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
                 player2.game_done()
-                vernier2.unsubscribe("00002a37-0000-1000-8000-00805f9b34fb")
                 player3.game_done()
                 player4.game_done()
                 player1.laps = 0
@@ -532,6 +553,7 @@ class RunScreen(Screen):
                         break
 
             finally:
+                s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -569,6 +591,7 @@ class RunScreen(Screen):
                         break
 
             finally:
+                s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -585,7 +608,7 @@ class RunScreen(Screen):
 
 class TrajectoryScreen(Screen):
     """
-    Class to handle the trajectory control screen and its associated touch events
+    Class to handle the trajectory control screen and its associated touch events. THIS IS NOT USED IN THE EXHIBIT!
     """
 
     def switch_screen(self):
@@ -609,7 +632,7 @@ class TrajectoryScreen(Screen):
 
 class AdminScreen(Screen):
     """
-    Class to handle the AdminScreen and its functionality
+    Class to handle the AdminScreen and its functionality.
     """
 
     def __init__(self, **kwargs):
@@ -693,5 +716,5 @@ def send_event(event_name):
 
 
 if __name__ == "__main__":
-    print("done setting up")
+    print("done setting up :D")
     ProjectNameGUI().run()

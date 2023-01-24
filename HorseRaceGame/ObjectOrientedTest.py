@@ -1,3 +1,4 @@
+# This file defines several functions and variables called from main.py
 import sys
 from binascii import hexlify
 from Player import Player
@@ -44,10 +45,10 @@ od_2.axis0.controller.config.enable_overspeed_error = False
 od_2.axis1.controller.config.enable_overspeed_error = False
 
 numberOfPlayers = 0
-baseline1 = 0
-baseline2 = 0
-baseline3 = 0
-baseline4 = 0
+baseline1 = 60
+baseline2 = 60
+baseline3 = 60
+baseline4 = 60
 
 h1_laps = 0
 h2_laps = 0
@@ -75,6 +76,8 @@ player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3, 0)
 player4 = Player("", od_1, 4, horse4, baseline4, 0)
 
 byteHeartrate = 0
+heartrate = 0
+laps = 0
 
 
 class PacketType(enum.Enum):
@@ -96,23 +99,31 @@ def heartrate_is_real(heartrate):
 
 def heartrate_baseline(player_num):
     def handle_data(handle, value):
-        global i, byteHeartrate
+        global i, byteHeartrate, heartrate, laps
         heartrate = int(hexlify(value)[2:4], 16)
         byteHeartrate = bytes(str(heartrate), 'utf-8')
 
         if heartrate_is_real(heartrate):
             if player_num == 1:
                 baseline1List.append(heartrate)
-                s.send_packet(PacketType.COMMAND0, byteHeartrate)
+                msg = str(heartrate) + "-" + str(laps)
+                byteMsg = bytes(str(msg), 'utf-8')
+                s.send_packet(PacketType.COMMAND0, byteMsg)
             elif player_num == 2:
                 baseline2List.append(heartrate)
-                s.send_packet(PacketType.COMMAND1, byteHeartrate)
+                msg = str(heartrate) + "-" + str(laps)
+                byteMsg = bytes(str(msg), 'utf-8')
+                s.send_packet(PacketType.COMMAND1, byteMsg)
             elif player_num == 3:
                 baseline3List.append(heartrate)
-                s.send_packet(PacketType.COMMAND2, byteHeartrate)
+                msg = str(heartrate) + "-" + str(laps)
+                byteMsg = bytes(str(msg), 'utf-8')
+                s.send_packet(PacketType.COMMAND2, byteMsg)
             elif player_num == 4:
                 baseline4List.append(heartrate)
-                s.send_packet(PacketType.COMMAND3, byteHeartrate)
+                msg = str(heartrate) + "-" + str(laps)
+                byteMsg = bytes(str(msg), 'utf-8')
+                s.send_packet(PacketType.COMMAND3, byteMsg)
             else:
                 print('not good')
         else:
@@ -124,6 +135,13 @@ def heartrate_baseline(player_num):
     return handle_data
 
 
+def create_server():
+    print('server created')
+    s.open_server()
+    print('server opened, now waiting for connection!')
+    s.wait_for_connection()
+
+
 def average_heartrate(lst):
     if not len(lst) == 0:
         return sum(lst) / len(lst)
@@ -132,40 +150,48 @@ def average_heartrate(lst):
 
 
 def setup(player_num):
-    global byteHeartrate
+    global byteHeartrate, heartrate
     total_laps = horserace_helpers.total_laps
 
     def handle_data(self, value):
+        global laps
         if player_num == 1:
+            laps = player1.get_laps()
+            msg = str(heartrate) + "-" + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
             player1.handle_tick(value)
-            s.send_packet(PacketType.COMMAND0, byteHeartrate)
-            if player1.get_laps() >= total_laps:
+            s.send_packet(PacketType.COMMAND0, byteMsg)
+            if laps >= total_laps:
                 end_game(1)
-                s.send_packet(PacketType.COMMAND0, b'FINISHED')
         elif player_num == 2:
             player2.handle_tick(value)
             s.send_packet(PacketType.COMMAND1, byteHeartrate)
             if player2.get_laps() >= total_laps:
                 end_game(2)
-                s.send_packet(PacketType.COMMAND1, b'FINISHED')
         elif player_num == 3:
             player3.handle_tick(value)
             s.send_packet(PacketType.COMMAND2, byteHeartrate)
             if player3.get_laps() >= total_laps:
                 end_game(3)
-                s.send_packet(PacketType.COMMAND2, b'FINISHED')
         else:
             player4.handle_tick(value)
             s.send_packet(PacketType.COMMAND3, byteHeartrate)
             if player4.get_laps() >= total_laps:
                 end_game(4)
-                s.send_packet(PacketType.COMMAND3, b'FINISHED')
     def end_game(num):
         print("Player " + str(num) + " Wins!")
         player1.is_done = True
         player2.is_done = True
         player3.is_done = True
         player4.is_done = True
+        if num == 1:
+            s.send_packet(PacketType.COMMAND0, b'WIN')
+        elif num == 2:
+            s.send_packet(PacketType.COMMAND1, b'WIN')
+        elif num == 3:
+            s.send_packet(PacketType.COMMAND2, b'WIN')
+        else:
+            s.send_packet(PacketType.COMMAND3, b'WIN')
 
 
     return handle_data

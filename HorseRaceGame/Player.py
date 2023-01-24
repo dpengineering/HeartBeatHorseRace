@@ -1,3 +1,4 @@
+#
 from binascii import hexlify
 from odrive_helpers import *
 import horserace_helpers
@@ -28,7 +29,7 @@ class Player:
         self.is_playing = True
         self.is_backward = False
         self.laps = 0
-        self.base_velo = 0.5
+        self.base_velo = 1
         self.heart_weight = 70
         self.baseline_rate = baseline_rate
         self.is_done = True
