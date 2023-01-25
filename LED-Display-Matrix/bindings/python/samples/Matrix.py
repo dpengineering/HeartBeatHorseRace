@@ -9,6 +9,7 @@ import adafruit_vl6180x
 import enum
 from p2p.dpea_p2p import Client
 from threading import Thread
+from datetime import datetime
 
 
 os.environ['DISPLAY'] = ":0.0"
@@ -87,8 +88,6 @@ class Matrix(SampleBase):
 
         self.board = self.matrix.CreateFrameCanvas()
 
-
-
         while True:
 
             # big tippy maze text
@@ -97,7 +96,6 @@ class Matrix(SampleBase):
             self.text_with_outline("BEAT", "white", "blue", self.font5, self.board.width/4+8, y_offset[y2])
             self.text_with_outline("HORSE", "white", "blue", self.font5, self.board.width*2/4+2, y_offset[y3])
             self.text_with_outline("RACE", "white", "blue", self.font5, self.board.width*3/4+8, y_offset[y4])
-
 
             y1 = y1 + 1
             y2 = y2 + 1
@@ -117,13 +115,31 @@ class Matrix(SampleBase):
                 pos = self.board.width
 
             self.board = self.matrix.SwapOnVSync(self.board)
+            print(packetvalue)
             if str(packetvalue) == 'baseline':
                 self.board.Clear()
                 break
 
+        print("yeezus")
+        self.baseline()
+
+    def baseline(self):
+        self.countdown_screen()
+
+    def countdown_screen(self):
+        self.board.Clear()
+        self.text_with_outline("3", "white", "blue", self.font5, 2, 8)
+        sleep(1)
+        self.board.Clear()
+        self.text_with_outline("2", "white", "blue", self.font5, 2, 7)
+        sleep(1)
+        self.board.Clear()
+        self.text_with_outline("1", "white", "blue", self.font5, 2, 7)
+        sleep(1)
+        self.board.Clear()
+        self.text_with_outline("Go!", "white", "blue", self.font5, 2, 7)
+        sleep(1)
         self.in_game()
-
-
 
     def in_game(self):
 
@@ -137,7 +153,7 @@ class Matrix(SampleBase):
         p = self.board.height * 1 / 2
 
         while True:
-            x = str(pack[0])
+            packetType = str(pack[0])
 
             if "-" in packetvalue:
                  x = packetvalue.split("-")
@@ -145,16 +161,16 @@ class Matrix(SampleBase):
                  laps = x[1]
 
 
-            if x == "PacketType.COMMAND0":
+            if packetType == "PacketType.COMMAND0":
                 heartrate1 = packetvalue
                 lap1 = laps
-            elif x == "PacketType.COMMAND1":
+            elif packetType == "PacketType.COMMAND1":
                 heartrate2 = packetvalue
                 lap2 = laps
-            elif x == "PacketType.COMMAND2":
+            elif packetType == "PacketType.COMMAND2":
                 heartrate3 = packetvalue
                 lap3 = laps
-            elif x == "PacketType.COMMAND3":
+            elif packetType == "PacketType.COMMAND3":
                 heartrate4 = packetvalue
                 lap4 = laps
             self.board.Clear()
@@ -171,18 +187,72 @@ class Matrix(SampleBase):
 
             time.sleep(0.1)
             self.board = self.matrix.SwapOnVSync(self.board)
+            if str(packetvalue) == 'WIN':
+                if packetType == "PacketType.COMMAND0":
+                    self.win_screen(1)
+                elif packetType == "PacketType.COMMAND1":
+                    self.win_screen(2)
+                elif packetType == "PacketType.COMMAND2":
+                    self.win_screen(3)
+                elif packetType == "PacketType.COMMAND3":
+                    self.win_screen(4)
 
-            if str(packetvalue) == 'done1':
-                self.win_screen(1)
-            elif str(packetvalue) == 'done2':
-                self.win_screen(2)
-            elif str(packetvalue) == 'done3':
-                self.win_screen(3)
-            elif str(packetvalue) == 'done4':
-                self.win_screen(4)
+
 
     def win_screen(self, number):
         self.board.Clear()
+
+        y_offset = [20, 21, 22, 23, 24, 25, 26, 27, 28, 27, 26, 25, 24, 23, 22, 21]
+        y1 = 0
+        y2 = 4
+        y3 = 8
+        y4 = 12
+
+        while True:
+
+            # big tippy maze text
+            self.board.Clear()
+            if number == 1:
+                self.text_with_outline("Win!", "white", "blue", self.font5, 10, y_offset[y1])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width / 4 + 8, y_offset[y2])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width * 2 / 4 + 8, y_offset[y3])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width * 3 / 4 + 8, y_offset[y4])
+            elif number == 2:
+                self.text_with_outline("Win!", "white", "blue", self.font5, self.board.width / 4 + 10, y_offset[y1])
+                self.text_with_outline("Lose", "white", "red", self.font5, 10, y_offset[y2])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width * 2 / 4 + 8, y_offset[y3])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width * 3 / 4 + 8, y_offset[y4])
+            elif number == 3:
+                self.text_with_outline("Win!", "white", "blue", self.font5, self.board.width * 2/4 + 10, y_offset[y1])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width / 4 + 8, y_offset[y2])
+                self.text_with_outline("Lose", "white", "red", self.font5, 10, y_offset[y3])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width * 3 / 4 + 8, y_offset[y4])
+            elif number == 4:
+                self.text_with_outline("Win!", "white", "blue", self.font5, self.board.width * 3/4 + 10, y_offset[y1])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width / 4 + 8, y_offset[y2])
+                self.text_with_outline("Lose", "white", "red", self.font5, self.board.width * 2 / 4 + 8, y_offset[y3])
+                self.text_with_outline("Lose", "white", "red", self.font5, 10, y_offset[y4])
+
+
+            y1 = y1 + 1
+            y2 = y2 + 1
+            y3 = y3 + 1
+            y4 = y4 + 1
+            if y1 == 16:
+                y1 = 0
+            elif y2 == 16:
+                y2 = 0
+            elif y3 == 16:
+                y3 = 0
+            elif y4 == 16:
+                y4 = 0
+
+            sleep(0.06)
+
+            self.board = self.matrix.SwapOnVSync(self.board)
+
+            if str(packetvalue) == "continue":
+                self.idle_screen()
 
 
     def run_text(self):
@@ -208,7 +278,6 @@ class Matrix(SampleBase):
 
 
     def text_with_outline(self, word, outer_color, inner_color, font, x_pos, y_pos):
-        print("bingus")
         if outer_color == "red":
             outer_color = graphics.Color(255, 0, 0)
         if outer_color == "orange":
