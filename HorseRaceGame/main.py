@@ -425,6 +425,7 @@ class BaselineScreen(Screen):
                 sleep(5)
 
                 SCREEN_MANAGER.transition.direction = "right"
+                s.send_packet(PacketType.COMMAND0, b'start')
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False
