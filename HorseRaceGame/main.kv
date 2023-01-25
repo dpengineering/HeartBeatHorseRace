@@ -2,7 +2,6 @@
 
     name: 'main'
     on_enter: root.beginning_setup()
-    on_enter: root.thread_check_all_sensors()
 
     FloatLayout:
         size_hint: None, None
@@ -14,14 +13,14 @@
                 size: self.size
                 pos: self.pos
 
-    DPEAButton:
-        id: traj_button
-        text: 'TRAJ'
-        size: 100, 100
-        center_x: root.width * 0.15
-        center_y: root.height * 0.1
-        color: 0, 1, 0, 1
-        on_press: root.switch_to_traj()
+#    DPEAButton:
+#        id: traj_button
+#        text: 'TRAJ'
+#        size: 100, 100
+#        center_x: root.width * 0.15
+#        center_y: root.height * 0.1
+#        color: 0, 1, 0, 1
+#        on_press: root.switch_to_traj()
 
     Button:
         id: beginning_button
@@ -40,7 +39,6 @@
         center_y: root.height * 0.1
         color: 1, 0, 0, 1
         on_press: root.quit()
-
 
 
 <TrajectoryScreen>:

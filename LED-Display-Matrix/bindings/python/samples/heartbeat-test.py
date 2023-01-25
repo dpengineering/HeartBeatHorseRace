@@ -4,9 +4,6 @@ from binascii import hexlify
 import pygatt
 import time
 
-adapter0 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM0')
-adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM1')
-
 heartrate0 = 0
 heartrate1 = 0
 timeInSeconds = 0
