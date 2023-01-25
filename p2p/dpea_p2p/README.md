@@ -12,12 +12,14 @@ On the server:
 
 ```python
 import enum
-from dpea_p2p import Server
+from p2p.dpea_p2p import Server
+
 
 class PacketType(enum.Enum):
     NULL = 0
     COMMAND1 = 1
     COMMAND2 = 2
+
 
 #         |Bind IP       |Port |Packet enum
 s = Server("172.17.21.2", 5001, PacketType)
@@ -35,12 +37,14 @@ On the client:
 
 ```python
 import enum
-from dpea_p2p import Client
+from p2p.dpea_p2p import Client
+
 
 class PacketType(enum.Enum):
     NULL = 0
     COMMAND1 = 1
     COMMAND2 = 2
+
 
 #         |Server IP     |Port |Packet enum
 c = Client("172.17.21.2", 5001, PacketType)

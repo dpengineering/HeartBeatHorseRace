@@ -85,8 +85,7 @@ class SampleBase(object):
         if self.args.led_show_refresh:
             options.show_refresh_rate = 1
 
-        if self.args.led_slowdown_gpio != None:
-            options.gpio_slowdown = 3
+
         if self.args.led_no_hardware_pulse:
             options.disable_hardware_pulsing = True
         if not self.args.drop_privileges:
