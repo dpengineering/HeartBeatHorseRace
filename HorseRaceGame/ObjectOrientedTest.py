@@ -67,6 +67,7 @@ baseline4List = []
 
 homed = False
 print(homed)
+serverCreated = False
 i = 0
 total_laps = 3
 
@@ -108,22 +109,26 @@ def heartrate_baseline(player_num):
                 baseline1List.append(heartrate)
                 msg = str(heartrate) + "-" + str(laps)
                 byteMsg = bytes(str(msg), 'utf-8')
-                s.send_packet(PacketType.COMMAND0, byteMsg)
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, byteMsg)
             elif player_num == 2:
                 baseline2List.append(heartrate)
                 msg = str(heartrate) + "-" + str(laps)
                 byteMsg = bytes(str(msg), 'utf-8')
-                s.send_packet(PacketType.COMMAND1, byteMsg)
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND1, byteMsg)
             elif player_num == 3:
                 baseline3List.append(heartrate)
                 msg = str(heartrate) + "-" + str(laps)
                 byteMsg = bytes(str(msg), 'utf-8')
-                s.send_packet(PacketType.COMMAND2, byteMsg)
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND2, byteMsg)
             elif player_num == 4:
                 baseline4List.append(heartrate)
                 msg = str(heartrate) + "-" + str(laps)
                 byteMsg = bytes(str(msg), 'utf-8')
-                s.send_packet(PacketType.COMMAND3, byteMsg)
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND3, byteMsg)
             else:
                 print('not good')
         else:
@@ -140,6 +145,8 @@ def create_server():
     s.open_server()
     print('server opened, now waiting for connection!')
     s.wait_for_connection()
+    serverCreated = True
+    return serverCreated
 
 
 def average_heartrate(lst):
@@ -160,22 +167,26 @@ def setup(player_num):
             msg = str(heartrate) + "-" + str(laps)
             byteMsg = bytes(str(msg), 'utf-8')
             player1.handle_tick(value)
-            s.send_packet(PacketType.COMMAND0, byteMsg)
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, byteMsg)
             if laps >= total_laps:
                 end_game(1)
         elif player_num == 2:
             player2.handle_tick(value)
-            s.send_packet(PacketType.COMMAND1, byteHeartrate)
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND1, byteHeartrate)
             if player2.get_laps() >= total_laps:
                 end_game(2)
         elif player_num == 3:
             player3.handle_tick(value)
-            s.send_packet(PacketType.COMMAND2, byteHeartrate)
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND2, byteHeartrate)
             if player3.get_laps() >= total_laps:
                 end_game(3)
         else:
             player4.handle_tick(value)
-            s.send_packet(PacketType.COMMAND3, byteHeartrate)
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND3, byteHeartrate)
             if player4.get_laps() >= total_laps:
                 end_game(4)
     def end_game(num):
@@ -184,14 +195,15 @@ def setup(player_num):
         player2.is_done = True
         player3.is_done = True
         player4.is_done = True
-        if num == 1:
-            s.send_packet(PacketType.COMMAND0, b'WIN')
-        elif num == 2:
-            s.send_packet(PacketType.COMMAND1, b'WIN')
-        elif num == 3:
-            s.send_packet(PacketType.COMMAND2, b'WIN')
-        else:
-            s.send_packet(PacketType.COMMAND3, b'WIN')
+        if serverCreated is True:
+            if num == 1:
+                s.send_packet(PacketType.COMMAND0, b'WIN')
+            elif num == 2:
+                s.send_packet(PacketType.COMMAND1, b'WIN')
+            elif num == 3:
+                s.send_packet(PacketType.COMMAND2, b'WIN')
+            else:
+                s.send_packet(PacketType.COMMAND3, b'WIN')
 
 
     return handle_data

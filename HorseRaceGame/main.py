@@ -67,6 +67,9 @@ class ProjectNameGUI(App):
 Window.clearcolor = (1, 1, 1, 1)  # White
 
 create_server()
+
+# ^Comment out this function if you don't want to run the main.py with the LED Display^
+
 # Refer to ObjectOrientedTest. This function creates the P2P server on the main.py RaspberryPi and WAITS for the
 # Matrix.py RaspberryPi to build a connection. The rest of the file will NOT run until this connection
 # is found. From building this connection, you are able to send packet of information back and forth through
@@ -129,7 +132,8 @@ class MainScreen(Screen):
             od_1.clear_errors()
             od_2.clear_errors()
 
-            s.send_packet(PacketType.COMMAND0, b'game start')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, b'game start')
 
             homed = True
             return homed
@@ -313,7 +317,8 @@ class BaselineScreen(Screen):
     def find_baseline(self):
         global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed
         if numberOfPlayers == 1:
-            s.send_packet(PacketType.COMMAND0, b'baseline')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, b'baseline')
             # Refer to dpea-p2p repo for more info on sending packets
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
@@ -339,7 +344,8 @@ class BaselineScreen(Screen):
                 print(homed)
 
         elif numberOfPlayers == 2:
-            s.send_packet(PacketType.COMMAND0, b'baseline')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -366,7 +372,8 @@ class BaselineScreen(Screen):
                 print(homed)
 
         elif numberOfPlayers == 3:
-            s.send_packet(PacketType.COMMAND0, b'baseline')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -396,7 +403,8 @@ class BaselineScreen(Screen):
                 print(homed)
 
         elif numberOfPlayers == 4:
-            s.send_packet(PacketType.COMMAND0, b'baseline')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, b'baseline')
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
             vernier2 = adapter2.connect(player2.deviceID)
@@ -425,7 +433,8 @@ class BaselineScreen(Screen):
                 sleep(5)
 
                 SCREEN_MANAGER.transition.direction = "right"
-                s.send_packet(PacketType.COMMAND0, b'start')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'start')
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False
@@ -490,7 +499,8 @@ class RunScreen(Screen):
                     # To end a subscription, you MUST break the while loop.
 
             finally:
-                s.send_packet(PacketType.COMMAND0, b'done')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -520,7 +530,8 @@ class RunScreen(Screen):
                         break
 
             finally:
-                s.send_packet(PacketType.COMMAND0, b'done')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -554,7 +565,8 @@ class RunScreen(Screen):
                         break
 
             finally:
-                s.send_packet(PacketType.COMMAND0, b'done')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -592,7 +604,8 @@ class RunScreen(Screen):
                         break
 
             finally:
-                s.send_packet(PacketType.COMMAND0, b'done')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'done')
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
