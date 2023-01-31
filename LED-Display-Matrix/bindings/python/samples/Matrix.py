@@ -204,11 +204,16 @@ class Matrix(SampleBase):
         global packetvalue, heartrate1, heartrate2, heartrate3, heartrate4, lap1, lap2, lap3, lap4, laps
 
         textColor = graphics.Color(255, 0, 0)
-        pos1 = self.board.width * 0.35 / 4
-        pos2 = self.board.width * 1.35 / 4
-        pos3 = self.board.width * 2.35 / 4
-        pos4 = self.board.width * 3.35 / 4
-        p = self.board.height * 1 / 2
+        pos1 = self.board.width * 0.05 / 4
+        pos2 = self.board.width * 1.05 / 4
+        pos3 = self.board.width * 2.05 / 4
+        pos4 = self.board.width * 3.05 / 4
+        post1 = self.board.width * .65 / 4
+        post2 = self.board.width * 1.65 / 4
+        post3 = self.board.width * 2.65 / 4
+        post4 = self.board.width * 3.65 / 4
+        horiz1 = self.board.height * 2 / 5
+        horiz2 = self.board.height * 4 / 5
 
         while True:
             packetType = str(pack[0])
@@ -233,15 +238,25 @@ class Matrix(SampleBase):
                 lap4 = laps
             self.board.Clear()
 
-            len1 = graphics.DrawText(self.board, self.font2, pos1, p, textColor, str(heartrate1))
-            len2 = graphics.DrawText(self.board, self.font2, pos2, p, textColor, str(heartrate2))
-            len3 = graphics.DrawText(self.board, self.font2, pos3, p, textColor, str(heartrate3))
-            len4 = graphics.DrawText(self.board, self.font2, pos4, p, textColor, str(heartrate4))
+            len1 = self.text_with_outline("Rate:", "white", "blue", self.font2, pos1, horiz1)
+            len2 = self.text_with_outline("Rate:", "white", "blue", self.font2, pos2, horiz1)
+            len3 = self.text_with_outline("Rate:", "white", "blue", self.font2, pos3, horiz1)
+            len4 = self.text_with_outline("Rate:", "white", "blue", self.font2, pos4, horiz1)
 
-            len5 = graphics.DrawText(self.board, self.font2, pos1, p * 1.5, textColor, str(lap1))
-            len6 = graphics.DrawText(self.board, self.font2, pos2, p * 1.5, textColor, str(lap2))
-            len7 = graphics.DrawText(self.board, self.font2, pos3, p * 1.5, textColor, str(lap3))
-            len8 = graphics.DrawText(self.board, self.font2, pos4, p * 1.5, textColor, str(lap4))
+            len9 = self.text_with_outline(str(heartrate1), "white", "blue", self.font2, post1, horiz1)
+            len10 = self.text_with_outline(str(heartrate2), "white", "blue", self.font2, post2, horiz1)
+            len11 = self.text_with_outline(str(heartrate3), "white", "blue", self.font2, post3, horiz1)
+            len12 = self.text_with_outline(str(heartrate4), "white", "blue", self.font2, post4, horiz1)
+
+            len5 = self.text_with_outline("Laps:", "white", "blue", self.font2, pos1, horiz2)
+            len6 = self.text_with_outline("Laps:", "white", "blue", self.font2, pos2, horiz2)
+            len7 = self.text_with_outline("Laps:", "white", "blue", self.font2, pos3, horiz2)
+            len8 = self.text_with_outline("Laps:", "white", "blue", self.font2, pos4, horiz2)
+
+            len13 = self.text_with_outline(str(lap1) + "/3", "white", "blue", self.font2, post1, horiz2)
+            len14 = self.text_with_outline(str(lap2) + "/3", "white", "blue", self.font2, post2, horiz2)
+            len15 = self.text_with_outline(str(lap3) + "/3", "white", "blue", self.font2, post3, horiz2)
+            len16 = self.text_with_outline(str(lap4) + "/3", "white", "blue", self.font2, post4, horiz2)
 
             time.sleep(0.1)
             self.board = self.matrix.SwapOnVSync(self.board)
