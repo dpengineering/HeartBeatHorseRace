@@ -31,7 +31,7 @@ from PIL import Image
 
 
 
-image = Image.open("/home/pi/LED-Display-Matrix/img/heart_pixelated.png")
+image = Image.open("/home/pi/LED-Display-Matrix/img/Heart_Button.png")
 
 # Configuration for the matrix
 options = RGBMatrixOptions()
@@ -47,15 +47,5 @@ options.gpio_slowdown = 3
 
 matrix = RGBMatrix(options = options)
 
-# Make image fit our screen.
-image.thumbnail((matrix.width, matrix.height), Image.ANTIALIAS)
 
-matrix.SetImage(image.convert('RGB'))
-
-try:
-    print("Press CTRL-C to stop.")
-    while True:
-        time.sleep(100)
-except KeyboardInterrupt:
-    sys.exit(0)
 
