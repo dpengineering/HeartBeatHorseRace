@@ -66,9 +66,11 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-create_server()
+serverCreated = False
 
+# serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display^
+
 
 # Refer to ObjectOrientedTest. This function creates the P2P server on the main.py RaspberryPi and WAITS for the
 # Matrix.py RaspberryPi to build a connection. The rest of the file will NOT run until this connection
@@ -85,7 +87,7 @@ class MainScreen(Screen):
     # Automatically runs when MainScreen is created. Homes/Calibrates the oDrives if not already done, and sets up the
     # server. 'IF STATEMENT' WILL NOT FULLY RUN UNTIL A CONNECTION TO A CLIENT IS FOUND.
     def beginning_setup(self):
-        global homed
+        global homed, serverCreated
         if homed is False:
             assert od_1.config.enable_brake_resistor is True, "Check for faulty brake resistor."
             assert od_2.config.enable_brake_resistor is True, "Check for faulty brake resistor."
@@ -108,6 +110,8 @@ class MainScreen(Screen):
             if not horse4.is_calibrated():
                 print("calibrating horse4...")
                 horse4.calibrate_with_current_lim(15)
+
+            sleep(3)
 
             # Homes the Horses to Left Side
             horses = [horse1, horse2, horse3, horse4]
@@ -168,10 +172,12 @@ class MainScreen(Screen):
 
     def quit(self):
         print("Exit")
-        s.close_connection()
-        print('connection closed')
-        s.close_server()
-        print('server closed')
+        if serverCreated is True:
+            s.close_connection()
+            print('connection closed')
+            s.close_server()
+            print('server closed')
+            sleep(3)
         quit()
 
 
@@ -315,7 +321,8 @@ class BaselineScreen(Screen):
         quit()
 
     def find_baseline(self):
-        global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed
+        global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed, \
+            serverCreated
         if numberOfPlayers == 1:
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, b'baseline')
@@ -338,6 +345,9 @@ class BaselineScreen(Screen):
                 baseline1 = round(average_heartrate(baseline1List))
 
                 SCREEN_MANAGER.transition.direction = "right"
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'start')
+                    print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False
@@ -366,6 +376,9 @@ class BaselineScreen(Screen):
                 baseline2 = round(average_heartrate(baseline2List))
 
                 SCREEN_MANAGER.transition.direction = "right"
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'start')
+                    print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False
@@ -397,6 +410,9 @@ class BaselineScreen(Screen):
                 baseline3 = round(average_heartrate(baseline3List))
 
                 SCREEN_MANAGER.transition.direction = "right"
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'start')
+                    print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False
@@ -435,6 +451,7 @@ class BaselineScreen(Screen):
                 SCREEN_MANAGER.transition.direction = "right"
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'start')
+                    print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False
@@ -477,7 +494,7 @@ class RunScreen(Screen):
         player4.baseline_rate = baseline4
 
     def start_game(self):
-        global new_game
+        global new_game, serverCreated
         t = "3"
         while int(t) > 0:
             t = str(int(t) - 1)
@@ -492,8 +509,6 @@ class RunScreen(Screen):
                 while True:
                     time.sleep(10)
                     print("while True is running")
-                    print(player1.get_laps())
-                    print(total_laps)
                     if player1.get_laps() >= total_laps:
                         break
                     # To end a subscription, you MUST break the while loop.
@@ -506,9 +521,7 @@ class RunScreen(Screen):
                 player3.game_done()
                 player4.game_done()
                 player1.laps = 0
-                player2.laps = 0
-                player3.laps = 0
-                player4.laps = 0
+                sleep(5)
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -538,8 +551,7 @@ class RunScreen(Screen):
                 player4.game_done()
                 player1.laps = 0
                 player2.laps = 0
-                player3.laps = 0
-                player4.laps = 0
+                sleep(5)
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -574,7 +586,7 @@ class RunScreen(Screen):
                 player1.laps = 0
                 player2.laps = 0
                 player3.laps = 0
-                player4.laps = 0
+                sleep(5)
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -614,6 +626,7 @@ class RunScreen(Screen):
                 player2.laps = 0
                 player3.laps = 0
                 player4.laps = 0
+                sleep(5)
                 print('new game')
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME

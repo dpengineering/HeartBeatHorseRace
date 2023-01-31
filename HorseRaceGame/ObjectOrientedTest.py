@@ -66,8 +66,8 @@ baseline3List = []
 baseline4List = []
 
 homed = False
-print(homed)
 serverCreated = False
+print(homed)
 i = 0
 total_laps = 3
 
@@ -141,19 +141,21 @@ def heartrate_baseline(player_num):
 
 
 def create_server():
+    global serverCreated
     print('server created')
     s.open_server()
     print('server opened, now waiting for connection!')
     s.wait_for_connection()
     serverCreated = True
-    return serverCreated
+    return True
 
 
 def average_heartrate(lst):
     if not len(lst) == 0:
-        return sum(lst) / len(lst)
-    else:
-        return 'not averaged'
+        if not sum(lst) == 0:
+            return sum(lst) / len(lst)
+        else:
+            return 'not averaged'
 
 
 def setup(player_num):
