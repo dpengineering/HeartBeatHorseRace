@@ -10,7 +10,7 @@ import enum
 from p2p.dpea_p2p import Client
 from threading import Thread
 from datetime import datetime
-
+from PIL import Image
 
 os.environ['DISPLAY'] = ":0.0"
 
@@ -37,6 +37,8 @@ c.connect()
 
 joyvalue = None
 laps = 0
+
+
 
 class Matrix(SampleBase):
     global laps
@@ -115,7 +117,6 @@ class Matrix(SampleBase):
                 pos = self.board.width
 
             self.board = self.matrix.SwapOnVSync(self.board)
-            print(packetvalue)
             if str(packetvalue) == 'baseline':
                 self.board.Clear()
                 break
@@ -124,21 +125,79 @@ class Matrix(SampleBase):
         self.baseline()
 
     def baseline(self):
+
+        if not 'image' in self.__dict__:
+            self.image = Image.open("/home/pi/LED-Display-Matrix/img/Heart_Button.png").convert('RGB')
+            self.image2 = Image.open("/home/pi/LED-Display-Matrix/img/Heart_Button.png").convert('RGB')
+            print("yee")
+        self.image.resize((int(self.matrix.width * 0.5), int(self.matrix.height * 0.5)), Image.ANTIALIAS)
+        self.image.thumbnail((int(self.matrix.width * 0.5), int(self.matrix.height * 0.5)), Image.ANTIALIAS)
+
+        self.image2.resize((int(self.matrix.width * 0.6), int(self.matrix.height * 0.6)), Image.ANTIALIAS)
+        self.image2.thumbnail((int(self.matrix.width * 0.6), int(self.matrix.height * 0.6)), Image.ANTIALIAS)
+
+        text1 = "Taking"
+        text2 = ["Heartrate", "Heartrate.", "Heartrate.."]
+        i = 0
+        p = 0
+        while True:
+            if p % 2 == 0:
+                self.board.SetImage(self.image, 34, 2)
+                self.board.SetImage(self.image, 34 + 64, 2)
+                self.board.SetImage(self.image, 34 + 128, 2)
+                self.board.SetImage(self.image, 34 + 192, 2)
+            else:
+                self.board.SetImage(self.image2, 30, 2)
+                self.board.SetImage(self.image2, 30 + 64, 2)
+                self.board.SetImage(self.image2, 30 + 128, 2)
+                self.board.SetImage(self.image2, 30 + 192, 2)
+
+
+
+            graphics.DrawText(self.board, self.font6, 0, 23, self.text_color3, text1)
+            graphics.DrawText(self.board, self.font6, 0, 31, self.text_color3, text2[i])
+
+            graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 23, self.text_color3, text1)
+            graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 31, self.text_color3, text2[i])
+
+            graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 23, self.text_color3, text1)
+            graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 31, self.text_color3, text2[i])
+
+            graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 23, self.text_color3, text1)
+            graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 31, self.text_color3, text2[i])
+
+            p = p + 1
+            i = i + 1
+            if i == 3:
+                i = 0
+            self.board = self.matrix.SwapOnVSync(self.board)
+
+            time.sleep(0.5)
+            self.board.Clear()
+            print(packetvalue)
+            if str(packetvalue) == 'start':
+                self.board.Clear()
+                break
+
         self.countdown_screen()
 
     def countdown_screen(self):
+        print("yeezy")
+        self.text_with_outline("3", "white", "blue", self.font5, 25, 23)
+        self.board = self.matrix.SwapOnVSync(self.board)
+        sleep(5)
         self.board.Clear()
-        self.text_with_outline("3", "white", "blue", self.font5, 2, 8)
-        sleep(1)
+        self.text_with_outline("2", "white", "blue", self.font5, 23 + self.board.width * 1/4, 23)
+        self.board = self.matrix.SwapOnVSync(self.board)
+        sleep(5)
         self.board.Clear()
-        self.text_with_outline("2", "white", "blue", self.font5, 2, 7)
-        sleep(1)
+        self.text_with_outline("1", "white", "blue", self.font5, 23 + self.board.width * 2/4, 23)
+        self.board = self.matrix.SwapOnVSync(self.board)
+        sleep(5)
         self.board.Clear()
-        self.text_with_outline("1", "white", "blue", self.font5, 2, 7)
-        sleep(1)
-        self.board.Clear()
-        self.text_with_outline("Go!", "white", "blue", self.font5, 2, 7)
-        sleep(1)
+        self.text_with_outline("Go!", "white", "blue", self.font5, 23 + self.board.width * 3/4, 23)
+        self.board = self.matrix.SwapOnVSync(self.board)
+        sleep(5)
         self.in_game()
 
     def in_game(self):
@@ -187,6 +246,7 @@ class Matrix(SampleBase):
 
             time.sleep(0.1)
             self.board = self.matrix.SwapOnVSync(self.board)
+            print(packetvalue)
             if str(packetvalue) == 'WIN':
                 if packetType == "PacketType.COMMAND0":
                     self.win_screen(1)

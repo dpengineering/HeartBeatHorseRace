@@ -88,10 +88,10 @@ class Matrix(SampleBase):
 
             # big tippy maze text
             self.board.Clear()
-            self.text_with_outline("Win!", "white", "blue", self.font5, 10, y_offset[y1])
-            self.text_with_outline("Lose", "white", "red", self.font6, self.board.width/4+8, y_offset[y2])
-            self.text_with_outline("Lose", "white", "red", self.font6, self.board.width*2/4+8, y_offset[y3])
-            self.text_with_outline("Lose", "white", "red", self.font6, self.board.width*3/4+8, y_offset[y4])
+            self.text_with_outline("1", "white", "blue", self.font5, 26, 23)
+            self.text_with_outline("2", "white", "blue", self.font6, self.board.width/4+26, 23)
+            self.text_with_outline("3", "white", "blue", self.font6, self.board.width*2/4+26, 23)
+            self.text_with_outline("Go!", "white", "blue", self.font6, self.board.width*3/4+18, 23)
 
 
             y1 = y1 + 1
