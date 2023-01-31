@@ -33,10 +33,9 @@ class PacketType(enum.Enum):
 
 #          |Server IP           |Port |Packet enum
 c = Client("172.17.21.3", 5001, PacketType)
-c.connect()
+#c.connect()
 
 joyvalue = None
-laps = 0
 
 
 
