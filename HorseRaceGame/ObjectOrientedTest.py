@@ -66,7 +66,6 @@ baseline3List = []
 baseline4List = []
 
 homed = False
-serverCreated = False
 print(homed)
 i = 0
 total_laps = 3
@@ -193,10 +192,6 @@ def setup(player_num):
                 end_game(4)
     def end_game(num):
         print("Player " + str(num) + " Wins!")
-        player1.is_done = True
-        player2.is_done = True
-        player3.is_done = True
-        player4.is_done = True
         if serverCreated is True:
             if num == 1:
                 s.send_packet(PacketType.COMMAND0, b'WIN')
@@ -206,6 +201,12 @@ def setup(player_num):
                 s.send_packet(PacketType.COMMAND2, b'WIN')
             else:
                 s.send_packet(PacketType.COMMAND3, b'WIN')
+        player1.is_done = True
+        player2.is_done = True
+        player3.is_done = True
+        player4.is_done = True
+        sleep(2)
+
 
 
     return handle_data

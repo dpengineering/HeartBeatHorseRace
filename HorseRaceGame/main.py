@@ -39,6 +39,11 @@ sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 from odrive_helpers import *
 import time
 
+# Heartbeat Horse Race!
+
+
+
+
 print('starting server')
 
 MIXPANEL_TOKEN = "x"
@@ -66,10 +71,10 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-serverCreated = False
+# serverCreated = False
 
-# serverCreated = create_server()
-# ^Comment out this function if you don't want to run the main.py with the LED Display^
+serverCreated = create_server()
+# ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
 # Refer to ObjectOrientedTest. This function creates the P2P server on the main.py RaspberryPi and WAITS for the
@@ -452,6 +457,7 @@ class BaselineScreen(Screen):
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'start')
                     print("game started")
+                    sleep(1)
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
                 homed = False

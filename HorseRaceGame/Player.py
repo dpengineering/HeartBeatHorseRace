@@ -58,10 +58,13 @@ class Player:
                     self.axis.set_vel(1.4)
                     self.track_laps()
                     self.is_backward = True
-                    sleep(.5)
+                    sleep(0.5)
                     self.axis.wait_for_motor_to_stop()
-                    self.track_lap = True
-                    self.is_backward = False
+                    if digital_read(self.od, self.od_num) != 0:
+                        self.track_lap = True
+                        self.is_backward = False
+                    else:
+                        self.check_end_sensor()
             else:
                 self.axis.set_vel(0)
         else:
@@ -120,12 +123,13 @@ class Player:
 
 
     def track_laps(self):
-        self.track_lap = False
-        self.laps += 1
-        if self.laps >= horserace_helpers.total_laps:
-            self.axis.set_vel(2)
-            self.is_backward = True
-            self.axis.wait_for_motor_to_stop()
+        if self.track_lap is True:
+            self.track_lap = False
+            self.laps += 1
+            if self.laps >= horserace_helpers.total_laps:
+                self.axis.set_vel(2)
+                self.is_backward = True
+                self.axis.wait_for_motor_to_stop()
 
     def game_done(self):
         self.is_done = True
