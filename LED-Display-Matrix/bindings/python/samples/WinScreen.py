@@ -87,31 +87,21 @@ class Matrix(SampleBase):
         while True:
 
             # big tippy maze text
-            self.board.Clear()
-            self.text_with_outline("1", "white", "blue", self.font5, 26, 23)
-            self.text_with_outline("2", "white", "blue", self.font6, self.board.width/4+26, 23)
-            self.text_with_outline("3", "white", "blue", self.font6, self.board.width*2/4+26, 23)
-            self.text_with_outline("Go!", "white", "blue", self.font6, self.board.width*3/4+18, 23)
-
-
-            y1 = y1 + 1
-            y2 = y2 + 1
-            y3 = y3 + 1
-            y4 = y4 + 1
-            if y1 == 16:
-                y1 = 0
-            elif y2 == 16:
-                y2 = 0
-            elif y3 == 16:
-                y3 = 0
-            elif y4 == 16:
-                y4 = 0
-
-            sleep(0.06)
-            if (pos + length < 0):
-                pos = self.board.width
-
+            self.text_with_outline("3", "white", "blue", self.font6, 26, 23)
             self.board = self.matrix.SwapOnVSync(self.board)
+            sleep(1)
+            self.board.Clear()
+            self.text_with_outline("2", "white", "blue", self.font6, self.board.width / 4 + 26, 23)
+            self.board = self.matrix.SwapOnVSync(self.board)
+            sleep(1)
+            self.board.Clear()
+            self.text_with_outline("1", "white", "blue", self.font5, self.board.width * 2 / 4 + 26, 23)
+            self.board = self.matrix.SwapOnVSync(self.board)
+            sleep(1)
+            self.board.Clear()
+            self.text_with_outline("Go!", "white", "blue", self.font6, self.board.width * 3 / 4 + 16, 23)
+            self.board = self.matrix.SwapOnVSync(self.board)
+            sleep(1)
 
     def text_with_outline(self, word, outer_color, inner_color, font, x_pos, y_pos):
         if outer_color == "red":
