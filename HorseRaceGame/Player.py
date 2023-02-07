@@ -8,7 +8,7 @@ class Player:
 
     deviceMap = {
         "49A85121": "A0:9E:1A:49:A8:51",
-        "5EEFF62F": "A0:9E:1A:5E:EF:F6",
+        "5EEFF62F": "A0:9E:1A:5E:EF:F6", #horse3
         "A3DDF820": "C6:4B:DF:A5:36:0B",
         "9F43FF2B": "F8:FF:5C:77:2A:A1", #horse2
         "A3DDDD2F": "EF:FD:6F:EE:D7:81" #horse1
@@ -35,6 +35,9 @@ class Player:
         self.is_done = True
         self.mode = mode
 
+    def game_is_done(self, num):
+        print("Player " + str(num) + " Wins!")
+        sleep(10)
 
     def handle_tick(self, value):
         if not self.is_done:
@@ -143,7 +146,7 @@ class Player:
 
     def heartrate_is_real(self, heartrate):
         if heartrate > 30:
-            if heartrate < 170:
+            if heartrate < 220:
                 return True
         else:
             return False

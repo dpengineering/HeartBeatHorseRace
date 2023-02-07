@@ -7,11 +7,12 @@ from kivy.uix.screenmanager import ScreenManager
 
 import pygatt
 
-sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
-
 from odrive_helpers import *
 import time
 import enum
+
+sys.path.append("/home/pi/HeartBeatHorseRace/")
+
 from p2p.dpea_p2p import Server
 
 od_1 = find_odrive(serial_number="208D3388304B")
@@ -66,6 +67,7 @@ baseline3List = []
 baseline4List = []
 
 homed = False
+serverCreated = False
 print(homed)
 i = 0
 total_laps = 3
@@ -132,7 +134,6 @@ def heartrate_baseline(player_num):
                 print('not good')
         else:
             print('unlucky')
-            i -= 1
 
         return byteHeartrate
 
@@ -156,6 +157,12 @@ def average_heartrate(lst):
         else:
             return 'not averaged'
 
+def go_home():
+    horse1.get_home()
+    horse2.get_home()
+    horse3.get_home()
+    horse4.get_home()
+
 
 def setup(player_num):
     global byteHeartrate, heartrate
@@ -170,43 +177,72 @@ def setup(player_num):
             player1.handle_tick(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, byteMsg)
-            if laps >= total_laps:
-                end_game(1)
+            # if laps >= total_laps:
+            #     end_game(1)
         elif player_num == 2:
+            laps = player1.get_laps()
+            msg = str(heartrate) + "-" + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
             player2.handle_tick(value)
             if serverCreated is True:
-                s.send_packet(PacketType.COMMAND1, byteHeartrate)
-            if player2.get_laps() >= total_laps:
-                end_game(2)
+                s.send_packet(PacketType.COMMAND1, byteMsg)
+            # if player2.get_laps() >= total_laps:
+            #     end_game(2)
         elif player_num == 3:
+            laps = player1.get_laps()
+            msg = str(heartrate) + "-" + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
             player3.handle_tick(value)
             if serverCreated is True:
-                s.send_packet(PacketType.COMMAND2, byteHeartrate)
-            if player3.get_laps() >= total_laps:
-                end_game(3)
+                s.send_packet(PacketType.COMMAND2, byteMsg)
+            # if player3.get_laps() >= total_laps:
+            #     end_game(3)
         else:
+            laps = player1.get_laps()
+            msg = str(heartrate) + "-" + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
             player4.handle_tick(value)
             if serverCreated is True:
-                s.send_packet(PacketType.COMMAND3, byteHeartrate)
-            if player4.get_laps() >= total_laps:
-                end_game(4)
-    def end_game(num):
-        print("Player " + str(num) + " Wins!")
-        if serverCreated is True:
-            if num == 1:
-                s.send_packet(PacketType.COMMAND0, b'WIN')
-            elif num == 2:
-                s.send_packet(PacketType.COMMAND1, b'WIN')
-            elif num == 3:
-                s.send_packet(PacketType.COMMAND2, b'WIN')
-            else:
-                s.send_packet(PacketType.COMMAND3, b'WIN')
-        player1.is_done = True
-        player2.is_done = True
-        player3.is_done = True
-        player4.is_done = True
-        sleep(2)
-
-
+                s.send_packet(PacketType.COMMAND3, byteMsg)
+            # if player4.get_laps() >= total_laps:
+            #     end_game(4)
+    # def end_game(num):
+    #     print("Player " + str(num) + " Wins!")
+    #     if serverCreated is True:
+    #         if num == 1:
+    #             s.send_packet(PacketType.COMMAND0, b'WIN')
+    #             print('yeet')
+    #         elif num == 2:
+    #             s.send_packet(PacketType.COMMAND1, b'WIN')
+    #         elif num == 3:
+    #             s.send_packet(PacketType.COMMAND2, b'WIN')
+    #         else:
+    #             s.send_packet(PacketType.COMMAND3, b'WIN')
+    #     player1.is_done = True
+    #     player2.is_done = True
+    #     player3.is_done = True
+    #     player4.is_done = True
+    #     sleep(2)
 
     return handle_data
+
+def home_all_horses():
+    horses = [horse1, horse2, horse3, horse4]
+    for horse in horses:
+        horse.set_ramped_vel(1, 1)
+    sleep(1)
+    for horse in horses:
+        horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall
+    for horse in horses:
+        horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
+    sleep(3)  # allows motor to start moving to offset position
+    for horse in horses:
+        horse.wait_for_motor_to_stop()
+    for horse in horses:
+        if round(horse.get_pos()) != 0:
+            horse.set_ramped_vel(1, 1)
+            sleep(1)
+            horse.wait_for_motor_to_stop()
+            horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
+            sleep(3)
+            horse.wait_for_motor_to_stop()
