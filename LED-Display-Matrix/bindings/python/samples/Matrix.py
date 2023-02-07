@@ -47,10 +47,11 @@ class PacketType(enum.Enum):
 
 #          |Server IP           |Port |Packet enum
 c = Client("172.17.21.3", 5001, PacketType)
+
+sleep(15)
 c.connect()
 
 joyvalue = None
-
 
 
 class Matrix(SampleBase):
@@ -154,38 +155,42 @@ class Matrix(SampleBase):
         i = 0
         p = 0
         while True:
-            if p % 2 == 0:
-                self.board.SetImage(self.image, 34, 2)
-                self.board.SetImage(self.image, 34 + 64, 2)
-                self.board.SetImage(self.image, 34 + 128, 2)
-                self.board.SetImage(self.image, 34 + 192, 2)
-            else:
-                self.board.SetImage(self.image2, 30, 2)
-                self.board.SetImage(self.image2, 30 + 64, 2)
-                self.board.SetImage(self.image2, 30 + 128, 2)
-                self.board.SetImage(self.image2, 30 + 192, 2)
+            if p % 101 == 0:
+                if p % 2 == 0:
+                    self.board.SetImage(self.image, 34, 2)
+                    self.board.SetImage(self.image, 34 + 64, 2)
+                    self.board.SetImage(self.image, 34 + 128, 2)
+                    self.board.SetImage(self.image, 34 + 192, 2)
+                else:
+                    self.board.SetImage(self.image2, 30, 2)
+                    self.board.SetImage(self.image2, 30 + 64, 2)
+                    self.board.SetImage(self.image2, 30 + 128, 2)
+                    self.board.SetImage(self.image2, 30 + 192, 2)
 
 
 
-            graphics.DrawText(self.board, self.font6, 0, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, 0, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, 0, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, 0, 31, self.text_color3, text2[i])
 
-            graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 31, self.text_color3, text2[i])
 
-            graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 31, self.text_color3, text2[i])
 
-            graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 31, self.text_color3, text2[i])
+                self.board = self.matrix.SwapOnVSync(self.board)
 
+                self.board.Clear()
+                i = i + 1
+                if i == 3:
+                    i = 0
+
+            time.sleep(0.005)
             p = p + 1
-            i = i + 1
-            if i == 3:
-                i = 0
-            self.board = self.matrix.SwapOnVSync(self.board)
 
-            self.board.Clear()
+
             print(packetvalue)
             if str(packetvalue) == 'start':
                 self.board.Clear()

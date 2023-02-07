@@ -81,39 +81,41 @@ class ImageScroller(SampleBase):
         p = 0
         # let's scroll
         while True:
-            if p % 2 == 0:
-                self.board.SetImage(self.image, 34, 2)
-                self.board.SetImage(self.image, 34 + 64, 2)
-                self.board.SetImage(self.image, 34 + 128, 2)
-                self.board.SetImage(self.image, 34 + 192, 2)
-            else:
-                self.board.SetImage(self.image2, 30, 2)
-                self.board.SetImage(self.image2, 30 + 64, 2)
-                self.board.SetImage(self.image2, 30 + 128, 2)
-                self.board.SetImage(self.image2, 30 + 192, 2)
+            if p % 101 == 0:
+                if p % 2 == 0:
+                    self.board.SetImage(self.image, 34, 2)
+                    self.board.SetImage(self.image, 34 + 64, 2)
+                    self.board.SetImage(self.image, 34 + 128, 2)
+                    self.board.SetImage(self.image, 34 + 192, 2)
+                else:
+                    self.board.SetImage(self.image2, 30, 2)
+                    self.board.SetImage(self.image2, 30 + 64, 2)
+                    self.board.SetImage(self.image2, 30 + 128, 2)
+                    self.board.SetImage(self.image2, 30 + 192, 2)
 
 
 
-            graphics.DrawText(self.board, font4, 0, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, 0, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, 0, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, 0, 31, text_color4, text2[i])
 
-            graphics.DrawText(self.board, font4, self.board.width * 1/4, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, self.board.width * 1/4, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, self.board.width * 1/4, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, self.board.width * 1/4, 31, text_color4, text2[i])
 
-            graphics.DrawText(self.board, font4, self.board.width * 2/4, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, self.board.width * 2/4, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, self.board.width * 2/4, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, self.board.width * 2/4, 31, text_color4, text2[i])
 
-            graphics.DrawText(self.board, font4, self.board.width * 3/4, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, self.board.width * 3/4, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, self.board.width * 3/4, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, self.board.width * 3/4, 31, text_color4, text2[i])
+                self.board = self.matrix.SwapOnVSync(self.board)
+
+                self.board.Clear()
+                i = i + 1
+                if i == 3:
+                    i = 0
 
             p = p + 1
-            i = i + 1
-            if i == 3:
-                i = 0
-            self.board = self.matrix.SwapOnVSync(self.board)
 
-            time.sleep(0.5)
-            self.board.Clear()
+            time.sleep(0.005)
 
 
 # Main function
