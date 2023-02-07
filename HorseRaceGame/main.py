@@ -74,7 +74,7 @@ Window.clearcolor = (1, 1, 1, 1)  # White
 # serverCreated = False
 
 serverCreated = create_server()
-# ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
+#^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
 # Refer to ObjectOrientedTest. This function creates the P2P server on the main.py RaspberryPi and WAITS for the
@@ -328,9 +328,14 @@ class BaselineScreen(Screen):
     def find_baseline(self):
         global baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed, \
             serverCreated
+        baseline1List_real = True
+        baseline2List_real = True
+        baseline3List_real = True
+        baseline4List_real = True
         if numberOfPlayers == 1:
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, b'baseline')
+
             # Refer to dpea-p2p repo for more info on sending packets
             vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
             print('vernier1 connected')
@@ -340,14 +345,20 @@ class BaselineScreen(Screen):
 
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                while i < 4:
+                while i < 3:
                     sleep(1)
                     print('Finding Average')
                     i += 1
                     # When loop breaks, the subscription breaks as well! Refer to HeartrateRate Example Repo
 
             finally:
-                baseline1 = round(average_heartrate(baseline1List))
+                if not baseline1List:
+                    print("heartrate not found")
+                    baseline1 = 60
+
+                else:
+                    print("yes")
+                    baseline1 = round(average_heartrate(baseline1List))
 
                 SCREEN_MANAGER.transition.direction = "right"
                 if serverCreated is True:
@@ -355,7 +366,6 @@ class BaselineScreen(Screen):
                     print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-                homed = False
                 print(homed)
 
         elif numberOfPlayers == 2:
@@ -371,14 +381,32 @@ class BaselineScreen(Screen):
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-                while i < 4:
+                while i < 3:
                     sleep(1)
                     print('Finding Average')
                     i += 1
 
             finally:
-                baseline1 = round(average_heartrate(baseline1List))
-                baseline2 = round(average_heartrate(baseline2List))
+                if not baseline1List:
+                    print("heartrate not found")
+                    baseline1 = 60
+                    if not baseline2List:
+                        baseline2 = 60
+                    else:
+                        baseline2 = round(average_heartrate(baseline2List))
+
+                elif not baseline2List:
+                    print("heartrate not found")
+                    baseline2 = 60
+                    if not baseline1List:
+                        baseline1 = 60
+                    else:
+                        baseline1 = round(average_heartrate(baseline1List))
+
+                else:
+                    print("good :D")
+                    baseline1 = round(average_heartrate(baseline1List))
+                    baseline2 = round(average_heartrate(baseline2List))
 
                 SCREEN_MANAGER.transition.direction = "right"
                 if serverCreated is True:
@@ -386,7 +414,6 @@ class BaselineScreen(Screen):
                     print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-                homed = False
                 print(homed)
 
         elif numberOfPlayers == 3:
@@ -404,15 +431,36 @@ class BaselineScreen(Screen):
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                while i < 4:
+                while i < 3:
                     sleep(1)
                     print('Finding Average')
                     i += 1
 
             finally:
-                baseline1 = round(average_heartrate(baseline1List))
-                baseline2 = round(average_heartrate(baseline2List))
-                baseline3 = round(average_heartrate(baseline3List))
+                if not baseline1List:
+                    baseline1List_real = False
+
+                if not baseline2List:
+                    baseline2List_real = False
+
+                if not baseline3List:
+                    baseline3List_real = False
+
+                if baseline1List_real is False:
+                    baseline1 = 60
+                else:
+                    baseline1 = round(average_heartrate(baseline1List))
+
+                if baseline2List_real is False:
+                    baseline2 = 60
+                else:
+                    baseline2 = round(average_heartrate(baseline2List))
+
+                if baseline3List_real is False:
+                    baseline3 = 60
+                else:
+                    baseline3 = round(average_heartrate(baseline3List))
+
 
                 SCREEN_MANAGER.transition.direction = "right"
                 if serverCreated is True:
@@ -420,7 +468,6 @@ class BaselineScreen(Screen):
                     print("game started")
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-                homed = False
                 print(homed)
 
         elif numberOfPlayers == 4:
@@ -446,12 +493,19 @@ class BaselineScreen(Screen):
                     i += 1
 
             finally:
-                baseline1 = round(average_heartrate(baseline1List))
-                baseline2 = round(average_heartrate(baseline2List))
-                baseline3 = round(average_heartrate(baseline3List))
-                baseline4 = round(average_heartrate(baseline4List))
+                if not baseline1List or baseline2List or baseline3List or baseline4List:
+                    print("heartrate not found")
+                    baseline1 = 60
+                    baseline2 = 60
+                    baseline3 = 60
+                    baseline4 = 60
 
-                sleep(5)
+                else:
+                    print("yes")
+                    baseline1 = round(average_heartrate(baseline1List))
+                    baseline2 = round(average_heartrate(baseline2List))
+                    baseline3 = round(average_heartrate(baseline3List))
+                    baseline4 = round(average_heartrate(baseline4List))
 
                 SCREEN_MANAGER.transition.direction = "right"
                 if serverCreated is True:
@@ -460,7 +514,6 @@ class BaselineScreen(Screen):
                     sleep(1)
                 SCREEN_MANAGER.current = RUN_SCREEN_NAME
 
-                homed = False
                 print(homed)
 
         else:
@@ -516,19 +569,34 @@ class RunScreen(Screen):
                     time.sleep(10)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND0, b'WIN')
+                        player1.game_is_done(1)
                         break
                     # To end a subscription, you MUST break the while loop.
 
             finally:
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'done')
+                horse1.set_vel(0)
+                horse2.set_vel(0)
+                horse3.set_vel(0)
+                horse4.set_vel(0)
+
+                player1.is_done = True
+                player2.is_done = True
+                player3.is_done = True
+                player4.is_done = True
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
                 player4.game_done()
                 player1.laps = 0
-                sleep(5)
+                sleep(3)
                 print('new game')
+
+                home_all_horses()
+
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
@@ -544,21 +612,39 @@ class RunScreen(Screen):
                     time.sleep(10)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND0, b'WIN')
+                        player1.game_is_done(1)
                         break
                     elif player2.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND1, b'WIN')
+                        player2.game_is_done(2)
                         break
 
             finally:
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'done')
+                horse1.set_vel(0)
+                horse2.set_vel(0)
+                horse3.set_vel(0)
+                horse4.set_vel(0)
+
+                player1.is_done = True
+                player2.is_done = True
+                player3.is_done = True
+                player4.is_done = True
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
                 player4.game_done()
                 player1.laps = 0
                 player2.laps = 0
-                sleep(5)
+                sleep(3)
                 print('new game')
+
+                home_all_horses()
+
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
@@ -573,18 +659,36 @@ class RunScreen(Screen):
                 player3.start_game()
 
                 while True:
-                    time.sleep(2)
+                    time.sleep(10)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND0, b'WIN')
+                        player1.game_is_done(1)
                         break
                     elif player2.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND1, b'WIN')
+                        player2.game_is_done(2)
                         break
                     elif player3.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND2, b'WIN')
+                        player3.game_is_done(3)
                         break
 
             finally:
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'done')
+                horse1.set_vel(0)
+                horse2.set_vel(0)
+                horse3.set_vel(0)
+                horse4.set_vel(0)
+
+                player1.is_done = True
+                player2.is_done = True
+                player3.is_done = True
+                player4.is_done = True
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -592,8 +696,11 @@ class RunScreen(Screen):
                 player1.laps = 0
                 player2.laps = 0
                 player3.laps = 0
-                sleep(5)
+                sleep(3)
                 print('new game')
+
+                home_all_horses()
+
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
@@ -610,20 +717,41 @@ class RunScreen(Screen):
                 player4.start_game()
 
                 while True:
-                    time.sleep(2)
+                    time.sleep(10)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND0, b'WIN')
+                        player1.game_is_done(1)
                         break
                     elif player2.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND1, b'WIN')
+                        player2.game_is_done(2)
                         break
                     elif player3.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND2, b'WIN')
+                        player3.game_is_done(3)
                         break
                     elif player4.get_laps() >= total_laps:
+                        if serverCreated is True:
+                            s.send_packet(PacketType.COMMAND3, b'WIN')
+                        player4.game_is_done(4)
                         break
 
             finally:
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'done')
+                horse1.set_vel(0)
+                horse2.set_vel(0)
+                horse3.set_vel(0)
+                horse4.set_vel(0)
+
+                player1.is_done = True
+                player2.is_done = True
+                player3.is_done = True
+                player4.is_done = True
                 player1.game_done()
                 player2.game_done()
                 player3.game_done()
@@ -632,8 +760,11 @@ class RunScreen(Screen):
                 player2.laps = 0
                 player3.laps = 0
                 player4.laps = 0
-                sleep(5)
+                sleep(3)
                 print('new game')
+
+                home_all_horses()
+
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
