@@ -35,10 +35,6 @@ class Player:
         self.is_done = True
         self.mode = mode
 
-    def game_is_done(self, num):
-        print("Player " + str(num) + " Wins!")
-        sleep(10)
-
     def handle_tick(self, value):
         if not self.is_done:
             if not self.is_backward:
@@ -50,15 +46,12 @@ class Player:
                     else:
                         self.zenmove(value)
 
-        else:
-            self.axis.set_vel(0)
-
     def check_end_sensor(self):
         if digital_read(self.od, self.od_num) == 0:
             if self.is_done is False:
                 if not self.is_backward:
                     print("sensor hit")
-                    self.axis.set_vel(1.4)
+                    self.axis.set_vel(2)
                     self.track_laps()
                     self.is_backward = True
                     sleep(0.5)

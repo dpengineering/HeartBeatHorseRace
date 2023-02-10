@@ -229,7 +229,7 @@ def setup(player_num):
 def home_all_horses():
     horses = [horse1, horse2, horse3, horse4]
     for horse in horses:
-        horse.set_ramped_vel(1, 1)
+        horse.set_ramped_vel(2, 2)
     sleep(1)
     for horse in horses:
         horse.wait_for_motor_to_stop()  # waiting until motor slowly hits wall

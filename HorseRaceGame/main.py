@@ -571,7 +571,6 @@ class RunScreen(Screen):
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND0, b'WIN')
-                        player1.game_is_done(1)
                         break
                     # To end a subscription, you MUST break the while loop.
 
@@ -614,12 +613,10 @@ class RunScreen(Screen):
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND0, b'WIN')
-                        player1.game_is_done(1)
                         break
                     elif player2.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND1, b'WIN')
-                        player2.game_is_done(2)
                         break
 
             finally:
@@ -664,17 +661,14 @@ class RunScreen(Screen):
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND0, b'WIN')
-                        player1.game_is_done(1)
                         break
                     elif player2.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND1, b'WIN')
-                        player2.game_is_done(2)
                         break
                     elif player3.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND2, b'WIN')
-                        player3.game_is_done(3)
                         break
 
             finally:
@@ -722,22 +716,18 @@ class RunScreen(Screen):
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND0, b'WIN')
-                        player1.game_is_done(1)
                         break
                     elif player2.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND1, b'WIN')
-                        player2.game_is_done(2)
                         break
                     elif player3.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND2, b'WIN')
-                        player3.game_is_done(3)
                         break
                     elif player4.get_laps() >= total_laps:
                         if serverCreated is True:
                             s.send_packet(PacketType.COMMAND3, b'WIN')
-                        player4.game_is_done(4)
                         break
 
             finally:
