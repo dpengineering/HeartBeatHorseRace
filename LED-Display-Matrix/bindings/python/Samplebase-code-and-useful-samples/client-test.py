@@ -1,3 +1,7 @@
+# File we used to test DPEA_p2p and the client/server connection between the original raspberry pi and the matrix one.
+# I'm unsure this still works, but it should interface with Main.py in HorseRaceGame if so. You could also create a
+# server tester to learn how DPEA p2p works with this file.
+
 import enum
 from p2p.dpea_p2p import Client
 import time
@@ -32,6 +36,7 @@ class RunText(SampleBase):
         super(RunText, self).__init__(*args, **kwargs)
         self.parser.add_argument("-t", "--text", help="The text to scroll on the RGB LED panel")
 
+    # Should just display text mirroring the heartrate data received from the server
     def run(self):
         global heartrate1, heartrate2, heartrate3, heartrate4
         offscreen_canvas = self.matrix.CreateFrameCanvas()

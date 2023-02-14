@@ -1,3 +1,5 @@
+# Basis for the matrix.py file. Contains where you set the settings for your LED matrix.
+
 import argparse
 import time
 import sys
@@ -61,6 +63,7 @@ class SampleBase(object):
     def run(self):
         print("Running")
 
+    # Set the settings of the LED matrix.
     def process(self):
         self.args = self.parser.parse_args()
 

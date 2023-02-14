@@ -7,6 +7,11 @@
 # and text. Namely, image-scroller will help you learn to run images, and WinScreen or in-game-test will help you display
 # text. If you'd like to make your own images pixel by pixel, the tippy maze repo may help you learn that.
 
+# Samplebase is a very important file that Matrix.py is a child file of. We don't understand that file too well, but
+# what is important in that file is that it helps you set the settings for the LED matrix you are using. So if you end
+# changing the size of the LED matrix (using a different product or something), go to samplebase and scroll to the area
+# where you tell the file the size of the LED matrix you are using.
+
 # Other than that, there's not too much I can help you learn about/do, just read through this file and see what you can
 # gain. Then, move on and try to improve the project! Thanks for working on it!
 
@@ -61,6 +66,8 @@ class Matrix(SampleBase):
         super(Matrix, self).__init__(*args, **kwargs)
         Thread(target=self.listen, daemon=True).start()
 
+    # Run is called by the function at the bottom of this file, it loads all the fonts, creats the matrix (LED screen)
+    # and does basically all the setup  for the screens
     def run(self):
         self.board = self.matrix.CreateFrameCanvas()
         self.font2 = graphics.Font()
@@ -77,10 +84,12 @@ class Matrix(SampleBase):
         self.font7.LoadFont("/home/pi/LED-Display-Matrix/fonts/retro-gaming.bdf")
         self.text_color3 = graphics.Color(255, 255, 255)
         self.text_color4 = graphics.Color(255, 0, 0)
-        self.screens = {"screensaver": self.idle_screen()}
 
         self.idle_screen()
 
+    # Listen is the interface for the server between the two raspberry pis. This is called on the matrix's creation
+    # it runs on a separate thread from all the other code, allowing the file to listen for data and display things at
+    # the same time.
     def listen(self):
         global packetvalue, pack
 
@@ -89,6 +98,8 @@ class Matrix(SampleBase):
             pack = c.recv_packet()
             packetvalue = pack[1].decode()
             sleep(0.05)
+
+    # First screen for when the project is started and idle.
     def idle_screen(self):
 
         global packetvalue, heartrate1, heartrate2, heartrate3, heartrate4, lap1, lap2, lap3, lap4, laps
@@ -132,13 +143,15 @@ class Matrix(SampleBase):
                 pos = self.board.width
 
             self.board = self.matrix.SwapOnVSync(self.board)
+
+            # This is how the matrix detects that the main.py raspberry pi is ready for it to switch screens.
             if str(packetvalue) == 'baseline':
                 self.board.Clear()
                 break
 
-        print("yeezus")
         self.baseline()
 
+    # Screen for taking the baseline heartrate of players.
     def baseline(self):
 
         if not 'image' in self.__dict__:
@@ -199,6 +212,7 @@ class Matrix(SampleBase):
 
         self.countdown_screen()
 
+    # The 3, 2, 1, Go! screen.
     def countdown_screen(self):
         print("yeezy")
 
@@ -219,6 +233,7 @@ class Matrix(SampleBase):
         sleep(1)
         self.in_game()
 
+    # This screen displays a player's heartrate and laps completed during the game.
     def in_game(self):
 
         global packetvalue, heartrate1, heartrate2, heartrate3, heartrate4, lap1, lap2, lap3, lap4, laps
@@ -236,8 +251,11 @@ class Matrix(SampleBase):
         horiz2 = self.board.height * 4 / 5
 
         while True:
+            # We can use packetvalue within the loop here to get all the lap/heartrate data.
             packetType = str(pack[0])
 
+            # Our lap + heartrate data comes in the form: "(Heartrate #)-(lap #)" - ex: 25-2 for 25 bpm, 2 laps completed
+            # this if statement helps us decode that data.
             if "-" in packetvalue:
                  x = packetvalue.split("-")
                  packetvalue = x[0]
@@ -291,7 +309,7 @@ class Matrix(SampleBase):
                     self.win_screen(4)
 
 
-
+    # Screen after one player wins
     def win_screen(self, number):
         self.board.Clear()
 
@@ -347,7 +365,7 @@ class Matrix(SampleBase):
             if str(packetvalue) == "done":
                 self.idle_screen()
 
-
+    # Helper function I'm unsure we even use anymore - helps display the packetvalue text when run.
     def run_text(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
@@ -364,12 +382,13 @@ class Matrix(SampleBase):
             time.sleep(2)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
+    # Quits out of the server
     def quitting(self):
         if c.recv_packet() == (PacketType.COMMAND0, b'quit'):
             c.close_connection()
             quit()
 
-
+    # Helper function to add a colored border around a text font
     def text_with_outline(self, word, outer_color, inner_color, font, x_pos, y_pos):
         if outer_color == "red":
             outer_color = graphics.Color(255, 0, 0)
@@ -406,14 +425,10 @@ class Matrix(SampleBase):
         graphics.DrawText(self.board, font, float(x_pos), float(y_pos) + 1, outer_color, word)
         graphics.DrawText(self.board, font, float(x_pos), float(y_pos), inner_color, word)
 
-    def switch_to(self, screen_name):
-        self.screens[screen_name]()
 
-# Main function
+# Main function - basically just runs Matrix.py run function.
 if __name__ == "__main__":
     matrix = Matrix()
-
-
 
     if (not matrix.process()):
         matrix.print_help()

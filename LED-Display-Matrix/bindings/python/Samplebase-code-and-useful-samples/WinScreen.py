@@ -1,3 +1,5 @@
+# File that helped us develop the 3, 2, 1 go! file. If you read through, it will teach you how to display text and remove
+# it on a timer.
 import time
 from time import sleep
 from samplebase import SampleBase
@@ -87,6 +89,7 @@ class Matrix(SampleBase):
         while True:
 
             # big tippy maze text
+            self.board.Clear()
             self.text_with_outline("3", "white", "blue", self.font6, 26, 23)
             self.board = self.matrix.SwapOnVSync(self.board)
             sleep(1)
