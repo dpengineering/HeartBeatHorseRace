@@ -36,7 +36,7 @@ class RunText(SampleBase):
         global heartrate1, heartrate2, heartrate3, heartrate4
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
-        font.LoadFont("../../../../fonts/7x13.bdf")
+        font.LoadFont("/home/pi/LED-Display-Matrix/fonts/7x13.bdf")
         textColor = graphics.Color(255, 0, 0)
         pos1 = offscreen_canvas.width * 0.35 / 4
         pos2 = offscreen_canvas.width * 1.35 / 4
@@ -63,6 +63,7 @@ class RunText(SampleBase):
             len2 = graphics.DrawText(offscreen_canvas, font, pos3, p, textColor, str(heartrate3))
             len3 = graphics.DrawText(offscreen_canvas, font, pos4, p, textColor, str(heartrate4))
             time.sleep(0.1)
+
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
 
