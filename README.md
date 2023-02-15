@@ -5,7 +5,6 @@ Four oDrives, four LEDs Displays, two Raspberry PIs, four bluetooth heartrate se
 
 **Current Problems:**
 * After clicking the heart button to find a baseline heartrate, the program may crash if no one is holding onto the specified bluetooth heartrate sensor. AFAIK, there are three modes for the POLAR adapters, depending on how the user holds them: "ON" - the user is properly holding the sensor. A heartrate will be successfully sent to the RPI. "SLEEP" - the user is holding the sensor, but the sensor cannot find a heartrate. NONETYPE will be sent to the RPI. "OFF" - the user is not holding or touching the sensor. This will cause an error. We have tried try and finally statements, but nothing seems to work.
-* The program sometimes has trouble repeating the race.
 
 **Useful information:**
 * Hold the heart rate sensors properly! This is probably the most important information, and will be the most important factor on whether the program will crash or not. If the program crashes, turn the power off and on again.
