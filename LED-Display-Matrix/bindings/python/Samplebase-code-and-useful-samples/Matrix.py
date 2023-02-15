@@ -210,6 +210,10 @@ class Matrix(SampleBase):
                 self.board.Clear()
                 break
 
+            if str(packetvalue) == 'error':
+                self.board.Clear()
+                self.board.idle_screen()
+
         self.countdown_screen()
 
     # The 3, 2, 1, Go! screen.
