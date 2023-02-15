@@ -5,13 +5,13 @@ import horserace_helpers
 
 class Player:
 
-
+    # Device IDs (which you can find on the side of the polar adapters) correspond to a specific device address.
     deviceMap = {
-        "49A85121": "A0:9E:1A:49:A8:51",
+        "49A85121": "A0:9E:1A:49:A8:51", #horse2
         "5EEFF62F": "A0:9E:1A:5E:EF:F6", #horse3
-        "A3DDF820": "C6:4B:DF:A5:36:0B",
-        "9F43FF2B": "F8:FF:5C:77:2A:A1", #horse2
-        "A3DDDD2F": "EF:FD:6F:EE:D7:81" #horse1
+        "A3DDF820": "C6:4B:DF:A5:36:0B", #horse1
+        "9F43FF2B": "F8:FF:5C:77:2A:A1", #horse4
+        "A3DDDD2F": "EF:FD:6F:EE:D7:81"
     }
 
     def __init__(self, deviceID, od, player_num,  axis, baseline_rate, mode):
@@ -34,10 +34,6 @@ class Player:
         self.baseline_rate = baseline_rate
         self.is_done = True
         self.mode = mode
-
-    def game_is_done(self, num):
-        print("Player " + str(num) + " Wins!")
-        sleep(10)
 
     def handle_tick(self, value):
         if not self.is_done:
@@ -90,6 +86,9 @@ class Player:
 
         self.axis.set_vel(self.velocity)
 
+    # Zenmove and Steadymove are two different types of race modes that are currently not used in the exhibit.
+    # The math has already been done for you to implement them into the exhibit, but we didn't find it necessary.
+    # The function 'move' (above) already does everything we want.
     def zenmove(self, value):
 
         print("Heart rate is " + str(int(hexlify(value)[2:4], 16)))
@@ -124,7 +123,7 @@ class Player:
 
         self.axis.set_vel(self.velocity)
 
-
+    # This checks and/or adds the laps using the sensors at the end.
     def track_laps(self):
         if self.track_lap is True:
             self.track_lap = False
