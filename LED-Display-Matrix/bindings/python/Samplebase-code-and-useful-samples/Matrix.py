@@ -1,4 +1,22 @@
+# This is the main file you will be using to control the LED Display on the Heartbeat Horse Race. If you read on dpea p2p,
+# you can learn more about how to send signals back and forth from the matrix.py raspberry pi and the main.py raspberry pi.
+# These two files run simultaneously. For us, we developed both files on separate computers at the same time, connecting main.py
+# to matrix.py as we tested code.
+
+# There are a several helper files we are leaving in to educate you on how to use the LED board system to display images,
+# and text. Namely, image-scroller will help you learn to run images, and WinScreen or in-game-test will help you display
+# text. If you'd like to make your own images pixel by pixel, the tippy maze repo may help you learn that.
+
+# Samplebase is a very important file that Matrix.py is a child file of. We don't understand that file too well, but
+# what is important in that file is that it helps you set the settings for the LED matrix you are using. So if you end
+# changing the size of the LED matrix (using a different product or something), go to samplebase and scroll to the area
+# where you tell the file the size of the LED matrix you are using.
+
+# Other than that, there's not too much I can help you learn about/do, just read through this file and see what you can
+# gain. Then, move on and try to improve the project! Thanks for working on it!
+
 import time
+import sys
 from time import sleep
 from samplebase import SampleBase
 from rgbmatrix import graphics
@@ -7,6 +25,7 @@ import board
 import busio
 import adafruit_vl6180x
 import enum
+sys.path.append("/home/pi/")
 from p2p.dpea_p2p import Client
 from threading import Thread
 from datetime import datetime
@@ -31,20 +50,24 @@ class PacketType(enum.Enum):
     COMMAND2 = 2
     COMMAND3 = 3
 
+# Here is where we define the martix.py file as the client side of the server
 #          |Server IP           |Port |Packet enum
 c = Client("172.17.21.3", 5001, PacketType)
-#c.connect()
+
+# Connecting to the server
+c.connect()
 
 joyvalue = None
 
-
-
+# Samplebase
 class Matrix(SampleBase):
     global laps
     def __init__(self, *args, **kwargs):
         super(Matrix, self).__init__(*args, **kwargs)
         Thread(target=self.listen, daemon=True).start()
 
+    # Run is called by the function at the bottom of this file, it loads all the fonts, creats the matrix (LED screen)
+    # and does basically all the setup  for the screens
     def run(self):
         self.board = self.matrix.CreateFrameCanvas()
         self.font2 = graphics.Font()
@@ -61,10 +84,12 @@ class Matrix(SampleBase):
         self.font7.LoadFont("/home/pi/LED-Display-Matrix/fonts/retro-gaming.bdf")
         self.text_color3 = graphics.Color(255, 255, 255)
         self.text_color4 = graphics.Color(255, 0, 0)
-        self.screens = {"screensaver": self.idle_screen()}
 
         self.idle_screen()
 
+    # Listen is the interface for the server between the two raspberry pis. This is called on the matrix's creation
+    # it runs on a separate thread from all the other code, allowing the file to listen for data and display things at
+    # the same time.
     def listen(self):
         global packetvalue, pack
 
@@ -73,6 +98,8 @@ class Matrix(SampleBase):
             pack = c.recv_packet()
             packetvalue = pack[1].decode()
             sleep(0.05)
+
+    # First screen for when the project is started and idle.
     def idle_screen(self):
 
         global packetvalue, heartrate1, heartrate2, heartrate3, heartrate4, lap1, lap2, lap3, lap4, laps
@@ -116,13 +143,15 @@ class Matrix(SampleBase):
                 pos = self.board.width
 
             self.board = self.matrix.SwapOnVSync(self.board)
+
+            # This is how the matrix detects that the main.py raspberry pi is ready for it to switch screens.
             if str(packetvalue) == 'baseline':
                 self.board.Clear()
                 break
 
-        print("yeezus")
         self.baseline()
 
+    # Screen for taking the baseline heartrate of players.
     def baseline(self):
 
         if not 'image' in self.__dict__:
@@ -140,39 +169,42 @@ class Matrix(SampleBase):
         i = 0
         p = 0
         while True:
-            if p % 2 == 0:
-                self.board.SetImage(self.image, 34, 2)
-                self.board.SetImage(self.image, 34 + 64, 2)
-                self.board.SetImage(self.image, 34 + 128, 2)
-                self.board.SetImage(self.image, 34 + 192, 2)
-            else:
-                self.board.SetImage(self.image2, 30, 2)
-                self.board.SetImage(self.image2, 30 + 64, 2)
-                self.board.SetImage(self.image2, 30 + 128, 2)
-                self.board.SetImage(self.image2, 30 + 192, 2)
+            if p % 101 == 0:
+                if p % 2 == 0:
+                    self.board.SetImage(self.image, 34, 2)
+                    self.board.SetImage(self.image, 34 + 64, 2)
+                    self.board.SetImage(self.image, 34 + 128, 2)
+                    self.board.SetImage(self.image, 34 + 192, 2)
+                else:
+                    self.board.SetImage(self.image2, 30, 2)
+                    self.board.SetImage(self.image2, 30 + 64, 2)
+                    self.board.SetImage(self.image2, 30 + 128, 2)
+                    self.board.SetImage(self.image2, 30 + 192, 2)
 
 
 
-            graphics.DrawText(self.board, self.font6, 0, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, 0, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, 0, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, 0, 31, self.text_color3, text2[i])
 
-            graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, self.board.width * 1/4, 31, self.text_color3, text2[i])
 
-            graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, self.board.width * 2/4, 31, self.text_color3, text2[i])
 
-            graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 23, self.text_color3, text1)
-            graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 31, self.text_color3, text2[i])
+                graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 23, self.text_color3, text1)
+                graphics.DrawText(self.board, self.font6, self.board.width * 3/4, 31, self.text_color3, text2[i])
+                self.board = self.matrix.SwapOnVSync(self.board)
 
+                self.board.Clear()
+                i = i + 1
+                if i == 3:
+                    i = 0
+
+            time.sleep(0.005)
             p = p + 1
-            i = i + 1
-            if i == 3:
-                i = 0
-            self.board = self.matrix.SwapOnVSync(self.board)
 
-            time.sleep(0.5)
-            self.board.Clear()
+
             print(packetvalue)
             if str(packetvalue) == 'start':
                 self.board.Clear()
@@ -180,25 +212,28 @@ class Matrix(SampleBase):
 
         self.countdown_screen()
 
+    # The 3, 2, 1, Go! screen.
     def countdown_screen(self):
         print("yeezy")
-        self.text_with_outline("3", "white", "blue", self.font5, 25, 23)
+
+        self.text_with_outline("3", "white", "blue", self.font5, 26, 23)
         self.board = self.matrix.SwapOnVSync(self.board)
-        sleep(5)
+        sleep(1)
         self.board.Clear()
-        self.text_with_outline("2", "white", "blue", self.font5, 23 + self.board.width * 1/4, 23)
+        self.text_with_outline("2", "white", "blue", self.font5, self.board.width / 4 + 26, 23)
         self.board = self.matrix.SwapOnVSync(self.board)
-        sleep(5)
+        sleep(1)
         self.board.Clear()
-        self.text_with_outline("1", "white", "blue", self.font5, 23 + self.board.width * 2/4, 23)
+        self.text_with_outline("1", "white", "blue", self.font5, self.board.width * 2/4 + 26, 23)
         self.board = self.matrix.SwapOnVSync(self.board)
-        sleep(5)
+        sleep(1)
         self.board.Clear()
-        self.text_with_outline("Go!", "white", "blue", self.font5, 23 + self.board.width * 3/4, 23)
+        self.text_with_outline("Go!", "white", "blue", self.font5, self.board.width * 3 / 4 + 16, 23)
         self.board = self.matrix.SwapOnVSync(self.board)
-        sleep(5)
+        sleep(1)
         self.in_game()
 
+    # This screen displays a player's heartrate and laps completed during the game.
     def in_game(self):
 
         global packetvalue, heartrate1, heartrate2, heartrate3, heartrate4, lap1, lap2, lap3, lap4, laps
@@ -216,8 +251,11 @@ class Matrix(SampleBase):
         horiz2 = self.board.height * 4 / 5
 
         while True:
+            # We can use packetvalue within the loop here to get all the lap/heartrate data.
             packetType = str(pack[0])
 
+            # Our lap + heartrate data comes in the form: "(Heartrate #)-(lap #)" - ex: 25-2 for 25 bpm, 2 laps completed
+            # this if statement helps us decode that data.
             if "-" in packetvalue:
                  x = packetvalue.split("-")
                  packetvalue = x[0]
@@ -258,7 +296,6 @@ class Matrix(SampleBase):
             len15 = self.text_with_outline(str(lap3) + "/3", "white", "blue", self.font2, post3, horiz2)
             len16 = self.text_with_outline(str(lap4) + "/3", "white", "blue", self.font2, post4, horiz2)
 
-            time.sleep(0.1)
             self.board = self.matrix.SwapOnVSync(self.board)
             print(packetvalue)
             if str(packetvalue) == 'WIN':
@@ -272,7 +309,7 @@ class Matrix(SampleBase):
                     self.win_screen(4)
 
 
-
+    # Screen after one player wins
     def win_screen(self, number):
         self.board.Clear()
 
@@ -324,11 +361,11 @@ class Matrix(SampleBase):
             sleep(0.06)
 
             self.board = self.matrix.SwapOnVSync(self.board)
-
-            if str(packetvalue) == "continue":
+            print(packetvalue)
+            if str(packetvalue) == "done":
                 self.idle_screen()
 
-
+    # Helper function I'm unsure we even use anymore - helps display the packetvalue text when run.
     def run_text(self):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         font = graphics.Font()
@@ -345,12 +382,13 @@ class Matrix(SampleBase):
             time.sleep(2)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
 
+    # Quits out of the server
     def quitting(self):
         if c.recv_packet() == (PacketType.COMMAND0, b'quit'):
             c.close_connection()
             quit()
 
-
+    # Helper function to add a colored border around a text font
     def text_with_outline(self, word, outer_color, inner_color, font, x_pos, y_pos):
         if outer_color == "red":
             outer_color = graphics.Color(255, 0, 0)
@@ -387,11 +425,10 @@ class Matrix(SampleBase):
         graphics.DrawText(self.board, font, float(x_pos), float(y_pos) + 1, outer_color, word)
         graphics.DrawText(self.board, font, float(x_pos), float(y_pos), inner_color, word)
 
-    def switch_to(self, screen_name):
-        self.screens[screen_name]()
 
-# Main function
+# Main function - basically just runs Matrix.py run function.
 if __name__ == "__main__":
     matrix = Matrix()
+
     if (not matrix.process()):
         matrix.print_help()

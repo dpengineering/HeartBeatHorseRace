@@ -1,6 +1,9 @@
 Python bindings for RGB Matrix library
 ======================================
 
+**For DPEA Developers:**
+Here is the folder you'll find useful samples (and not so useful ones) as well as the all important Matrix.py file. Head into the useful samples file for that. You can also learn to setup your computer to interact with Adafruit below if you haven't done so already.
+
 Building
 --------
 

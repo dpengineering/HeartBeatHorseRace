@@ -1,3 +1,6 @@
+# This file helped us develop the taking heartrate screen. This includes both displaying images, text, and changing
+# those images and text on a timer. Should help for displaying images and text.
+
 #!/usr/bin/env python
 import time
 from samplebase import SampleBase
@@ -7,7 +10,7 @@ from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 font4 = graphics.Font()
 font4.LoadFont("/home/pi/LED-Display-Matrix/fonts/6x10.bdf")
 
-
+#Load image
 image = Image.open("/home/pi/LED-Display-Matrix/img/Heart_Button.png")
 text_color4 = graphics.Color(255, 255, 255)
 
@@ -64,10 +67,13 @@ class ImageScroller(SampleBase):
         options.hardware_mapping = 'regular'  # If you have an Adafruit HAT: 'adafruit-hat'
 
 
-
+        # Image processing that is necessary. Although I'm not sure why it is needed, perhaps just to convert the images
+        # to a rgb sheet of pixels.
         if not 'image' in self.__dict__:
             self.image = Image.open("/home/pi/LED-Display-Matrix/img/Heart_Button.png").convert('RGB')
             self.image2 = Image.open("/home/pi/LED-Display-Matrix/img/Heart_Button.png").convert('RGB')
+
+        # Processing size of image.
         self.image.resize((int(self.matrix.width * 0.5), int(self.matrix.height * 0.5)), Image.ANTIALIAS)
         self.image.thumbnail((int(self.matrix.width * 0.5), int(self.matrix.height * 0.5)), Image.ANTIALIAS)
 
@@ -79,41 +85,44 @@ class ImageScroller(SampleBase):
         text2 = ["Heartrate", "Heartrate.", "Heartrate.."]
         i = 0
         p = 0
-        # let's scroll
         while True:
-            if p % 2 == 0:
-                self.board.SetImage(self.image, 34, 2)
-                self.board.SetImage(self.image, 34 + 64, 2)
-                self.board.SetImage(self.image, 34 + 128, 2)
-                self.board.SetImage(self.image, 34 + 192, 2)
-            else:
-                self.board.SetImage(self.image2, 30, 2)
-                self.board.SetImage(self.image2, 30 + 64, 2)
-                self.board.SetImage(self.image2, 30 + 128, 2)
-                self.board.SetImage(self.image2, 30 + 192, 2)
+
+            # Will only change images every 101 ticks (every 0.005 seconds in the current setup).
+            if p % 101 == 0:
+                if p % 2 == 0:
+                    self.board.SetImage(self.image, 34, 2)
+                    self.board.SetImage(self.image, 34 + 64, 2)
+                    self.board.SetImage(self.image, 34 + 128, 2)
+                    self.board.SetImage(self.image, 34 + 192, 2)
+                else:
+                    self.board.SetImage(self.image2, 30, 2)
+                    self.board.SetImage(self.image2, 30 + 64, 2)
+                    self.board.SetImage(self.image2, 30 + 128, 2)
+                    self.board.SetImage(self.image2, 30 + 192, 2)
 
 
 
-            graphics.DrawText(self.board, font4, 0, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, 0, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, 0, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, 0, 31, text_color4, text2[i])
 
-            graphics.DrawText(self.board, font4, self.board.width * 1/4, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, self.board.width * 1/4, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, self.board.width * 1/4, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, self.board.width * 1/4, 31, text_color4, text2[i])
 
-            graphics.DrawText(self.board, font4, self.board.width * 2/4, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, self.board.width * 2/4, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, self.board.width * 2/4, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, self.board.width * 2/4, 31, text_color4, text2[i])
 
-            graphics.DrawText(self.board, font4, self.board.width * 3/4, 23, text_color4, text1)
-            graphics.DrawText(self.board, font4, self.board.width * 3/4, 31, text_color4, text2[i])
+                graphics.DrawText(self.board, font4, self.board.width * 3/4, 23, text_color4, text1)
+                graphics.DrawText(self.board, font4, self.board.width * 3/4, 31, text_color4, text2[i])
+                self.board = self.matrix.SwapOnVSync(self.board)
+
+                self.board.Clear()
+                i = i + 1
+                if i == 3:
+                    i = 0
 
             p = p + 1
-            i = i + 1
-            if i == 3:
-                i = 0
-            self.board = self.matrix.SwapOnVSync(self.board)
 
-            time.sleep(0.5)
-            self.board.Clear()
+            time.sleep(0.005)
 
 
 # Main function

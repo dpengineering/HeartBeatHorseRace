@@ -1,5 +1,5 @@
 # LED Display
-Below is an Adafruit guide on how to get started<br />
+Below is an Adafruit guide on how to get started setting up your LED matrix<br />
 https://learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi?view=all<br /><br />
 These are the commands to clone and setup the repository for creating Python programs to run on the LED matrix<br />
 ```

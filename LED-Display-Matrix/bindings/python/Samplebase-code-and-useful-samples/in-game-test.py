@@ -1,3 +1,6 @@
+# Similar to Client-Test but using outlines with the text and no code to recieve messages from server. Helped us develop
+# the look of the LED matrix during the horse race game. Only code for visuals though.
+
 import time
 from time import sleep
 from samplebase import SampleBase
