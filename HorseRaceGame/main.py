@@ -71,9 +71,9 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-serverCreated = False
+# serverCreated = False
 
-#serverCreated = create_server()
+serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
@@ -191,11 +191,13 @@ class MainScreen(Screen):
     def quit(self):
         print("Exit")
         if serverCreated is True:
+            s.send_packet(PacketType.COMMAND0, b'quitting')
+            sleep(2)
             s.close_connection()
             print('connection closed')
             s.close_server()
             print('server closed')
-            sleep(3)
+            sleep(2)
         quit()
 
 
@@ -203,6 +205,16 @@ class BeginningScreen(Screen):
     """
     Class to handle the beginning screen and its associated events for starting a race
     """
+
+    def stop_all_adapters(self):
+        try:
+            adapter1.stop()
+            adapter2.stop()
+            adapter3.stop()
+            adapter4.stop()
+        finally:
+            return
+
     def quit(self):
         print("Exit")
         s.close_connection()
@@ -223,6 +235,8 @@ class BeginningScreen(Screen):
     def one_adapater_start(self):
         try:
             adapter1.start()
+        except:
+            print("not working :(")
         finally:
             print('adapter1 started')
 
@@ -230,6 +244,8 @@ class BeginningScreen(Screen):
         try:
             adapter1.start()
             adapter2.start()
+        except:
+            print("not working :(")
         finally:
             print('adapter1 started')
             print('adapter2 started')
@@ -239,6 +255,8 @@ class BeginningScreen(Screen):
             adapter1.start()
             adapter2.start()
             adapter3.start()
+        except:
+            print("not working :(")
         finally:
             print('adapter1 started')
             print('adapter2 started')
@@ -250,6 +268,8 @@ class BeginningScreen(Screen):
             adapter2.start()
             adapter3.start()
             adapter4.start()
+        except:
+            print("not working :(")
         finally:
             print('adapter1 started')
             print('adapter2 started')
@@ -341,6 +361,9 @@ class BaselineScreen(Screen):
                     i += 1
                     # When loop breaks, the subscription breaks as well! Refer to HeartrateRate Example Repo
 
+            except:
+                print('L')
+
             # Calls baseline to default at 60 if no data is pulled from the sensors.
             finally:
                 if not baseline1List:
@@ -378,6 +401,9 @@ class BaselineScreen(Screen):
                 while i < 3:
                     sleep(1)
                     i += 1
+
+            except:
+                print('L')
 
             finally:
                 if not baseline1List:
@@ -427,6 +453,9 @@ class BaselineScreen(Screen):
                 while i < 3:
                     sleep(1)
                     i += 1
+
+            except:
+                print('L')
 
             finally:
                 if not baseline1List:
@@ -484,6 +513,9 @@ class BaselineScreen(Screen):
                 while i < 4:
                     sleep(1)
                     i += 1
+
+            except:
+                print('L')
 
             finally:
                 if not baseline1List:
