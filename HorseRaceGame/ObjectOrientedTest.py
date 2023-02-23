@@ -81,7 +81,8 @@ byteHeartrate = 0
 heartrate = 0
 laps = 0
 
-
+# This creates a server for raspberry pi that runs the main.py code. It will interact with the clients connected
+# to it through different PacketTypes, namely COMMAND(0-3). Use this to individually send code to each horse.
 class PacketType(enum.Enum):
     COMMAND0 = 0
     COMMAND1 = 1
@@ -90,7 +91,7 @@ class PacketType(enum.Enum):
 
 s = Server("172.17.21.3", 5001, PacketType)
 
-
+# Checks to make sure the heart rate exists. Especially useful for when the sensors randomly spike.
 def heartrate_is_real(heartrate):
     if (heartrate > 30):
         if (heartrate < 170):
@@ -98,7 +99,7 @@ def heartrate_is_real(heartrate):
     else:
         return False
 
-
+# Creates a list of values that averages to find a baseline for each player.
 def heartrate_baseline(player_num):
     def handle_data(handle, value):
         global i, byteHeartrate, heartrate, laps
@@ -139,7 +140,7 @@ def heartrate_baseline(player_num):
 
     return handle_data
 
-
+# Creates a server for a P2P connection with the matrix.py
 def create_server():
     global serverCreated
     print('server created')
@@ -204,26 +205,6 @@ def setup(player_num):
             player4.handle_tick(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND3, byteMsg)
-            # if player4.get_laps() >= total_laps:
-            #     end_game(4)
-    # def end_game(num):
-    #     print("Player " + str(num) + " Wins!")
-    #     if serverCreated is True:
-    #         if num == 1:
-    #             s.send_packet(PacketType.COMMAND0, b'WIN')
-    #             print('yeet')
-    #         elif num == 2:
-    #             s.send_packet(PacketType.COMMAND1, b'WIN')
-    #         elif num == 3:
-    #             s.send_packet(PacketType.COMMAND2, b'WIN')
-    #         else:
-    #             s.send_packet(PacketType.COMMAND3, b'WIN')
-    #     player1.is_done = True
-    #     player2.is_done = True
-    #     player3.is_done = True
-    #     player4.is_done = True
-    #     sleep(2)
-
     return handle_data
 
 def home_all_horses():
@@ -238,11 +219,3 @@ def home_all_horses():
     sleep(3)  # allows motor to start moving to offset position
     for horse in horses:
         horse.wait_for_motor_to_stop()
-    for horse in horses:
-        if round(horse.get_pos()) != 0:
-            horse.set_ramped_vel(1, 1)
-            sleep(1)
-            horse.wait_for_motor_to_stop()
-            horse.set_pos_traj(horse.get_pos() - 0.5, 1, 2, 1)
-            sleep(3)
-            horse.wait_for_motor_to_stop()
