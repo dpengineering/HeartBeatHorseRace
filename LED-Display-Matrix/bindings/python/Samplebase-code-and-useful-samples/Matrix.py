@@ -52,10 +52,10 @@ class PacketType(enum.Enum):
 
 # Here is where we define the martix.py file as the client side of the server
 #          |Server IP           |Port |Packet enum
-c = Client("172.17.21.3", 5001, PacketType)
+# c = Client("172.17.21.3", 5001, PacketType)
 
 # Connecting to the server
-c.connect()
+# c.connect()
 
 joyvalue = None
 
@@ -149,6 +149,10 @@ class Matrix(SampleBase):
                 self.board.Clear()
                 break
 
+            if str(packetvalue) == 'quitting':
+                self.board.Clear()
+                quit()
+
         self.baseline()
 
     # Screen for taking the baseline heartrate of players.
@@ -212,7 +216,7 @@ class Matrix(SampleBase):
 
             if str(packetvalue) == 'error':
                 self.board.Clear()
-                self.board.idle_screen()
+                self.idle_screen()
 
         self.countdown_screen()
 
