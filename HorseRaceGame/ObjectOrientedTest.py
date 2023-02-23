@@ -75,7 +75,7 @@ total_laps = 3
 player1 = Player("C6:4B:DF:A5:36:0B", od_2, 1, horse1, baseline1, 0)
 player2 = Player("A0:9E:1A:49:A8:51", od_2, 2, horse2, baseline2, 0)
 player3 = Player("A0:9E:1A:5E:EF:F6", od_1, 3, horse3, baseline3, 0)
-player4 = Player("F8:FF:5C:77:2A:A1", od_1, 4, horse4, baseline4, 0)
+player4 = Player("DF:CF:39:84:C2:78", od_1, 4, horse4, baseline4, 0)
 
 byteHeartrate = 0
 heartrate = 0
