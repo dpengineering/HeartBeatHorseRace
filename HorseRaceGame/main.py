@@ -71,9 +71,9 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-# serverCreated = False
+serverCreated = False
 
-serverCreated = create_server()
+#serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
