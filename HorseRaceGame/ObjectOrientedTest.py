@@ -140,6 +140,8 @@ def heartrate_baseline(player_num):
 
     return handle_data
 
+
+
 # Creates a server for a P2P connection with the matrix.py
 def create_server():
     global serverCreated
@@ -175,7 +177,7 @@ def setup(player_num):
             laps = player1.get_laps()
             msg = str(heartrate) + "-" + str(laps)
             byteMsg = bytes(str(msg), 'utf-8')
-            player1.handle_tick(value)
+            player1.update_heartrate(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, byteMsg)
             # if laps >= total_laps:
@@ -184,7 +186,7 @@ def setup(player_num):
             laps = player1.get_laps()
             msg = str(heartrate) + "-" + str(laps)
             byteMsg = bytes(str(msg), 'utf-8')
-            player2.handle_tick(value)
+            player2.update_heartrate(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND1, byteMsg)
             # if player2.get_laps() >= total_laps:
@@ -193,7 +195,7 @@ def setup(player_num):
             laps = player1.get_laps()
             msg = str(heartrate) + "-" + str(laps)
             byteMsg = bytes(str(msg), 'utf-8')
-            player3.handle_tick(value)
+            player3.update_heartrate(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND2, byteMsg)
             # if player3.get_laps() >= total_laps:
@@ -202,10 +204,38 @@ def setup(player_num):
             laps = player1.get_laps()
             msg = str(heartrate) + "-" + str(laps)
             byteMsg = bytes(str(msg), 'utf-8')
-            player4.handle_tick(value)
+            player4.update_heartrate(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND3, byteMsg)
     return handle_data
+
+
+tickerOn = False
+def player_ticker(num_players):
+    global tickerOn
+    tickerOn = True
+    while tickerOn:
+        if num_players == 1:
+            player1.handle_tick()
+        elif num_players == 2:
+            player1.handle_tick()
+            player2.handle_tick()
+
+        elif num_players == 3:
+            player1.handle_tick()
+            player2.handle_tick()
+            player3.handle_tick()
+        else:
+            player1.handle_tick()
+            player2.handle_tick()
+            player3.handle_tick()
+            player4.handle_tick()
+
+        time.sleep(1)
+
+def tickerOff():
+    global tickerOn
+    tickerOn = False
 
 def home_all_horses():
     horses = [horse1, horse2, horse3, horse4]

@@ -34,17 +34,21 @@ class Player:
         self.baseline_rate = baseline_rate
         self.is_done = True
         self.mode = mode
+        self.heartrate = 60
 
-    def handle_tick(self, value):
+    def handle_tick(self):
         if not self.is_done:
             if not self.is_backward:
                 if not self.check_end_sensor():
                     if self.mode == 0:
-                        self.move(value)
+                        self.move(self.heartrate)
                     elif self.mode == 1:
-                        self.steadymove(value)
+                        self.steadymove(self.heartrate)
                     else:
-                        self.zenmove(value)
+                        self.zenmove(self.heartrate)
+
+    def update_heartrate(self, value):
+        self.heartrate = value
 
     def check_end_sensor(self):
         if digital_read(self.od, self.od_num) == 0:
