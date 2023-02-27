@@ -71,9 +71,9 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-serverCreated = False
+# serverCreated = False
 
-#serverCreated = create_server()
+serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
@@ -356,7 +356,7 @@ class BaselineScreen(Screen):
 
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                while i < 3:
+                while i < 6:
                     sleep(1)
                     i += 1
                     # When loop breaks, the subscription breaks as well! Refer to HeartrateRate Example Repo
@@ -398,7 +398,7 @@ class BaselineScreen(Screen):
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-                while i < 3:
+                while i < 6:
                     sleep(1)
                     i += 1
 
@@ -450,7 +450,7 @@ class BaselineScreen(Screen):
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                while i < 3:
+                while i < 6:
                     sleep(1)
                     i += 1
 
@@ -510,7 +510,7 @@ class BaselineScreen(Screen):
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
-                while i < 4:
+                while i < 6:
                     sleep(1)
                     i += 1
 

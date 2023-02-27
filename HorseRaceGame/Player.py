@@ -73,8 +73,8 @@ class Player:
         t = (data - self.baseline_rate) / self.heart_weight
 
         self.velocity = (self.base_velo + t) * -1
-        if self.velocity > 0:
-            self.velocity = 0
+        if self.velocity > -0.4:
+            self.velocity = -0.4
 
         if not self.heartrate_is_real(data):
             self.velocity = self.base_velo * -1
