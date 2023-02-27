@@ -46,9 +46,20 @@ class Player:
                         self.steadymove(self.heartrate)
                     else:
                         self.zenmove(self.heartrate)
+            else:
+                self.at_start()
+
+    def at_start(self):
+        if abs(self.axis.get_vel()) < 0.1:
+            if digital_read(self.od, self.od_num) != 0:
+                self.track_lap = True
+                self.is_backward = False
+
+
 
     def update_heartrate(self, value):
         self.heartrate = value
+
 
     def check_end_sensor(self):
         if digital_read(self.od, self.od_num) == 0:
@@ -58,13 +69,7 @@ class Player:
                     self.axis.set_vel(2)
                     self.track_laps()
                     self.is_backward = True
-                    sleep(0.5)
-                    self.axis.wait_for_motor_to_stop()
-                    if digital_read(self.od, self.od_num) != 0:
-                        self.track_lap = True
-                        self.is_backward = False
-                    else:
-                        self.check_end_sensor()
+
             else:
                 self.axis.set_vel(0)
         else:
