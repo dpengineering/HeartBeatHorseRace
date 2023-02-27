@@ -5,7 +5,6 @@ Four oDrives, four LEDs Displays, two Raspberry PIs, four bluetooth heartrate se
 
 **Useful information:**
 * Hold the heart rate sensors properly! This might sound self explanatory, but it's still important to keep in mind.
-* As of right now (February 2022), only POLAR adapters/heartrate sensors work for horses 1 - 3. Horse 4 can move fine, but we don't have a functioning POLAR sensor for it yet.
 * **main.py** and files that control the horses/heartrate sensors can be found in the folder **HorseRaceGame**. Moreover, **Matrix.py** and files that control the LED Displays can be found folders in **LED-Display-Matrix --> bindings --> python --> samples**. Learn more information about the LED-Displays [here](https://github.com/dpengineering/LED-Display).
 ------------------------
 Written by `@foongi` and `@landonhellmandpea`.
