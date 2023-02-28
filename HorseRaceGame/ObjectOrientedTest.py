@@ -216,28 +216,22 @@ def setup(player_num):
     return handle_data
 
 
-p1 = Thread(target=player1.handle_tick)
-p2 = Thread(target=player2.handle_tick)
-p3 = Thread(target=player3.handle_tick)
-p4 = Thread(target=player4.handle_tick)
-
-
 
 def player_ticker(num_players):
     if num_players == 1:
-        p1.run()
+        Thread(target=player1.handle_tick).start()
     elif num_players == 2:
-        p1.run()
-        p2.run()
+        Thread(target=player1.handle_tick).start()
+        Thread(target=player2.handle_tick).start()
     elif num_players == 3:
-        p1.run()
-        p2.run()
-        p3.run()
+        Thread(target=player1.handle_tick).start()
+        Thread(target=player2.handle_tick).start()
+        Thread(target=player3.handle_tick).start()
     else:
-        p1.run()
-        p2.run()
-        p3.run()
-        p4.run()
+        Thread(target=player1.handle_tick).start()
+        Thread(target=player2.handle_tick).start()
+        Thread(target=player3.handle_tick).start()
+        Thread(target=player4.handle_tick).start()
 
 
 
