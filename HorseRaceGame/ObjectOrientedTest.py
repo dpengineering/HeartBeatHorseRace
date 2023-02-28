@@ -4,6 +4,7 @@ from binascii import hexlify
 from Player import Player
 import horserace_helpers
 from kivy.uix.screenmanager import ScreenManager
+from threading import Thread
 
 import pygatt
 
@@ -81,6 +82,7 @@ byteHeartrate = 0
 heartrate = 0
 laps = 0
 
+
 # This creates a server for raspberry pi that runs the main.py code. It will interact with the clients connected
 # to it through different PacketTypes, namely COMMAND(0-3). Use this to individually send code to each horse.
 class PacketType(enum.Enum):
@@ -89,7 +91,9 @@ class PacketType(enum.Enum):
     COMMAND2 = 2
     COMMAND3 = 3
 
+
 s = Server("172.17.21.3", 5001, PacketType)
+
 
 # Checks to make sure the heart rate exists. Especially useful for when the sensors randomly spike.
 def heartrate_is_real(heartrate):
@@ -98,6 +102,7 @@ def heartrate_is_real(heartrate):
             return True
     else:
         return False
+
 
 # Creates a list of values that averages to find a baseline for each player.
 def heartrate_baseline(player_num):
@@ -141,7 +146,6 @@ def heartrate_baseline(player_num):
     return handle_data
 
 
-
 # Creates a server for a P2P connection with the matrix.py
 def create_server():
     global serverCreated
@@ -159,6 +163,7 @@ def average_heartrate(lst):
             return sum(lst) / len(lst)
         else:
             return 'not averaged'
+
 
 def go_home():
     horse1.get_home()
@@ -207,35 +212,34 @@ def setup(player_num):
             player4.update_heartrate(value)
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND3, byteMsg)
+
     return handle_data
 
 
-tickerOn = False
+p1 = Thread(target=player1.handle_tick)
+p2 = Thread(target=player2.handle_tick)
+p3 = Thread(target=player3.handle_tick)
+p4 = Thread(target=player4.handle_tick)
+
+
+
 def player_ticker(num_players):
-    global tickerOn
-    tickerOn = True
-    while tickerOn:
-        if num_players == 1:
-            player1.handle_tick()
-        elif num_players == 2:
-            player1.handle_tick()
-            player2.handle_tick()
+    if num_players == 1:
+        p1.run()
+    elif num_players == 2:
+        p1.run()
+        p2.run()
+    elif num_players == 3:
+        p1.run()
+        p2.run()
+        p3.run()
+    else:
+        p1.run()
+        p2.run()
+        p3.run()
+        p4.run()
 
-        elif num_players == 3:
-            player1.handle_tick()
-            player2.handle_tick()
-            player3.handle_tick()
-        else:
-            player1.handle_tick()
-            player2.handle_tick()
-            player3.handle_tick()
-            player4.handle_tick()
 
-        time.sleep(1)
-
-def tickerOff():
-    global tickerOn
-    tickerOn = False
 
 def home_all_horses():
     horses = [horse1, horse2, horse3, horse4]

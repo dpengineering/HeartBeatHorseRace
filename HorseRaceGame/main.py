@@ -71,9 +71,9 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-# serverCreated = False
+serverCreated = False
 
-serverCreated = create_server()
+#serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
@@ -362,7 +362,11 @@ class BaselineScreen(Screen):
                     # When loop breaks, the subscription breaks as well! Refer to HeartrateRate Example Repo
 
             except:
-                print('L')
+                print('weeeeee')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'error')
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+                return
 
             # Calls baseline to default at 60 if no data is pulled from the sensors.
             finally:
@@ -404,6 +408,10 @@ class BaselineScreen(Screen):
 
             except:
                 print('L')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'error')
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+                return
 
             finally:
                 if not baseline1List:
@@ -456,6 +464,10 @@ class BaselineScreen(Screen):
 
             except:
                 print('L')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'error')
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+                return
 
             finally:
                 if not baseline1List:
@@ -516,6 +528,10 @@ class BaselineScreen(Screen):
 
             except:
                 print('L')
+                if serverCreated is True:
+                    s.send_packet(PacketType.COMMAND0, b'error')
+                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
+                return
 
             finally:
                 if not baseline1List:
@@ -604,11 +620,16 @@ class RunScreen(Screen):
         sleep(.5)
         if numberOfPlayers == 1:
             try:
+                print(1)
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+                print(2)
                 player1.start_game()
+                print(3)
 
                 while True:
-                    time.sleep(10)
+                    print("in the true statement")
+                    player_ticker(numberOfPlayers)
+                    time.sleep(1)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
@@ -637,13 +658,17 @@ class RunScreen(Screen):
                 sleep(3)
                 print('new game')
 
-                adapter1.stop()
+                try:
+                    adapter1.stop()
+                except:
+                    print('sucks')
 
                 home_all_horses()
 
-                adapter1.stop()
-
-
+                try:
+                    adapter1.stop()
+                except:
+                    print('sucks')
 
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -657,7 +682,8 @@ class RunScreen(Screen):
                 player2.start_game()
 
                 while True:
-                    time.sleep(10)
+                    time.sleep(1)
+                    player_ticker(numberOfPlayers)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
@@ -691,13 +717,20 @@ class RunScreen(Screen):
                 sleep(3)
                 print('new game')
 
-                adapter1.stop()
-                adapter2.stop()
+                try:
+                    adapter1.stop()
+                    adapter2.stop()
+                except:
+                    print('sucks')
 
                 home_all_horses()
 
-                adapter1.stop()
-                adapter2.stop()
+                try:
+                    adapter1.stop()
+                    adapter2.stop()
+                except:
+                    print('sucks')
+
 
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -713,7 +746,8 @@ class RunScreen(Screen):
                 player3.start_game()
 
                 while True:
-                    time.sleep(10)
+                    time.sleep(1)
+                    player_ticker(numberOfPlayers)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
@@ -753,15 +787,22 @@ class RunScreen(Screen):
                 sleep(3)
                 print('new game')
 
-                adapter1.stop()
-                adapter2.stop()
-                adapter3.stop()
+                try:
+                    adapter1.stop()
+                    adapter2.stop()
+                    adapter3.stop()
+                except:
+                    print('sucks')
+
 
                 home_all_horses()
 
-                adapter1.stop()
-                adapter2.stop()
-                adapter3.stop()
+                try:
+                    adapter1.stop()
+                    adapter2.stop()
+                    adapter3.stop()
+                except:
+                    print('sucks')
 
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -779,7 +820,8 @@ class RunScreen(Screen):
                 player4.start_game()
 
                 while True:
-                    time.sleep(10)
+                    time.sleep(1)
+                    player_ticker(numberOfPlayers)
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:
@@ -825,17 +867,23 @@ class RunScreen(Screen):
                 sleep(3)
                 print('new game')
 
-                adapter1.stop()
-                adapter2.stop()
-                adapter3.stop()
-                adapter4.stop()
+                try:
+                    adapter1.stop()
+                    adapter2.stop()
+                    adapter3.stop()
+                    adapter4.stop()
+                except:
+                    print('sucks')
 
                 home_all_horses()
 
-                adapter1.stop()
-                adapter2.stop()
-                adapter3.stop()
-                adapter4.stop()
+                try:
+                    adapter1.stop()
+                    adapter2.stop()
+                    adapter3.stop()
+                    adapter4.stop()
+                except:
+                    print('sucks')
 
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
