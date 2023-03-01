@@ -71,9 +71,9 @@ class ProjectNameGUI(App):
 
 Window.clearcolor = (1, 1, 1, 1)  # White
 
-serverCreated = False
+# serverCreated = False
 
-#serverCreated = create_server()
+serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
@@ -209,9 +209,20 @@ class BeginningScreen(Screen):
     def stop_all_adapters(self):
         try:
             adapter1.stop()
+        except:
+            print('adapter 1 didnt stop')
+        try:
             adapter2.stop()
+        except:
+            print('adapter 2 didnt stop')
+        try:
             adapter3.stop()
+        except:
+            print('adapter 3 didnt stop')
+        try:
             adapter4.stop()
+        except:
+            print('adapter 4 didnt stop')
         finally:
             return
 
@@ -243,9 +254,12 @@ class BeginningScreen(Screen):
     def two_adapter_start(self):
         try:
             adapter1.start()
+        except:
+            print("not working p1:(")
+        try:
             adapter2.start()
         except:
-            print("not working :(")
+            print("not working p2:(")
         finally:
             print('adapter1 started')
             print('adapter2 started')
@@ -253,10 +267,16 @@ class BeginningScreen(Screen):
     def three_adapter_start(self):
         try:
             adapter1.start()
+        except:
+            print("not working p1:(")
+        try:
             adapter2.start()
+        except:
+            print("not working p2:(")
+        try:
             adapter3.start()
         except:
-            print("not working :(")
+            print("not working p3:(")
         finally:
             print('adapter1 started')
             print('adapter2 started')
@@ -265,11 +285,21 @@ class BeginningScreen(Screen):
     def four_adapter_start(self):
         try:
             adapter1.start()
+        except:
+            print("not working p1:(")
+        try:
             adapter2.start()
+        except:
+            print("not working p2:(")
+        try:
             adapter3.start()
+        except:
+            print("not working p3:(")
+        try:
             adapter4.start()
         except:
-            print("not working :(")
+            print("not working p4:(")
+
         finally:
             print('adapter1 started')
             print('adapter2 started')
@@ -503,15 +533,22 @@ class BaselineScreen(Screen):
                 print(homed)
 
         elif numberOfPlayers == 4:
+            print('a')
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, b'baseline')
+            print('b')
             try:
                 vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID)
+                print('c')
+                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
+                print('d')
                 vernier3 = adapter3.connect(player3.deviceID)
-                vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+                print('e')
+                vernier4 = adapter4.connect(player4.deviceID)
+                print('f')
 
             except:
+                print('exception occured #1')
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'error')
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -521,7 +558,8 @@ class BaselineScreen(Screen):
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
                 vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
                 vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
+                vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
+                print('subscribing')
                 while i < 6:
                     sleep(1)
                     i += 1
@@ -533,7 +571,9 @@ class BaselineScreen(Screen):
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
                 return
 
+
             finally:
+                print('found finally')
                 if not baseline1List:
                     baseline1List_real = False
 

@@ -30,7 +30,7 @@ horse4 = ODriveAxis(od_1.axis1, current_lim=10, vel_lim=10)
 adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
 adapter2 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
 adapter3 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM4')
-adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM1')
+adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM5')
 
 SCREEN_MANAGER = ScreenManager()
 MAIN_SCREEN_NAME = 'main'
