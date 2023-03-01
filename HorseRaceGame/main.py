@@ -775,6 +775,9 @@ class RunScreen(Screen):
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
+
+
+
         elif numberOfPlayers == 3:
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
@@ -862,6 +865,7 @@ class RunScreen(Screen):
                 while True:
                     time.sleep(1)
                     player_ticker(numberOfPlayers)
+                    player_ticker4()
                     print("while True is running")
                     if player1.get_laps() >= total_laps:
                         if serverCreated is True:

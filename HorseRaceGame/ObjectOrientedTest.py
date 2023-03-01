@@ -231,9 +231,9 @@ def player_ticker(num_players):
         Thread(target=player1.handle_tick).start()
         Thread(target=player2.handle_tick).start()
         Thread(target=player3.handle_tick).start()
-        Thread(target=player4.handle_tick).start()
 
-
+def player_ticker4():
+    Thread(target=player4.handle_tick).start()
 
 def home_all_horses():
     horses = [horse1, horse2, horse3, horse4]
