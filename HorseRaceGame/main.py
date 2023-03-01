@@ -388,7 +388,7 @@ class BaselineScreen(Screen):
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             try:
                 vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID)
+                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
                 vernier3 = 0
                 vernier4 = 0
 
@@ -444,7 +444,7 @@ class BaselineScreen(Screen):
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             try:
                 vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID)
+                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
                 vernier3 = adapter3.connect(player3.deviceID)
                 vernier4 = 0
 
