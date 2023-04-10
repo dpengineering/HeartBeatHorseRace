@@ -367,10 +367,11 @@ class BaselineScreen(Screen):
         baseline2List_real = True
         baseline3List_real = True
         baseline4List_real = True
+
         if numberOfPlayers == 1:
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, b'baseline')
-            # Refer to dpea-p2p repo for more info on sending packets\
+            # Refer to dpea-p2p repo for more info on sending packets
             try:
                 vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
                 vernier2 = 0
@@ -678,6 +679,10 @@ class RunScreen(Screen):
                         break
                     # To end a subscription, you MUST break the while loop.
 
+            except:
+                print("unlucky race stopped")
+                pass
+
             finally:
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'done')
@@ -736,6 +741,10 @@ class RunScreen(Screen):
                         sleep(10)
                         break
 
+            except:
+                print("unlucky race stopped")
+                pass
+
             finally:
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'done')
@@ -776,8 +785,6 @@ class RunScreen(Screen):
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
 
-
-
         elif numberOfPlayers == 3:
             try:
                 vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
@@ -807,6 +814,10 @@ class RunScreen(Screen):
                             s.send_packet(PacketType.COMMAND2, b'WIN')
                         sleep(10)
                         break
+
+            except:
+                print("unlucky race stopped")
+                pass
 
             finally:
                 if serverCreated is True:
@@ -887,6 +898,10 @@ class RunScreen(Screen):
                             s.send_packet(PacketType.COMMAND3, b'WIN')
                         sleep(10)
                         break
+
+            except:
+                print("unlucky race stopped")
+                pass
 
             finally:
                 if serverCreated is True:
