@@ -30,7 +30,7 @@ horse4 = ODriveAxis(od_1.axis1, current_lim=10, vel_lim=10)
 adapter1 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM2')
 adapter2 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM3')
 adapter3 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM4')
-adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM1')
+adapter4 = pygatt.BGAPIBackend(serial_port='/dev/ttyACM5')
 
 SCREEN_MANAGER = ScreenManager()
 MAIN_SCREEN_NAME = 'main'
@@ -231,9 +231,9 @@ def player_ticker(num_players):
         Thread(target=player1.handle_tick).start()
         Thread(target=player2.handle_tick).start()
         Thread(target=player3.handle_tick).start()
-        Thread(target=player4.handle_tick).start()
 
-
+def player_ticker4():
+    Thread(target=player4.handle_tick).start()
 
 def home_all_horses():
     horses = [horse1, horse2, horse3, horse4]
