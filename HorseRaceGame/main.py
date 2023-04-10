@@ -73,7 +73,7 @@ Window.clearcolor = (1, 1, 1, 1)  # White
 
 serverCreated = False
 
-#serverCreated = create_server()
+serverCreated = create_server()
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
@@ -507,9 +507,9 @@ class BaselineScreen(Screen):
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             try:
                 vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID)
+                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
                 vernier3 = adapter3.connect(player3.deviceID)
-                vernier4 = adapter4.connect(player4.deviceID, address_type=pygatt.BLEAddressType.random)
+                vernier4 = adapter4.connect(player4.deviceID)
 
             except:
                 if serverCreated is True:
