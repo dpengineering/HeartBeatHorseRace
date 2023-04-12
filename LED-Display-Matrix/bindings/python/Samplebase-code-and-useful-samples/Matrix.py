@@ -12,6 +12,7 @@
 # changing the size of the LED matrix (using a different product or something), go to samplebase and scroll to the area
 # where you tell the file the size of the LED matrix you are using.
 
+poopy
 # Other than that, there's not too much I can help you learn about/do, just read through this file and see what you can
 # gain. Then, move on and try to improve the project! Thanks for working on it!
 
@@ -30,6 +31,10 @@ from p2p.dpea_p2p import Client
 from threading import Thread
 from datetime import datetime
 from PIL import Image
+from adafruit_motorkit import MotorKit
+
+kit = MotorKit(i2c=board.I2C(), pwm_frequency=400.0) # this will change the pwm_frequency to 250Hz
+kit.motor1.throttle = 0
 
 os.environ['DISPLAY'] = ":0.0"
 
@@ -52,7 +57,7 @@ class PacketType(enum.Enum):
 
 # Here is where we define the martix.py file as the client side of the server
 #          |Server IP           |Port |Packet enum
-# c = Client("172.17.21.3", 5001, PacketType)
+#c = Client("172.17.21.3", 5001, PacketType)
 
 # Connecting to the server
 # c.connect()
