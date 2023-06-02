@@ -31,6 +31,8 @@ from threading import Thread
 from datetime import datetime
 from PIL import Image
 
+from adafruit_motorkit import MotorKit
+
 os.environ['DISPLAY'] = ":0.0"
 
 heartrate1 = 0

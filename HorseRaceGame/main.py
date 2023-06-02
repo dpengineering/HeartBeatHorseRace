@@ -540,11 +540,9 @@ class BaselineScreen(Screen):
             print('b')
             try:
                 vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-<<<<<<< HEAD
                 vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
                 vernier3 = adapter3.connect(player3.deviceID)
                 vernier4 = adapter4.connect(player4.deviceID)
-=======
                 print('c')
                 vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
                 print('d')
@@ -552,7 +550,6 @@ class BaselineScreen(Screen):
                 print('e')
                 vernier4 = adapter4.connect(player4.deviceID)
                 print('f')
->>>>>>> main
 
             except:
                 print('exception occured #1')
