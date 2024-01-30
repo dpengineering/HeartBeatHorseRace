@@ -6,6 +6,8 @@ import kivy
 from binascii import hexlify
 from ObjectOrientedTest import *
 from Player import *
+import asyncio
+from bleak import *
 
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
@@ -27,6 +29,7 @@ from time import sleep
 from kivy.properties import ObjectProperty
 from kivy.uix.image import Image
 from kivy.clock import Clock
+from functools import partial
 
 from pidev.MixPanel import MixPanel
 from pidev.kivy.PassCodeScreen import PassCodeScreen
@@ -53,6 +56,7 @@ global vernier1
 global vernier2
 global vernier3
 global vernier4
+hr_uuid = "00002a37-0000-1000-8000-00805f9b34fb"
 
 class ProjectNameGUI(App):
     """
@@ -209,20 +213,20 @@ class BeginningScreen(Screen):
     def stop_all_adapters(self):
         try:
             adapter1.stop()
-        except:
-            print('adapter 1 didnt stop')
+        except Exception as e:
+            print(f'adapter 1 didnt stop: {e}')
         try:
             adapter2.stop()
-        except:
-            print('adapter 2 didnt stop')
+        except Exception as e:
+            print(f'adapter 1 didnt stop: {e}')
         try:
             adapter3.stop()
-        except:
-            print('adapter 3 didnt stop')
+        except Exception as e:
+            print(f'adapter 1 didnt stop: {e}')
         try:
             adapter4.stop()
-        except:
-            print('adapter 4 didnt stop')
+        except Exception as e:
+            print(f'adapter 1 didnt stop: {e}')
         finally:
             return
 
@@ -348,6 +352,30 @@ class BeginningScreen(Screen):
     print("Beginning Screen Created")
 
 
+async def connect_and_get_heartrate(device_address, player_num):
+    try:
+        async with BleakClient(device_address) as client:
+            hr_uuid = '00002a37-0000-1000-8000-00805f9b34fb'
+            partial_handler = partial(heartrate_baseline, num=player_num)
+            await client.start_notify(hr_uuid, partial_handler)
+
+            await asyncio.sleep(6)
+
+            await client.stop_notify(hr_uuid)
+
+    except Exception as e:
+        print(f"looks like error: {e}")
+        
+async def connect_and_get_heartrates(device_addresses):
+    try:
+        tasks = []
+        for addr, player_num in zip(device_addresses, range(1, len(device_addresses) + 1)):
+            tasks.append(connect_and_get_heartrate(addr, player_num))
+        await asyncio.gather(*tasks)
+
+    except Exception as e:
+        print(f"Lol: {e}")
+
 class BaselineScreen(Screen):
     """
     Class to handle the baseline screen and finding each individual's heart rate
@@ -373,27 +401,10 @@ class BaselineScreen(Screen):
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             # Refer to dpea-p2p repo for more info on sending packets
             try:
-                vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = 0
-                vernier3 = 0
-                vernier4 = 0
+                addresses = [player1.deviceID]
+                connect_and_get_heartrates(addresses)
 
             except:
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND0, b'error')
-                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-                return
-
-
-            try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                while i < 6:
-                    sleep(1)
-                    i += 1
-                    # When loop breaks, the subscription breaks as well! Refer to HeartrateRate Example Repo
-
-            except:
-                print('weeeeee')
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'error')
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -418,27 +429,10 @@ class BaselineScreen(Screen):
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             try:
-                vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier3 = 0
-                vernier4 = 0
+                addresses = [player1.deviceID, player2.deviceID]
+                connect_and_get_heartrates(addresses)
 
             except:
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND0, b'error')
-                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-                return
-
-
-            try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-                while i < 6:
-                    sleep(1)
-                    i += 1
-
-            except:
-                print('L')
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'error')
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -474,27 +468,10 @@ class BaselineScreen(Screen):
             if serverCreated is True:
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             try:
-                vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier3 = adapter3.connect(player3.deviceID)
-                vernier4 = 0
+                addresses = [player1.deviceID, player2.deviceID, player3.deviceID]
+                connect_and_get_heartrates(addresses)
 
             except:
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND0, b'error')
-                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-                return
-
-            try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                while i < 6:
-                    sleep(1)
-                    i += 1
-
-            except:
-                print('L')
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'error')
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -539,17 +516,8 @@ class BaselineScreen(Screen):
                 s.send_packet(PacketType.COMMAND0, b'baseline')
             print('b')
             try:
-                vernier1 = adapter1.connect(player1.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
-                vernier3 = adapter3.connect(player3.deviceID)
-                vernier4 = adapter4.connect(player4.deviceID)
-                print('c')
-                vernier2 = adapter2.connect(player2.deviceID, address_type=pygatt.BLEAddressType.random)
-                print('d')
-                vernier3 = adapter3.connect(player3.deviceID)
-                print('e')
-                vernier4 = adapter4.connect(player4.deviceID)
-                print('f')
+                addresses = [player1.deviceID, player2.deviceID, player3.deviceID, player4.deviceID]
+                connect_and_get_heartrates(addresses)
 
             except:
                 print('exception occured #1')
@@ -557,24 +525,6 @@ class BaselineScreen(Screen):
                     s.send_packet(PacketType.COMMAND0, b'error')
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
                 return
-
-            try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(1))
-                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(2))
-                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(3))
-                vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=heartrate_baseline(4))
-                print('subscribing')
-                while i < 6:
-                    sleep(1)
-                    i += 1
-
-            except:
-                print('L')
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND0, b'error')
-                SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-                return
-
 
             finally:
                 print('found finally')
@@ -654,7 +604,7 @@ class RunScreen(Screen):
         player3.baseline_rate = baseline3
         player4.baseline_rate = baseline4
 
-    def start_game(self):
+    async def start_game(self):
         global new_game, serverCreated
         t = "3"
         while int(t) > 0:
@@ -665,26 +615,47 @@ class RunScreen(Screen):
         if numberOfPlayers == 1:
             try:
                 print(1)
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-                print(2)
-                player1.start_game()
-                print(3)
+                async with BleakClient(player1.deviceID) as client:
+                    try:
+                        addresses = [player1.deviceID]
+                        partial_tool = partial(heartrate_baseline, num=1)
+                        await client.start_notify(hr_uuid, callback=partial_tool)
+                        player1.start_game()
+                        print(3)
 
-                while True:
-                    print("in the true statement")
-                    player_ticker(numberOfPlayers)
-                    time.sleep(1)
-                    print("while True is running")
-                    if player1.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND0, b'WIN')
-                        sleep(10)
-                        break
-                    # To end a subscription, you MUST break the while loop.
+                        while True:
+                            print('in the true statement')
+                            player_ticker(numberOfPlayers)
+                            await asyncio.sleep(1)
+                            print('while True is running')
+                            if player1.getlaps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND0, b'WIN')
+                                sleep(10)
+                                break
+                    finally:
+                        await client.stop_notify(hr_uuid)
+            
+            except Exception as e:
+                print(f"error during game: {e}")
 
-            except:
-                print("unlucky race stopped")
-                pass
+
+
+            #     while True:
+            #         print("in the true statement")
+            #         player_ticker(numberOfPlayers)
+            #         time.sleep(1)
+            #         print("while True is running")
+            #         if player1.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND0, b'WIN')
+            #             sleep(10)
+            #             break
+            #         # To end a subscription, you MUST break the while loop.
+
+            # except:
+            #     print("unlucky race stopped")
+            #     pass
 
             finally:
                 if serverCreated is True:
@@ -722,31 +693,66 @@ class RunScreen(Screen):
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
         elif numberOfPlayers == 2:
+            # try:
+            #     vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+            #     vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+
+            #     player1.start_game()
+            #     player2.start_game()
+
+            #     while True:
+            #         time.sleep(1)
+            #         player_ticker(numberOfPlayers)
+            #         print("while True is running")
+            #         if player1.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND0, b'WIN')
+            #             sleep(10)
+            #             break
+            #         elif player2.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND1, b'WIN')
+            #             sleep(10)
+            #             break
+
+            # except:
+            #     print("unlucky race stopped")
+            #     pass
+
             try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+                async with BleakClient(player1.deviceID) as client1, BleakClient(player2.deviceID) as client2:
+                    try:
+                        partial_handler1 = partial(heartrate_baseline, num=1)
+                        partial_handler2 = partial(heartrate_baseline, num=2)
+                        await asyncio.gather(
+                            client1.start_notify(hr_uuid, partial_handler1),
+                            client2.start_notify(hr_uuid, partial_handler2)
+                        )
+                        player1.start_game()
+                        player2.start_game()
 
-                player1.start_game()
-                player2.start_game()
-
-                while True:
-                    time.sleep(1)
-                    player_ticker(numberOfPlayers)
-                    print("while True is running")
-                    if player1.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND0, b'WIN')
-                        sleep(10)
-                        break
-                    elif player2.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND1, b'WIN')
-                        sleep(10)
-                        break
-
-            except:
-                print("unlucky race stopped")
-                pass
+                        while True:
+                            await asyncio.sleep(1)
+                            player_ticker(numberOfPlayers)
+                            print("while True is running")
+                            if player1.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND0, b'WIN')
+                                await asyncio.sleep(10)
+                                break
+                            elif player2.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND1, b'WIN')
+                                await asyncio.sleep(10)
+                                break
+                    finally:
+                        await asyncio.gather(
+                            client1.stop_notify(hr_uuid),
+                            client2.stop_notify(hr_uuid)
+                        )
+            
+            except Exception as e:
+                print(f'error during game: {e}')
 
             finally:
                 if serverCreated is True:
@@ -789,38 +795,85 @@ class RunScreen(Screen):
 
 
         elif numberOfPlayers == 3:
+            # try:
+            #     vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+            #     vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+            #     vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+
+            #     player1.start_game()
+            #     player2.start_game()
+            #     player3.start_game()
+
+            #     while True:
+            #         time.sleep(1)
+            #         player_ticker(numberOfPlayers)
+            #         print("while True is running")
+            #         if player1.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND0, b'WIN')
+            #             sleep(10)
+            #             break
+            #         elif player2.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND1, b'WIN')
+            #             sleep(10)
+            #             break
+            #         elif player3.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND2, b'WIN')
+            #             sleep(10)
+            #             break
+
+            # except:
+            #     print("unlucky race stopped")
+            #     pass
+
             try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
-                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+                async with BleakClient(player1.deviceID) as client1, BleakClient(player2.deviceID) as client2, BleakClient(player3.deviceID) as client3:  # Connect to three devices
+                    try:
+                        partial1 = partial(heartrate_baseline, num=1)
+                        partial2 = partial(heartrate_baseline, num=2)
+                        partial3 = partial(heartrate_baseline, num=3)
+                        
+                        await asyncio.gather(
+                            client1.start_notify(hr_uuid, callback=partial1),
+                            client2.start_notify(hr_uuid, callback=partial2),
+                            client3.start_notify(hr_uuid, callback=partial3)
+                        )  # Subscribe to notifications for all
 
-                player1.start_game()
-                player2.start_game()
-                player3.start_game()
+                        player1.start_game()
+                        player2.start_game()
+                        player3.start_game()
 
-                while True:
-                    time.sleep(1)
-                    player_ticker(numberOfPlayers)
-                    print("while True is running")
-                    if player1.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND0, b'WIN')
-                        sleep(10)
-                        break
-                    elif player2.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND1, b'WIN')
-                        sleep(10)
-                        break
-                    elif player3.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND2, b'WIN')
-                        sleep(10)
-                        break
+                        while True:
+                            await asyncio.sleep(1)
+                            player_ticker(numberOfPlayers)
+                            print("while True is running")
+                            if player1.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND0, b'WIN')
+                                sleep(10)
+                                break
+                            elif player2.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND1, b'WIN')
+                                sleep(10)
+                                break
+                            elif player3.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND2, b'WIN')
+                                sleep(10)
+                                break
 
-            except:
-                print("unlucky race stopped")
-                pass
+                    finally:
+                        await asyncio.gather(
+                            client1.stop_notify(hr_uuid),
+                            client2.stop_notify(hr_uuid),
+                            client3.stop_notify(hr_uuid)
+                        )  # Stop notifications
+
+            except Exception as e:
+                print(f"error during game: {e}")
 
             finally:
                 if serverCreated is True:
@@ -865,46 +918,102 @@ class RunScreen(Screen):
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
 
         elif numberOfPlayers == 4:
+            # try:
+            #     vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
+            #     vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
+            #     vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
+            #     vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(4))
+
+            #     player1.start_game()
+            #     player2.start_game()
+            #     player3.start_game()
+            #     player4.start_game()
+
+            #     while True:
+            #         time.sleep(1)
+            #         player_ticker(numberOfPlayers)
+            #         player_ticker4()
+            #         print("while True is running")
+            #         if player1.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND0, b'WIN')
+            #             sleep(10)
+            #             break
+            #         elif player2.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND1, b'WIN')
+            #             sleep(10)
+            #             break
+            #         elif player3.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND2, b'WIN')
+            #             sleep(10)
+            #             break
+            #         elif player4.get_laps() >= total_laps:
+            #             if serverCreated is True:
+            #                 s.send_packet(PacketType.COMMAND3, b'WIN')
+            #             sleep(10)
+            #             break
+
+            # except:
+            #     print("unlucky race stopped")
+            #     pass
+
             try:
-                vernier1.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(1))
-                vernier2.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(2))
-                vernier3.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(3))
-                vernier4.subscribe("00002a37-0000-1000-8000-00805f9b34fb", callback=setup(4))
+                async with BleakClient(player1.deviceID) as client1, BleakClient(player2.deviceID) as client2, BleakClient(player3.deviceID) as client3, BleakClient(player4.deviceID) as client4:  # Connect to three devices
+                    try:
+                        partial1 = partial(heartrate_baseline, num=1)
+                        partial2 = partial(heartrate_baseline, num=2)
+                        partial3 = partial(heartrate_baseline, num=3)
+                        partial4 = partial(heartrate_baseline, num=4)
 
-                player1.start_game()
-                player2.start_game()
-                player3.start_game()
-                player4.start_game()
+                        await asyncio.gather(
+                            client1.start_notify(hr_uuid, callback=partial1),
+                            client2.start_notify(hr_uuid, callback=partial2),
+                            client3.start_notify(hr_uuid, callback=partial3),
+                            client4.start_notify(hr_uuid, callbak=partial4)
+                        )  # Subscribe to notifications for all
 
-                while True:
-                    time.sleep(1)
-                    player_ticker(numberOfPlayers)
-                    player_ticker4()
-                    print("while True is running")
-                    if player1.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND0, b'WIN')
-                        sleep(10)
-                        break
-                    elif player2.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND1, b'WIN')
-                        sleep(10)
-                        break
-                    elif player3.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND2, b'WIN')
-                        sleep(10)
-                        break
-                    elif player4.get_laps() >= total_laps:
-                        if serverCreated is True:
-                            s.send_packet(PacketType.COMMAND3, b'WIN')
-                        sleep(10)
-                        break
+                        player1.start_game()
+                        player2.start_game()
+                        player3.start_game()
+                        player4.start_game()
 
-            except:
-                print("unlucky race stopped")
-                pass
+                        while True:
+                            await asyncio.sleep(1)
+                            player_ticker(numberOfPlayers)
+                            print("while True is running")
+                            if player1.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND0, b'WIN')
+                                sleep(10)
+                                break
+                            elif player2.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND1, b'WIN')
+                                sleep(10)
+                                break
+                            elif player3.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND2, b'WIN')
+                                sleep(10)
+                                break
+                            elif player4.get_laps() >= total_laps:
+                                if serverCreated is True:
+                                    s.send_packet(PacketType.COMMAND3, b'WIN')
+                                sleep(10)
+                                break
+
+                    finally:
+                        await asyncio.gather(
+                            client1.stop_notify(hr_uuid),
+                            client2.stop_notify(hr_uuid),
+                            client3.stop_notify(hr_uuid),
+                            client4.stop_notify(hr_uuid)
+                        )  # Stop notifications
+
+            except Exception as e:
+                print(f"error during game: {e}")
 
             finally:
                 if serverCreated is True:
