@@ -5,6 +5,7 @@ from Player import Player
 import horserace_helpers
 from kivy.uix.screenmanager import ScreenManager
 from threading import Thread
+import asyncio
 
 import pygatt
 
@@ -105,45 +106,78 @@ def heartrate_is_real(heartrate):
 
 
 # Creates a list of values that averages to find a baseline for each player.
-def heartrate_baseline(player_num):
-    def handle_data(handle, value):
-        global i, byteHeartrate, heartrate, laps
-        heartrate = int(hexlify(value)[2:4], 16)
-        byteHeartrate = bytes(str(heartrate), 'utf-8')
+def heartrate_baseline(client, handle, value, num):
+    # def handle_data(handle, value):
+    #     global i, byteHeartrate, heartrate, laps
+    #     heartrate = int(hexlify(value)[2:4], 16)
+    #     byteHeartrate = bytes(str(heartrate), 'utf-8')
 
-        if heartrate_is_real(heartrate):
-            if player_num == 1:
-                baseline1List.append(heartrate)
-                msg = str(heartrate) + "-" + str(laps)
-                byteMsg = bytes(str(msg), 'utf-8')
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND0, byteMsg)
-            elif player_num == 2:
-                baseline2List.append(heartrate)
-                msg = str(heartrate) + "-" + str(laps)
-                byteMsg = bytes(str(msg), 'utf-8')
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND1, byteMsg)
-            elif player_num == 3:
-                baseline3List.append(heartrate)
-                msg = str(heartrate) + "-" + str(laps)
-                byteMsg = bytes(str(msg), 'utf-8')
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND2, byteMsg)
-            elif player_num == 4:
-                baseline4List.append(heartrate)
-                msg = str(heartrate) + "-" + str(laps)
-                byteMsg = bytes(str(msg), 'utf-8')
-                if serverCreated is True:
-                    s.send_packet(PacketType.COMMAND3, byteMsg)
-            else:
-                print('not good')
+    #     if heartrate_is_real(heartrate):
+    #         if player_num == 1:
+    #             baseline1List.append(heartrate)
+    #             msg = str(heartrate) + "-" + str(laps)
+    #             byteMsg = bytes(str(msg), 'utf-8')
+    #             if serverCreated is True:
+    #                 s.send_packet(PacketType.COMMAND0, byteMsg)
+    #         elif player_num == 2:
+    #             baseline2List.append(heartrate)
+    #             msg = str(heartrate) + "-" + str(laps)
+    #             byteMsg = bytes(str(msg), 'utf-8')
+    #             if serverCreated is True:
+    #                 s.send_packet(PacketType.COMMAND1, byteMsg)
+    #         elif player_num == 3:
+    #             baseline3List.append(heartrate)
+    #             msg = str(heartrate) + "-" + str(laps)
+    #             byteMsg = bytes(str(msg), 'utf-8')
+    #             if serverCreated is True:
+    #                 s.send_packet(PacketType.COMMAND2, byteMsg)
+    #         elif player_num == 4:
+    #             baseline4List.append(heartrate)
+    #             msg = str(heartrate) + "-" + str(laps)
+    #             byteMsg = bytes(str(msg), 'utf-8')
+    #             if serverCreated is True:
+    #                 s.send_packet(PacketType.COMMAND3, byteMsg)
+    #         else:
+    #             print('not good')
+    #     else:
+    #         print('unlucky')
+
+    #     return byteHeartrate
+
+    global i, byteHeartrate, heartrate, laps
+    heartrate = int(hexlify(value)[2:4], 16)
+    byteHeartrate = bytes(str(heartrate), 'utf-8')
+
+    if heartrate_is_real(heartrate):
+        player_num = num
+        if player_num == 1:
+            baseline1List.append(heartrate)
+            msg = str(heartrate) + '-' + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND0, byteMsg)
+        elif player_num == 2:
+            baseline2List.append(heartrate)
+            msg = str(heartrate) + '-' + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND1, byteMsg)
+        elif player_num == 3:
+            baseline1List.append(heartrate)
+            msg = str(heartrate) + '-' + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND2, byteMsg)
+        elif player_num == 4:
+            baseline1List.append(heartrate)
+            msg = str(heartrate) + '-' + str(laps)
+            byteMsg = bytes(str(msg), 'utf-8')
+            if serverCreated is True:
+                s.send_packet(PacketType.COMMAND3, byteMsg)
         else:
-            print('unlucky')
+            print('really not good')
 
-        return byteHeartrate
-
-    return handle_data
+    return byteHeartrate
 
 
 # Creates a server for a P2P connection with the matrix.py
