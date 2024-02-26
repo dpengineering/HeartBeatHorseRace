@@ -1,5 +1,8 @@
+import contextlib
+import logging
 import os
 import select
+import struct
 import sys
 import pygatt
 import kivy
@@ -8,6 +11,7 @@ from ObjectOrientedTest import *
 from Player import *
 import asyncio
 from bleak import *
+import bitstruct
 
 sys.path.append("/home/soft-dev/Documents/dpea-odrive/")
 
@@ -45,8 +49,6 @@ import time
 # Heartbeat Horse Race!
 
 
-
-
 print('starting server')
 
 MIXPANEL_TOKEN = "x"
@@ -78,6 +80,8 @@ Window.clearcolor = (1, 1, 1, 1)  # White
 # serverCreated = False
 
 serverCreated = create_server()
+
+
 # ^Comment out this function if you don't want to run the main.py with the LED Display. Make serverCreated = False^
 
 
@@ -352,34 +356,75 @@ class BeginningScreen(Screen):
     print("Beginning Screen Created")
 
 
-async def connect_and_get_heartrate(device_address, player_num):
+async def connect_and_get_heartrate(lock: asyncio.Lock, device_address, player_num):
     try:
-        async with BleakClient(device_address) as client:
-            hr_uuid = '00002a37-0000-1000-8000-00805f9b34fb'
-            partial_handler = partial(heartrate_baseline, num=player_num)
-            await client.start_notify(hr_uuid, partial_handler)
+        async with contextlib.AsyncExitStack() as stack:
 
-            await asyncio.sleep(6)
+            # Trying to establish a connection to two devices at the same time
+            # can cause errors, so use a lock to avoid this.
+            async with lock:
+                print(f"scanning for %s Player {player_num}; ID: {device_address}")
 
-            await client.stop_notify(hr_uuid)
+                device = await BleakScanner.find_device_by_address(
+                    device_address, macos=dict(use_bdaddr=False))
+
+                print(f"stopped scanning for %s Player {player_num}; ID: {device_address}")
+
+                if device is None:
+                    print(f"%s not found Player {player_num}; ID: {device_address}")
+                    return
+
+                client = BleakClient(device)
+
+                print(f"connecting to %s Player {player_num}; ID: {device_address}")
+
+                await stack.enter_async_context(client)
+
+                print(f"connected to %s Player {player_num}; ID: {device_address}")
+
+                # This will be called immediately before client.__aexit__ when
+                # the stack context manager exits.
+                stack.callback(logging.info, "disconnecting from %s", device_address)
+
+            # The lock is released here. The device is still connected and the
+            # Bluetooth adapter is now free to scan and connect another device
+            # without disconnecting this one.
+
+            def callback(_, data):
+                hr_val = struct.unpack_from(
+                    "<H" if bitstruct.unpack("b1", data)[0] else "<B", data, 1
+                )[0]
+                print(f"HR Value: {hr_val}, Player # {player_num}")
+
+            await client.start_notify(hr_uuid, callback)
+            while client.is_connected:
+                await asyncio.sleep(0.5)
+
+        # The stack context manager exits here, triggering disconnection.
+
+        print(f"disconnected from %s Player {player_num}; ID: {device_address}")
 
     except Exception as e:
-        print(f"looks like error: {e}")
-        
+        print(f"error with %s Player {player_num}; ID: {device_address}: {e}")
+
+
 async def connect_and_get_heartrates(device_addresses):
+    lock = asyncio.Lock()
     try:
         tasks = []
         for addr, player_num in zip(device_addresses, range(1, len(device_addresses) + 1)):
-            tasks.append(connect_and_get_heartrate(addr, player_num))
+            tasks.append(connect_and_get_heartrate(lock, addr, player_num))
         await asyncio.gather(*tasks)
 
     except Exception as e:
         print(f"Lol: {e}")
 
+
 class BaselineScreen(Screen):
     """
     Class to handle the baseline screen and finding each individual's heart rate
     """
+
     def quit(self):
         print("Exit")
         s.close_connection()
@@ -502,7 +547,6 @@ class BaselineScreen(Screen):
                 else:
                     baseline3 = round(average_heartrate(baseline3List))
 
-
                 SCREEN_MANAGER.transition.direction = "right"
                 if serverCreated is True:
                     s.send_packet(PacketType.COMMAND0, b'start')
@@ -572,7 +616,6 @@ class BaselineScreen(Screen):
             print('not working L')
             return
 
-
         return baseline1, baseline2, baseline3, baseline4, vernier1, vernier2, vernier3, vernier4, i, homed
 
     def switch_screen(self):
@@ -586,6 +629,7 @@ class RunScreen(Screen):
     """
     Class to handle the run screen and heart beat horse race
     """
+
     def quit(self):
         print("Exit")
         s.close_connection()
@@ -635,9 +679,11 @@ class RunScreen(Screen):
                                 break
                     finally:
                         await client.stop_notify(hr_uuid)
-            
+
             except Exception as e:
                 print(f"error during game: {e}")
+
+
 
 
 
@@ -750,7 +796,7 @@ class RunScreen(Screen):
                             client1.stop_notify(hr_uuid),
                             client2.stop_notify(hr_uuid)
                         )
-            
+
             except Exception as e:
                 print(f'error during game: {e}')
 
@@ -788,7 +834,6 @@ class RunScreen(Screen):
                     adapter2.stop()
                 except:
                     print('sucks')
-
 
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
@@ -829,12 +874,14 @@ class RunScreen(Screen):
             #     pass
 
             try:
-                async with BleakClient(player1.deviceID) as client1, BleakClient(player2.deviceID) as client2, BleakClient(player3.deviceID) as client3:  # Connect to three devices
+                async with BleakClient(player1.deviceID) as client1, BleakClient(
+                        player2.deviceID) as client2, BleakClient(
+                        player3.deviceID) as client3:  # Connect to three devices
                     try:
                         partial1 = partial(heartrate_baseline, num=1)
                         partial2 = partial(heartrate_baseline, num=2)
                         partial3 = partial(heartrate_baseline, num=3)
-                        
+
                         await asyncio.gather(
                             client1.start_notify(hr_uuid, callback=partial1),
                             client2.start_notify(hr_uuid, callback=partial2),
@@ -904,7 +951,6 @@ class RunScreen(Screen):
                 except:
                     print('sucks')
 
-
                 home_all_horses()
 
                 try:
@@ -960,7 +1006,9 @@ class RunScreen(Screen):
             #     pass
 
             try:
-                async with BleakClient(player1.deviceID) as client1, BleakClient(player2.deviceID) as client2, BleakClient(player3.deviceID) as client3, BleakClient(player4.deviceID) as client4:  # Connect to three devices
+                async with BleakClient(player1.deviceID) as client1, BleakClient(
+                        player2.deviceID) as client2, BleakClient(player3.deviceID) as client3, BleakClient(
+                        player4.deviceID) as client4:  # Connect to three devices
                     try:
                         partial1 = partial(heartrate_baseline, num=1)
                         partial2 = partial(heartrate_baseline, num=2)
@@ -1058,7 +1106,6 @@ class RunScreen(Screen):
 
                 SCREEN_MANAGER.transition.direction = "right"
                 SCREEN_MANAGER.current = MAIN_SCREEN_NAME
-
 
 
 class TrajectoryScreen(Screen):

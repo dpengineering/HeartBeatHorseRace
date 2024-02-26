@@ -1,4 +1,5 @@
 # This file defines several functions and variables called from main.py
+import subprocess
 import sys
 from binascii import hexlify
 from Player import Player
@@ -186,6 +187,7 @@ def create_server():
     print('server created')
     s.open_server()
     print('server opened, now waiting for connection!')
+    client = Thread(target=lambda: subprocess.run('/home/pi/Documents/full_code/HorseRaceGame/upload.sh'), daemon=True, name='Client Thread').start()
     s.wait_for_connection()
     serverCreated = True
     return True

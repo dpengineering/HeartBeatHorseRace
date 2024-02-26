@@ -31,12 +31,12 @@ from p2p.dpea_p2p import Client
 from threading import Thread
 from datetime import datetime
 from PIL import Image
-from adafruit_motorkit import MotorKit
-
-kit = MotorKit(i2c=board.I2C(), pwm_frequency=400.0) # this will change the pwm_frequency to 250Hz
-kit.motor1.throttle = 0
-
-from adafruit_motorkit import MotorKit
+# from adafruit_motorkit import MotorKit
+#
+# kit = MotorKit(i2c=board.I2C(), pwm_frequency=400.0) # this will change the pwm_frequency to 250Hz
+# kit.motor1.throttle = 0
+#
+# from adafruit_motorkit import MotorKit
 
 os.environ['DISPLAY'] = ":0.0"
 
@@ -49,6 +49,8 @@ lap2 = 0
 lap3 = 0
 lap4 = 0
 laps = 0
+
+print('In here!')
 
 
 class PacketType(enum.Enum):
