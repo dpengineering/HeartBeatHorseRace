@@ -189,6 +189,7 @@ def create_server():
     print('server opened, now waiting for connection!')
     client = Thread(target=lambda: subprocess.run('/home/pi/Documents/full_code/HorseRaceGame/upload.sh'), daemon=True, name='Client Thread').start()
     s.wait_for_connection()
+    print('connection established')
     serverCreated = True
     return True
 
